@@ -1,7 +1,7 @@
 RedisExchange
 =============
 
-A trading engine with a redis datastore
+A trading engine with a redis datastore.
 
 Requirements
 ============
