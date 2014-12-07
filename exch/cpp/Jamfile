@@ -1,0 +1,45 @@
+import package ;
+import common ;
+import os ;
+import feature : set-default ;
+
+constant EXCH_INSTALL_PATH : /Users/dbdavidson/install/exch ;
+constant TOP : /Users/dbdavidson/dev/open_source/RedisExchange/exch/cpp ;
+
+local rule explicit-alias ( id : targets + )
+{
+    alias $(id) : $(targets) ;
+    explicit $(id) ;
+}
+
+project exch_projects
+        : requirements
+          <define>OTL_ODBC_UNIX
+          <define>BOOST_FILESYSTEM_VERSION=2
+          <variant>debug:<define>DEBUG
+          <toolset>gcc:<cxxflags>-Wno-invalid-offsetof
+          <toolset>gcc:<cxxflags>-Wno-deprecated-declarations
+          <toolset>gcc:<cxxflags>-std=c++11
+          <toolset>darwin:<cxxflags>-std=c++11
+          <linkflags>-lpthread
+          <include>$(BOOST_INCLUDE_PATH)
+          <include>$(CPP_INCLUDE_PATH)
+          <include>/usr/local/include
+          <include>.
+# custom <additional_includes>
+<include>/Users/dbdavidson/dev/open_source/fcs/cpp
+# end <additional_includes>
+
+          <tag>@$(__name__).tag
+          <toolset>intel:<cxxflags>-std=c++0x
+          <toolset>intel:<cxxflags>-Qoption,cpp,--rvalue_ctor_is_not_copy_ctor
+          <toolset>intel:<define>BOOST_CALLBACK_EXPLICIT_COPY_CONSTRUCTOR
+          <toolset>intel:<linkflags>-i-static
+          <toolset>intel:<linkflags>-i-static
+          <library>/site-config//boost_thread
+          <library>/site-config//boost_system
+          <library>/usr/local/lib/libodbc.2.dylib
+       :
+        : build-dir ../../build-dir
+        ;
+

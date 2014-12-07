@@ -1,0 +1,43 @@
+import project ;
+import feature ;
+import os ;
+
+project site-config ;
+
+path-constant BOOST_INCLUDE_PATH : /usr/local/Cellar/boost/1.56.0/include ;
+path-constant BOOST_LIB_PATH : /usr/local/Cellar/boost/1.56.0/lib ;
+path-constant CPP_INCLUDE_PATH : /Users/dbdavidson/install/cpp/include ;
+
+lib boost_atomic : : <file>$(BOOST_LIB_PATH)/libboost_atomic-mt.a <variant>release ;
+lib boost_chrono : : <file>$(BOOST_LIB_PATH)/libboost_chrono-mt.a <variant>release ;
+lib boost_context : : <file>$(BOOST_LIB_PATH)/libboost_context-mt.a <variant>release ;
+lib boost_coroutine : : <file>$(BOOST_LIB_PATH)/libboost_coroutine-mt.a <variant>release ;
+lib boost_date_time : : <file>$(BOOST_LIB_PATH)/libboost_date_time-mt.a <variant>release ;
+lib boost_exception : : <file>$(BOOST_LIB_PATH)/libboost_exception-mt.a <variant>release ;
+lib boost_filesystem : : <file>$(BOOST_LIB_PATH)/libboost_filesystem-mt.a <variant>release ;
+lib boost_graph : : <file>$(BOOST_LIB_PATH)/libboost_graph-mt.a <variant>release ;
+lib boost_iostreams : : <file>$(BOOST_LIB_PATH)/libboost_iostreams-mt.a <variant>release ;
+lib boost_locale : : <file>$(BOOST_LIB_PATH)/libboost_locale-mt.a <variant>release ;
+lib boost_log : : <file>$(BOOST_LIB_PATH)/libboost_log-mt.a <variant>release ;
+lib boost_log_setup : : <file>$(BOOST_LIB_PATH)/libboost_log_setup-mt.a <variant>release ;
+lib boost_math_c99 : : <file>$(BOOST_LIB_PATH)/libboost_math_c99-mt.a <variant>release ;
+lib boost_math_c99f : : <file>$(BOOST_LIB_PATH)/libboost_math_c99f-mt.a <variant>release ;
+lib boost_math_c99l : : <file>$(BOOST_LIB_PATH)/libboost_math_c99l-mt.a <variant>release ;
+lib boost_math_tr1 : : <file>$(BOOST_LIB_PATH)/libboost_math_tr1-mt.a <variant>release ;
+lib boost_math_tr1f : : <file>$(BOOST_LIB_PATH)/libboost_math_tr1f-mt.a <variant>release ;
+lib boost_math_tr1l : : <file>$(BOOST_LIB_PATH)/libboost_math_tr1l-mt.a <variant>release ;
+lib boost_prg_exec_monitor : : <file>$(BOOST_LIB_PATH)/libboost_prg_exec_monitor-mt.a <variant>release ;
+lib boost_program_options : : <file>$(BOOST_LIB_PATH)/libboost_program_options-mt.a <variant>release ;
+lib boost_python : : <file>$(BOOST_LIB_PATH)/libboost_python-mt.a <variant>release ;
+lib boost_random : : <file>$(BOOST_LIB_PATH)/libboost_random-mt.a <variant>release ;
+lib boost_regex : : <file>$(BOOST_LIB_PATH)/libboost_regex-mt.a <variant>release ;
+lib boost_serialization : : <file>$(BOOST_LIB_PATH)/libboost_serialization-mt.a <variant>release ;
+lib boost_signals : : <file>$(BOOST_LIB_PATH)/libboost_signals-mt.a <variant>release ;
+lib boost_system : : <file>$(BOOST_LIB_PATH)/libboost_system-mt.a <variant>release ;
+lib boost_test_exec_monitor : : <file>$(BOOST_LIB_PATH)/libboost_test_exec_monitor-mt.a <variant>release ;
+lib boost_thread : : <file>$(BOOST_LIB_PATH)/libboost_thread-mt.a <variant>release ;
+lib boost_timer : : <file>$(BOOST_LIB_PATH)/libboost_timer-mt.a <variant>release ;
+lib boost_unit_test_framework : : <file>$(BOOST_LIB_PATH)/libboost_unit_test_framework-mt.a <variant>release ;
+lib boost_wave : : <file>$(BOOST_LIB_PATH)/libboost_wave-mt.a <variant>release ;
+lib boost_wserialization : : <file>$(BOOST_LIB_PATH)/libboost_wserialization-mt.a <variant>release ;
+
