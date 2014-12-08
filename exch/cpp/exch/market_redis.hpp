@@ -4,6 +4,9 @@
 #include "exch/exch.hpp"
 
 namespace exch {
+  /**
+     Provides service for one market exchange, persisting books in redis
+  */
   class Market_exchange_redis :
     public Market_exchange
   {

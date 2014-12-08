@@ -14,3 +14,13 @@ rule test_market_mem
   ] ;
 }
 test-suite market_mem : [ test_market_mem ] ;
+
+rule test_exchange
+{
+  all_rules += [ run test_exchange.cpp
+  :
+  : # test-files
+  : # requirements
+  ] ;
+}
+test-suite exchange : [ test_exchange ] ;

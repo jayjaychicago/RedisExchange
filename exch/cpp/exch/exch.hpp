@@ -8,6 +8,8 @@
 
 namespace exch {
   class Order;
+  using Market_id_t = int32_t;
+  using User_id_t = int64_t;
   using Price_t = int32_t;
   using Quantity_t = int32_t;
   using Order_id_t = int64_t;

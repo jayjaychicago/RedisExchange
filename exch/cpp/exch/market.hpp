@@ -7,6 +7,7 @@
 #include <string>
 
 namespace exch {
+  class Managed_order;
   using Managed_order_list_t = std::vector< Managed_order >;
 
   class Market_config
@@ -67,6 +68,30 @@ namespace exch {
   };
 
 
+  class Managed_order
+  {
+  public:
+    Managed_order(
+      Order_id_t order_id,
+      Order order) :
+      order_id { order_id },
+      order { order } {
+    }
+
+    // custom <ClsPublic Managed_order>
+    // end <ClsPublic Managed_order>
+
+    Order_id_t const order_id {};
+    Order const order;
+    Order_state order_state { Submitted_e };
+    Quantity_t filled { 0 };
+
+  };
+
+
+  /**
+     Responsible for the exchange of a single market (e.g. one market id)
+  */
   class Market_exchange
   {
   public:
@@ -77,12 +102,21 @@ namespace exch {
 
     virtual ~Market_exchange() {}
     // custom <ClsPublic Market_exchange>
-    // end <ClsPublic Market_exchange>
 
-    //! getter for top_ (access is Ro)
-    Market top() const { return top_; }
-  protected:
-    Market top_ {};
+    virtual void submit(Order const& order) = 0;
+    void submit(Order_list_t const& orders) {
+
+    }
+
+    virtual void cancel(Order const& order) = 0;
+    void cancel(Order_list_t const& orders) {
+    }
+
+    virtual void replaceOrder(Order const& order) = 0;
+    void replaceOrder(Order_list_t const& orders) {
+    }
+
+    // end <ClsPublic Market_exchange>
 
   private:
     Market_config market_config_;

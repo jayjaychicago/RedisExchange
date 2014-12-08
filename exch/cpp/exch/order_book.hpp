@@ -76,27 +76,6 @@ namespace exch {
   };
 
 
-  class Managed_order
-  {
-  public:
-    Managed_order(
-      Order_id_t order_id,
-      Order order) :
-      order_id { order_id },
-      order { order } {
-    }
-
-    // custom <ClsPublic Managed_order>
-    // end <ClsPublic Managed_order>
-
-    Order_id_t const order_id {};
-    Order const order;
-    Order_state order_state { Submitted_e };
-    Quantity_t filled { 0 };
-
-  };
-
-
   class Fill
   {
   public:
