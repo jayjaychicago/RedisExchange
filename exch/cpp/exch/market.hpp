@@ -114,8 +114,10 @@ namespace exch {
   {
   public:
     Market_exchange(
-      Market_config market_config) :
-      market_config_ { market_config } {
+      Market_config const & market_config,
+      Market_id_t market_id) :
+      market_config_ { market_config },
+      market_id_ { market_id } {
     }
 
     virtual ~Market_exchange() {}
@@ -136,6 +138,7 @@ namespace exch {
 
   private:
     Market_config market_config_;
+    Market_id_t const market_id_ {};
     int next_order_id_ { 0 };
 
   };
@@ -150,7 +153,9 @@ namespace exch {
     virtual ~Market_exchange_factory() {}
     // custom <ClsPublic Market_exchange_factory>
 
-    virtual Market_exchange_ptr create_market(Market_config const& config) = 0;
+    virtual
+    Market_exchange_ptr create_market(Market_config const& config,
+                                      Market_id_t market_id) = 0;
 
     // end <ClsPublic Market_exchange_factory>
 

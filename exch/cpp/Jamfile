@@ -28,6 +28,7 @@ project exch_projects
           <include>.
 # custom <additional_includes>
 <include>/Users/dbdavidson/dev/open_source/fcs/cpp
+<include>/Users/dbdavidson/dev/open_source/redisclient/src
 # end <additional_includes>
 
           <tag>@$(__name__).tag
@@ -42,4 +43,3 @@ project exch_projects
        :
         : build-dir ../../build-dir
         ;
-

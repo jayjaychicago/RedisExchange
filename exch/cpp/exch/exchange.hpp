@@ -512,6 +512,7 @@ namespace exch {
     void create_market(Create_market_req const& req) {
 
       Create_market_result result;
+      Market_id_t market_id { req.market_id() };
 
       using Insert_result_t = std::pair<
         Market_exchange_map_t::iterator,
@@ -520,7 +521,7 @@ namespace exch {
       Insert_result_t insert_result {
         market_exchanges_.insert(
           Market_exchange_map_t::value_type(
-            req.market_id(), Market_exchange_ptr()))
+            market_id, Market_exchange_ptr()))
       };
 
       if(insert_result.second) {
@@ -531,7 +532,8 @@ namespace exch {
             };
 
         insert_result.first->second =
-          market_exchange_factory_.create_market(config);
+          market_exchange_factory_
+          .create_market(config, market_id);
 
         result = Create_market_succeeded_e;
       } else {

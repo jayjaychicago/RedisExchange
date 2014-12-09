@@ -2,6 +2,7 @@
 #define __EXCH_ORDER_BOOK_HPP__
 
 #include "exch/exch.hpp"
+#include <iosfwd>
 
 namespace exch {
   enum Side {
@@ -29,6 +30,14 @@ namespace exch {
     Price_t price;
     Quantity_t quantity;
 
+    friend inline
+    std::ostream& operator<<(std::ostream& out,
+                             Book_entry const& item) {
+      out << '\n' << "price:" << item.price;
+      out << '\n' << "quantity:" << item.quantity;
+      return out;
+    }
+
   };
 
 
@@ -44,6 +53,14 @@ namespace exch {
     Market() = default;
     Book_entry bid;
     Book_entry ask;
+
+    friend inline
+    std::ostream& operator<<(std::ostream& out,
+                             Market const& item) {
+      out << '\n' << "bid:" << item.bid;
+      out << '\n' << "ask:" << item.ask;
+      return out;
+    }
 
   };
 
@@ -78,6 +95,17 @@ namespace exch {
 
     //! getter for price_ (access is Ro)
     Price_t price() const { return price_; }
+    friend inline
+    std::ostream& operator<<(std::ostream& out,
+                             Order const& item) {
+      out << '\n' << "order_id:" << item.order_id_;
+      out << '\n' << "timestamp:" << item.timestamp_;
+      out << '\n' << "side:" << item.side_;
+      out << '\n' << "quantity:" << item.quantity_;
+      out << '\n' << "price:" << item.price_;
+      return out;
+    }
+
   private:
     Order_id_t const order_id_;
     Timestamp_t const timestamp_;
@@ -113,6 +141,16 @@ namespace exch {
 
     //! getter for quantity_ (access is Ro)
     Quantity_t quantity() const { return quantity_; }
+    friend inline
+    std::ostream& operator<<(std::ostream& out,
+                             Fill const& item) {
+      out << '\n' << "timestamp:" << item.timestamp_;
+      out << '\n' << "order:" << item.order_;
+      out << '\n' << "price:" << item.price_;
+      out << '\n' << "quantity:" << item.quantity_;
+      return out;
+    }
+
   private:
     Timestamp_t const timestamp_;
     Order_id_t const order_;

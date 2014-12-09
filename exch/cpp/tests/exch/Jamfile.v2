@@ -5,6 +5,16 @@ project test_exch
 
 import testing ;
 
+rule test_market_redis
+{
+  all_rules += [ run test_market_redis.cpp
+  :
+  : # test-files
+  : # requirements
+  ] ;
+}
+test-suite market_redis : [ test_market_redis ] ;
+
 rule test_market_mem
 {
   all_rules += [ run test_market_mem.cpp

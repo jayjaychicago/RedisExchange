@@ -39,6 +39,7 @@ final exch = lib('exch')
 
       class_('book_entry')
       ..struct = true
+      ..streamable = true
       ..defaultCtor.useDefault = true
       ..memberCtors = [ memberCtor(['price', 'quantity']) ]
       ..members = [
@@ -49,6 +50,7 @@ final exch = lib('exch')
       class_('market')
       ..struct = true
       ..memberCtors = [ memberCtor(['bid', 'ask']) ]
+      ..streamable = true
       ..defaultCtor.useDefault = true
       ..members = [
         member('bid')..type = 'Book_entry'..cppAccess = public..noInit = true,
@@ -57,6 +59,7 @@ final exch = lib('exch')
 
       class_('order')
       ..immutable = true
+      ..streamable = true
       ..members = [
         member('order_id')..type = 'Order_id_t',
         member('timestamp')..type = 'Timestamp_t',
@@ -66,6 +69,7 @@ final exch = lib('exch')
       ],
       class_('fill')
       ..immutable = true
+      ..streamable = true
       ..members = [
         member('timestamp')..type = 'Timestamp_t',
         member('order')..type = 'Order_id_t',
@@ -130,9 +134,10 @@ final exch = lib('exch')
       ..descr = 'Responsible for the exchange of a single market (e.g. one market id)'
       ..customBlocks = [ clsPublic ]
       ..dtor.abstract = true
-      ..memberCtors = [ memberCtor([ 'market_config' ] )]
+      ..memberCtors = [ memberCtor([ 'market_config', 'market_id' ] )]
       ..members = [
-        member('market_config')..type = 'Market_config'..noInit = true,
+        member('market_config')..type = 'Market_config'..noInit = true..byRef = true,
+        member('market_id')..type = 'Market_id_t'..isConst = true,
         member('next_order_id')..init = 0,
       ],
       class_('market_exchange_factory')
@@ -141,10 +146,34 @@ final exch = lib('exch')
       ..descr = 'Used to create market_exchange derivatives on demand',
     ],
     header('market_redis')
+    ..includes = [
+      'exch/market.hpp', 'redisclient/redisclient.h', 'boost/lexical_cast.hpp',
+    ]
+    ..includeTest = true
     ..classes = [
       class_('market_exchange_redis')
       ..descr = 'Provides service for one market exchange, persisting books in redis'
-      ..bases = [ base('Market_exchange') ]
+      ..customBlocks = [ clsPublic, clsPrivate, clsPreDecl ]
+      ..bases = [
+        base('Market_exchange')
+        ..init = 'Market_exchange(market_config, market_id)'
+      ]
+      ..memberCtors = [
+        memberCtor([ 'redis_client' ])
+        ..decls = [ 'Market_config const& market_config', 'Market_id_t market_id' ]
+      ]
+      ..members = [
+        member('redis_client')..type = 'RedisClient'..refType = ref,
+        member('market_id_str')..type = 'std::string'
+        ..isConst = true
+        ..ctorInit = 'boost::lexical_cast< std::string >(market_id)'
+      ],
+      class_('market_exchange_redis_factory')
+      ..customBlocks = [ clsPublic ]
+      ..memberCtors = [ memberCtor([ 'redis_client' ]) ]
+      ..members = [
+        member('redis_client')..type = 'RedisClient'..refType = ref,
+      ],
     ],
     header('market_mem')
     ..includes = [
