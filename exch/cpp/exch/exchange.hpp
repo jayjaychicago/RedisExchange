@@ -18,6 +18,7 @@ namespace exch {
   public:
     Create_market_req(
       Req_id_t req_id,
+      Market_id_t market_id,
       std::string const & name,
       Timestamp_t start_time,
       Timestamp_t end_time,
@@ -25,6 +26,7 @@ namespace exch {
       int shifted_modulus,
       Price_t max_price) :
       req_id_ { req_id },
+      market_id_ { market_id },
       name_ { name },
       start_time_ { start_time },
       end_time_ { end_time },
@@ -35,6 +37,9 @@ namespace exch {
 
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
+
+    //! getter for market_id_ (access is Ro)
+    Market_id_t market_id() const { return market_id_; }
 
     //! getter for name_ (access is Ro)
     std::string const& name() const { return name_; }
@@ -55,6 +60,7 @@ namespace exch {
     Price_t max_price() const { return max_price_; }
   private:
     Req_id_t const req_id_;
+    Market_id_t const market_id_;
     std::string const name_;
     Timestamp_t const start_time_;
     Timestamp_t const end_time_;
@@ -70,25 +76,25 @@ namespace exch {
   public:
     Create_market_resp(
       Req_id_t req_id,
-      Create_market_result create_market_result,
-      Market_id_t market_id) :
+      Market_id_t market_id,
+      Create_market_result result) :
       req_id_ { req_id },
-      create_market_result_ { create_market_result },
-      market_id_ { market_id } {
+      market_id_ { market_id },
+      result_ { result } {
     }
 
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
-    //! getter for create_market_result_ (access is Ro)
-    Create_market_result create_market_result() const { return create_market_result_; }
-
     //! getter for market_id_ (access is Ro)
     Market_id_t market_id() const { return market_id_; }
+
+    //! getter for result_ (access is Ro)
+    Create_market_result result() const { return result_; }
   private:
     Req_id_t const req_id_;
-    Create_market_result const create_market_result_;
     Market_id_t const market_id_;
+    Create_market_result const result_;
 
   };
 
@@ -147,12 +153,12 @@ namespace exch {
       Market_id_t market_id,
       User_id_t user_id,
       Order_id_t order_id,
-      Submit_result submit_result) :
+      Submit_result result) :
       req_id_ { req_id },
       market_id_ { market_id },
       user_id_ { user_id },
       order_id_ { order_id },
-      submit_result_ { submit_result } {
+      result_ { result } {
     }
 
     //! getter for req_id_ (access is Ro)
@@ -167,14 +173,14 @@ namespace exch {
     //! getter for order_id_ (access is Ro)
     Order_id_t order_id() const { return order_id_; }
 
-    //! getter for submit_result_ (access is Ro)
-    Submit_result submit_result() const { return submit_result_; }
+    //! getter for result_ (access is Ro)
+    Submit_result result() const { return result_; }
   private:
     Req_id_t const req_id_;
     Market_id_t const market_id_;
     User_id_t const user_id_;
     Order_id_t const order_id_;
-    Submit_result const submit_result_;
+    Submit_result const result_;
 
   };
 
@@ -221,12 +227,12 @@ namespace exch {
       Market_id_t market_id,
       User_id_t user_id,
       Order_id_t order_id,
-      Cancel_result cancel_result) :
+      Cancel_result result) :
       req_id_ { req_id },
       market_id_ { market_id },
       user_id_ { user_id },
       order_id_ { order_id },
-      cancel_result_ { cancel_result } {
+      result_ { result } {
     }
 
     //! getter for req_id_ (access is Ro)
@@ -241,14 +247,14 @@ namespace exch {
     //! getter for order_id_ (access is Ro)
     Order_id_t order_id() const { return order_id_; }
 
-    //! getter for cancel_result_ (access is Ro)
-    Cancel_result cancel_result() const { return cancel_result_; }
+    //! getter for result_ (access is Ro)
+    Cancel_result result() const { return result_; }
   private:
     Req_id_t const req_id_;
     Market_id_t const market_id_;
     User_id_t const user_id_;
     Order_id_t const order_id_;
-    Cancel_result const cancel_result_;
+    Cancel_result const result_;
 
   };
 
@@ -308,13 +314,13 @@ namespace exch {
       User_id_t user_id,
       Order_id_t canceled_order_id,
       Order_id_t order_id,
-      Replace_result replace_result) :
+      Replace_result result) :
       req_id_ { req_id },
       market_id_ { market_id },
       user_id_ { user_id },
       canceled_order_id_ { canceled_order_id },
       order_id_ { order_id },
-      replace_result_ { replace_result } {
+      result_ { result } {
     }
 
     //! getter for req_id_ (access is Ro)
@@ -332,15 +338,15 @@ namespace exch {
     //! getter for order_id_ (access is Ro)
     Order_id_t order_id() const { return order_id_; }
 
-    //! getter for replace_result_ (access is Ro)
-    Replace_result replace_result() const { return replace_result_; }
+    //! getter for result_ (access is Ro)
+    Replace_result result() const { return result_; }
   private:
     Req_id_t const req_id_;
     Market_id_t const market_id_;
     User_id_t const user_id_;
     Order_id_t const canceled_order_id_;
     Order_id_t const order_id_;
-    Replace_result const replace_result_;
+    Replace_result const result_;
 
   };
 
@@ -489,13 +495,14 @@ namespace exch {
   class Exchange
   {
   public:
-    using Market_exchange_ptr = std::unique_ptr< Market_exchange >;
     using Market_exchange_naked_ptr = Market_exchange *;
     using Market_exchange_map_t = std::map< Market_id_t, Market_exchange_ptr >;
 
     Exchange(
-      Market_publisher & market_publisher) :
-      market_publisher_ { market_publisher } {
+      Market_publisher & market_publisher,
+      Market_exchange_factory & market_exchange_factory) :
+      market_publisher_ { market_publisher },
+      market_exchange_factory_ { market_exchange_factory } {
       // custom <Exchange(from_args)>
       // end <Exchange(from_args)>
     }
@@ -503,8 +510,36 @@ namespace exch {
     // custom <ClsPublic Exchange>
 
     void create_market(Create_market_req const& req) {
+
+      Create_market_result result;
+
+      using Insert_result_t = std::pair<
+        Market_exchange_map_t::iterator,
+        bool>;
+
+      Insert_result_t insert_result {
+        market_exchanges_.insert(
+          Market_exchange_map_t::value_type(
+            req.market_id(), Market_exchange_ptr()))
+      };
+
+      if(insert_result.second) {
+        Market_config config { req.name(),
+            req.start_time(), req.end_time(),
+            req.decimal_shift(), req.shifted_modulus(),
+            req.max_price()
+            };
+
+        insert_result.first->second =
+          market_exchange_factory_.create_market(config);
+
+        result = Create_market_succeeded_e;
+      } else {
+        result = Create_market_failed_e;
+      }
+
       return market_publisher_.publish(
-        Create_market_resp(req.req_id(), Create_market_failed_e, 0));
+        Create_market_resp(req.req_id(), req.market_id(), result));
     };
 
     void submit(Submit_req const& req) {
@@ -558,7 +593,7 @@ namespace exch {
         revised_order_id = market->next_order_id();
         Order revised_order { revised_order_id,
             fcs::timestamp::current_time(),
-            No_side_e, // Side in book pulled from resting order
+            Bid_side_e, // Not used: Side in book pulled from resting order
             req.quantity(),
             req.price() };
 
@@ -592,6 +627,7 @@ namespace exch {
     // end <ClsPrivate Exchange>
 
     Market_publisher & market_publisher_;
+    Market_exchange_factory & market_exchange_factory_;
     Market_exchange_map_t market_exchanges_ {};
 
   };

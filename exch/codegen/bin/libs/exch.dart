@@ -31,7 +31,7 @@ final exch = lib('exch')
     ]
     ..enums = [
       enum_('side')
-      ..values = [ 'bid_side', 'ask_side', 'no_side' ],
+      ..values = [ 'bid_side', 'ask_side' ],
       enum_('order_state')
       ..values = [ 'submitted', 'active', 'canceled', 'filled' ],
     ]
@@ -98,9 +98,11 @@ final exch = lib('exch')
       ],
     ]
     ..forwardDecls = [
+      forwardDecl('Market_exchange'),
       forwardDecl('Managed_order'),
     ]
     ..usings = [
+      'Market_exchange_ptr = std::unique_ptr< Market_exchange >',
       'Managed_order_list_t = std::vector< Managed_order >',
     ]
     ..classes = [
@@ -133,6 +135,10 @@ final exch = lib('exch')
         member('market_config')..type = 'Market_config'..noInit = true,
         member('next_order_id')..init = 0,
       ],
+      class_('market_exchange_factory')
+      ..dtor.abstract = true
+      ..customBlocks = [ clsPublic ]
+      ..descr = 'Used to create market_exchange derivatives on demand',
     ],
     header('market_redis')
     ..classes = [
@@ -172,6 +178,7 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
+        member('market_id')..type = 'Market_id_t',
         member('name')..type = 'std::string',
         member('start_time')..type = 'Timestamp_t',
         member('end_time')..type = 'Timestamp_t',
@@ -183,8 +190,8 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('create_market_result')..type = 'Create_market_result',
         member('market_id')..type = 'Market_id_t',
+        member('result')..type = 'Create_market_result',
       ],
 
       class_('submit_req')
@@ -204,7 +211,7 @@ final exch = lib('exch')
         member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
         member('order_id')..type = 'Order_id_t',
-        member('submit_result')..type = 'Submit_result',
+        member('result')..type = 'Submit_result',
       ],
 
       class_('cancel_req')
@@ -222,7 +229,7 @@ final exch = lib('exch')
         member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
         member('order_id')..type = 'Order_id_t',
-        member('cancel_result')..type = 'Cancel_result',
+        member('result')..type = 'Cancel_result',
       ],
 
       class_('replace_req')
@@ -243,7 +250,7 @@ final exch = lib('exch')
         member('user_id')..type = 'User_id_t',
         member('canceled_order_id')..type = 'Order_id_t',
         member('order_id')..type = 'Order_id_t',
-        member('replace_result')..type = 'Replace_result',
+        member('result')..type = 'Replace_result',
       ],
 
       ////////////////////////////////////////////////////////////
@@ -293,14 +300,16 @@ redis - but that is an implementation detail from the perspective of
 this class.'''
       ..includeTest = true
       ..customBlocks = [ clsPublic, clsPrivate ]
-      ..memberCtors = [ memberCtor([ 'market_publisher' ])..customLabel = 'from_args' ]
+      ..memberCtors = [
+        memberCtor([ 'market_publisher', 'market_exchange_factory' ])..customLabel = 'from_args'
+      ]
       ..usings = [
-        'Market_exchange_ptr = std::unique_ptr< Market_exchange >',
         'Market_exchange_naked_ptr = Market_exchange *',
         'Market_exchange_map_t = std::map< Market_id_t, Market_exchange_ptr >',
       ]
       ..members = [
         member('market_publisher')..type = 'Market_publisher'..refType = ref,
+        member('market_exchange_factory')..type = 'Market_exchange_factory'..refType = ref,
         member('market_exchanges')..type = 'Market_exchange_map_t',
       ],
     ],

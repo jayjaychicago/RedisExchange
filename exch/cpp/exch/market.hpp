@@ -7,7 +7,9 @@
 #include <string>
 
 namespace exch {
+  class Market_exchange;
   class Managed_order;
+  using Market_exchange_ptr = std::unique_ptr< Market_exchange >;
   using Managed_order_list_t = std::vector< Managed_order >;
 
   enum Submit_result {
@@ -135,6 +137,22 @@ namespace exch {
   private:
     Market_config market_config_;
     int next_order_id_ { 0 };
+
+  };
+
+
+  /**
+     Used to create market_exchange derivatives on demand
+  */
+  class Market_exchange_factory
+  {
+  public:
+    virtual ~Market_exchange_factory() {}
+    // custom <ClsPublic Market_exchange_factory>
+
+    virtual Market_exchange_ptr create_market(Market_config const& config) = 0;
+
+    // end <ClsPublic Market_exchange_factory>
 
   };
 

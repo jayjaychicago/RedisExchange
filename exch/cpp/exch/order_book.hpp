@@ -6,8 +6,7 @@
 namespace exch {
   enum Side {
     Bid_side_e,
-    Ask_side_e,
-    No_side_e
+    Ask_side_e
   };
 
   enum Order_state {
