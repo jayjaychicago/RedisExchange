@@ -52,13 +52,18 @@ namespace exch {
   {
   public:
     Order(
+      Order_id_t order_id,
       Timestamp_t timestamp,
       Quantity_t quantity,
       Price_t price) :
+      order_id_ { order_id },
       timestamp_ { timestamp },
       quantity_ { quantity },
       price_ { price } {
     }
+
+    //! getter for order_id_ (access is Ro)
+    Order_id_t order_id() const { return order_id_; }
 
     //! getter for timestamp_ (access is Ro)
     Timestamp_t timestamp() const { return timestamp_; }
@@ -69,6 +74,7 @@ namespace exch {
     //! getter for price_ (access is Ro)
     Price_t price() const { return price_; }
   private:
+    Order_id_t const order_id_;
     Timestamp_t const timestamp_;
     Quantity_t const quantity_;
     Price_t const price_;

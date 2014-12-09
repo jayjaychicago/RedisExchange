@@ -13,65 +13,12 @@ namespace exch {
     Create_market_failed_e
   };
 
-  enum Submit_result {
-    Submit_succeeded_e,
-    Submit_invalid_market_e,
-    Submit_invalid_order_details_e
-  };
-
-  enum Cancel_result {
-    Cancel_succeeded_e,
-    Cancel_invalid_market_e,
-    Cancel_invalid_order_e
-  };
-
-  enum Replace_result {
-    Replace_succeeded_e,
-    Replace_invalid_market_e,
-    Replace_invalid_order_e,
-    Replace_invalid_order_details_e
-  };
-
-  enum Side {
-    Bid_side_e,
-    Ask_side_e
-  };
-
-  class Oid
-  {
-  public:
-    Oid(
-      Market_id_t market_id,
-      User_id_t user_id,
-      Order_id_t order_id) :
-      market_id_ { market_id },
-      user_id_ { user_id },
-      order_id_ { order_id } {
-    }
-
-    Oid() = default;
-    //! getter for market_id_ (access is Ro)
-    Market_id_t market_id() const { return market_id_; }
-
-    //! getter for user_id_ (access is Ro)
-    User_id_t user_id() const { return user_id_; }
-
-    //! getter for order_id_ (access is Ro)
-    Order_id_t order_id() const { return order_id_; }
-  private:
-    Market_id_t const market_id_ {};
-    User_id_t const user_id_ {};
-    Order_id_t const order_id_ {};
-
-  };
-
-
   class Create_market_req
   {
   public:
     Create_market_req(
       Req_id_t req_id,
-      std::string name,
+      std::string const & name,
       Timestamp_t start_time,
       Timestamp_t end_time,
       int decimal_shift,
@@ -90,7 +37,7 @@ namespace exch {
     Req_id_t req_id() const { return req_id_; }
 
     //! getter for name_ (access is Ro)
-    std::string name() const { return name_; }
+    std::string const& name() const { return name_; }
 
     //! getter for start_time_ (access is Ro)
     Timestamp_t start_time() const { return start_time_; }
@@ -191,25 +138,37 @@ namespace exch {
   public:
     Submit_resp(
       Req_id_t req_id,
-      Submit_result submit_result,
-      Oid oid) :
+      Market_id_t market_id,
+      User_id_t user_id,
+      Order_id_t order_id,
+      Submit_result submit_result) :
       req_id_ { req_id },
-      submit_result_ { submit_result },
-      oid_ { oid } {
+      market_id_ { market_id },
+      user_id_ { user_id },
+      order_id_ { order_id },
+      submit_result_ { submit_result } {
     }
 
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
+    //! getter for market_id_ (access is Ro)
+    Market_id_t market_id() const { return market_id_; }
+
+    //! getter for user_id_ (access is Ro)
+    User_id_t user_id() const { return user_id_; }
+
+    //! getter for order_id_ (access is Ro)
+    Order_id_t order_id() const { return order_id_; }
+
     //! getter for submit_result_ (access is Ro)
     Submit_result submit_result() const { return submit_result_; }
-
-    //! getter for oid_ (access is Ro)
-    Oid oid() const { return oid_; }
   private:
     Req_id_t const req_id_;
+    Market_id_t const market_id_;
+    User_id_t const user_id_;
+    Order_id_t const order_id_;
     Submit_result const submit_result_;
-    Oid const oid_;
 
   };
 
@@ -219,19 +178,31 @@ namespace exch {
   public:
     Cancel_req(
       Req_id_t req_id,
-      Oid oid) :
+      Market_id_t market_id,
+      User_id_t user_id,
+      Order_id_t order_id) :
       req_id_ { req_id },
-      oid_ { oid } {
+      market_id_ { market_id },
+      user_id_ { user_id },
+      order_id_ { order_id } {
     }
 
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
-    //! getter for oid_ (access is Ro)
-    Oid oid() const { return oid_; }
+    //! getter for market_id_ (access is Ro)
+    Market_id_t market_id() const { return market_id_; }
+
+    //! getter for user_id_ (access is Ro)
+    User_id_t user_id() const { return user_id_; }
+
+    //! getter for order_id_ (access is Ro)
+    Order_id_t order_id() const { return order_id_; }
   private:
     Req_id_t const req_id_;
-    Oid const oid_;
+    Market_id_t const market_id_;
+    User_id_t const user_id_;
+    Order_id_t const order_id_;
 
   };
 
@@ -241,25 +212,37 @@ namespace exch {
   public:
     Cancel_resp(
       Req_id_t req_id,
-      Cancel_result cancel_result,
-      Oid oid) :
+      Market_id_t market_id,
+      User_id_t user_id,
+      Order_id_t order_id,
+      Cancel_result cancel_result) :
       req_id_ { req_id },
-      cancel_result_ { cancel_result },
-      oid_ { oid } {
+      market_id_ { market_id },
+      user_id_ { user_id },
+      order_id_ { order_id },
+      cancel_result_ { cancel_result } {
     }
 
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
+    //! getter for market_id_ (access is Ro)
+    Market_id_t market_id() const { return market_id_; }
+
+    //! getter for user_id_ (access is Ro)
+    User_id_t user_id() const { return user_id_; }
+
+    //! getter for order_id_ (access is Ro)
+    Order_id_t order_id() const { return order_id_; }
+
     //! getter for cancel_result_ (access is Ro)
     Cancel_result cancel_result() const { return cancel_result_; }
-
-    //! getter for oid_ (access is Ro)
-    Oid oid() const { return oid_; }
   private:
     Req_id_t const req_id_;
+    Market_id_t const market_id_;
+    User_id_t const user_id_;
+    Order_id_t const order_id_;
     Cancel_result const cancel_result_;
-    Oid const oid_;
 
   };
 
@@ -268,14 +251,44 @@ namespace exch {
   {
   public:
     Replace_req(
-      Req_id_t req_id) :
-      req_id_ { req_id } {
+      Req_id_t req_id,
+      Market_id_t market_id,
+      User_id_t user_id,
+      Order_id_t existing_order_id,
+      Price_t price,
+      Quantity_t quantity) :
+      req_id_ { req_id },
+      market_id_ { market_id },
+      user_id_ { user_id },
+      existing_order_id_ { existing_order_id },
+      price_ { price },
+      quantity_ { quantity } {
     }
 
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
+
+    //! getter for market_id_ (access is Ro)
+    Market_id_t market_id() const { return market_id_; }
+
+    //! getter for user_id_ (access is Ro)
+    User_id_t user_id() const { return user_id_; }
+
+    //! getter for existing_order_id_ (access is Ro)
+    Order_id_t existing_order_id() const { return existing_order_id_; }
+
+    //! getter for price_ (access is Ro)
+    Price_t price() const { return price_; }
+
+    //! getter for quantity_ (access is Ro)
+    Quantity_t quantity() const { return quantity_; }
   private:
     Req_id_t const req_id_;
+    Market_id_t const market_id_;
+    User_id_t const user_id_;
+    Order_id_t const existing_order_id_;
+    Price_t const price_;
+    Quantity_t const quantity_;
 
   };
 
@@ -285,19 +298,43 @@ namespace exch {
   public:
     Replace_resp(
       Req_id_t req_id,
-      Oid oid) :
+      Market_id_t market_id,
+      User_id_t user_id,
+      Order_id_t canceled_order_id,
+      Order_id_t order_id,
+      Replace_result replace_result) :
       req_id_ { req_id },
-      oid_ { oid } {
+      market_id_ { market_id },
+      user_id_ { user_id },
+      canceled_order_id_ { canceled_order_id },
+      order_id_ { order_id },
+      replace_result_ { replace_result } {
     }
 
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
-    //! getter for oid_ (access is Ro)
-    Oid oid() const { return oid_; }
+    //! getter for market_id_ (access is Ro)
+    Market_id_t market_id() const { return market_id_; }
+
+    //! getter for user_id_ (access is Ro)
+    User_id_t user_id() const { return user_id_; }
+
+    //! getter for canceled_order_id_ (access is Ro)
+    Order_id_t canceled_order_id() const { return canceled_order_id_; }
+
+    //! getter for order_id_ (access is Ro)
+    Order_id_t order_id() const { return order_id_; }
+
+    //! getter for replace_result_ (access is Ro)
+    Replace_result replace_result() const { return replace_result_; }
   private:
     Req_id_t const req_id_;
-    Oid const oid_;
+    Market_id_t const market_id_;
+    User_id_t const user_id_;
+    Order_id_t const canceled_order_id_;
+    Order_id_t const order_id_;
+    Replace_result const replace_result_;
 
   };
 
@@ -466,18 +503,67 @@ namespace exch {
 
     void submit(Submit_req const& req) {
       Market_exchange_naked_ptr market { get_market(req.market_id()) };
+      Submit_result result;
+      Order_id_t submitted_id {};
+
       if(market == nullptr) {
-        market_publisher_.publish(
-          Submit_resp(req.req_id(), Submit_invalid_market_e, Oid()));
+        result = Submit_invalid_market_e;
       } else {
-        market_publisher_.publish(
-          Submit_resp(req.req_id(), Submit_succeeded_e, Oid()));
+        submitted_id = market->next_order_id();
+        Order order { submitted_id,
+            fcs::timestamp::current_time(),
+            req.quantity(),
+            req.price() };
+        result = market->submit(order);
       }
+
+      market_publisher_.publish(
+        Submit_resp(req.req_id(),
+                    req.market_id(),
+                    req.user_id(),
+                    submitted_id,
+                    result));
     }
 
     void cancel(Cancel_req const& req) {
-      return market_publisher_.publish(
-        Cancel_resp(req.req_id(), Cancel_invalid_market_e, Oid()));
+      Market_exchange_naked_ptr market { get_market(req.market_id()) };
+      Cancel_result result;
+
+      result = (market == nullptr)? Cancel_invalid_market_e :
+        market->cancel(req.order_id());
+
+      market_publisher_.publish(
+        Cancel_resp(req.req_id(),
+                    req.market_id(),
+                    req.user_id(),
+                    req.order_id(),
+                    result));
+    }
+
+    void replace(Replace_req const& req) {
+      Market_exchange_naked_ptr market { get_market(req.market_id()) };
+      Replace_result result;
+      Order_id_t revised_order_id {};
+
+      if(market == nullptr) {
+        result = Replace_invalid_market_e;
+      } else {
+        revised_order_id = market->next_order_id();
+        Order revised_order { revised_order_id,
+            fcs::timestamp::current_time(),
+            req.quantity(),
+            req.price() };
+
+        result = market->replace_order(req.existing_order_id(), revised_order);
+      }
+
+      market_publisher_.publish(
+        Replace_resp(req.req_id(),
+                     req.market_id(),
+                     req.user_id(),
+                     req.existing_order_id(),
+                     revised_order_id,
+                     result));
     }
 
     // end <ClsPublic Exchange>
@@ -485,7 +571,8 @@ namespace exch {
   private:
     // custom <ClsPrivate Exchange>
 
-    Market_exchange_naked_ptr get_market(Market_id_t market) {
+    Market_exchange_naked_ptr
+    get_market(Market_id_t market) {
       Market_exchange_map_t::iterator found { market_exchanges_.find(market) };
       if(found != market_exchanges_.end()) {
         return found->second.get();
