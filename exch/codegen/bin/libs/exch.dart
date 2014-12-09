@@ -30,8 +30,8 @@ final exch = lib('exch')
     ..includes = [
     ]
     ..enums = [
-      enum_('order_type')
-      ..values = [ 'buy','sell', ],
+      enum_('side')
+      ..values = [ 'bid_side', 'ask_side', 'no_side' ],
       enum_('order_state')
       ..values = [ 'submitted', 'active', 'canceled', 'filled' ],
     ]
@@ -58,7 +58,9 @@ final exch = lib('exch')
       class_('order')
       ..immutable = true
       ..members = [
+        member('order_id')..type = 'Order_id_t',
         member('timestamp')..type = 'Timestamp_t',
+        member('side')..type = 'Side',
         member('quantity')..type = 'Quantity_t',
         member('price')..type = 'Price_t',
       ],
@@ -73,6 +75,28 @@ final exch = lib('exch')
     ],
     header('market')
     ..includes = [ 'exch/order_book.hpp' ]
+    ..enums = [
+      enum_('submit_result')
+      ..values = [
+        'submit_succeeded',
+        'submit_invalid_market',
+        'submit_invalid_order_details' ],
+
+      enum_('cancel_result')
+      ..values = [
+        'cancel_succeeded',
+        'cancel_invalid_market',
+        'cancel_invalid_order'
+      ],
+
+      enum_('replace_result')
+      ..values = [
+        'replace_succeeded',
+        'replace_invalid_market',
+        'replace_invalid_order',
+        'replace_invalid_order_details',
+      ],
+    ]
     ..forwardDecls = [
       forwardDecl('Managed_order'),
     ]
@@ -93,9 +117,8 @@ final exch = lib('exch')
       ],
       class_('managed_order')
       ..customBlocks = [ clsPublic ]
-      ..memberCtors = [ memberCtor([ 'order_id', 'order' ]) ]
+      ..memberCtors = [ memberCtor([ 'order' ]) ]
       ..members = [
-        member('order_id')..type = 'Order_id_t'..isConst = true..cppAccess = public,
         member('order')..type = 'Order'..noInit = true..isConst = true
         ..cppAccess = public..byRef = true,
         member('order_state')..type = 'Order_state'..init = 'Submitted_e'..cppAccess = public,
@@ -108,6 +131,7 @@ final exch = lib('exch')
       ..memberCtors = [ memberCtor([ 'market_config' ] )]
       ..members = [
         member('market_config')..type = 'Market_config'..noInit = true,
+        member('next_order_id')..init = 0,
       ],
     ],
     header('market_redis')
@@ -139,41 +163,8 @@ final exch = lib('exch')
       ..values = [
         'create_market_succeeded',
         'create_market_failed', ],
-
-      enum_('submit_result')
-      ..values = [
-        'submit_succeeded',
-        'submit_invalid_market',
-        'submit_invalid_order_details' ],
-
-      enum_('cancel_result')
-      ..values = [
-        'cancel_succeeded',
-        'cancel_invalid_market',
-        'cancel_invalid_order'
-      ],
-
-      enum_('replace_result')
-      ..values = [
-        'replace_succeeded',
-        'replace_invalid_market',
-        'replace_invalid_order',
-        'replace_invalid_order_details',
-      ],
-
-      enum_('side')
-      ..values = [ 'bid_side', 'ask_side', ],
     ]
     ..classes = [
-      class_('oid')
-      ..immutable = true
-      ..defaultCtor.useDefault = true
-      ..members = [
-        member('market_id')..type = 'Market_id_t',
-        member('user_id')..type = 'User_id_t',
-        member('order_id')..type = 'Order_id_t',
-      ],
-
       ////////////////////////////////////////////////////////////
       // Requests/Responses
       ////////////////////////////////////////////////////////////
@@ -202,6 +193,7 @@ final exch = lib('exch')
         member('req_id')..type = 'Req_id_t',
         member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
+        member('side')..type = 'Side',
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
       ],
@@ -209,34 +201,49 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
+        member('market_id')..type = 'Market_id_t',
+        member('user_id')..type = 'User_id_t',
+        member('order_id')..type = 'Order_id_t',
         member('submit_result')..type = 'Submit_result',
-        member('oid')..type = 'Oid',
       ],
 
       class_('cancel_req')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('oid')..type = 'Oid',
+        member('market_id')..type = 'Market_id_t',
+        member('user_id')..type = 'User_id_t',
+        member('order_id')..type = 'Order_id_t',
       ],
       class_('cancel_resp')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
+        member('market_id')..type = 'Market_id_t',
+        member('user_id')..type = 'User_id_t',
+        member('order_id')..type = 'Order_id_t',
         member('cancel_result')..type = 'Cancel_result',
-        member('oid')..type = 'Oid',
       ],
 
       class_('replace_req')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
+        member('market_id')..type = 'Market_id_t',
+        member('user_id')..type = 'User_id_t',
+        member('existing_order_id')..type = 'Order_id_t',
+        member('price')..type = 'Price_t',
+        member('quantity')..type = 'Quantity_t',
       ],
       class_('replace_resp')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('oid')..type = 'Oid',
+        member('market_id')..type = 'Market_id_t',
+        member('user_id')..type = 'User_id_t',
+        member('canceled_order_id')..type = 'Order_id_t',
+        member('order_id')..type = 'Order_id_t',
+        member('replace_result')..type = 'Replace_result',
       ],
 
       ////////////////////////////////////////////////////////////

@@ -100,11 +100,13 @@ namespace exch {
       Req_id_t req_id,
       Market_id_t market_id,
       User_id_t user_id,
+      Side side,
       Price_t price,
       Quantity_t quantity) :
       req_id_ { req_id },
       market_id_ { market_id },
       user_id_ { user_id },
+      side_ { side },
       price_ { price },
       quantity_ { quantity } {
     }
@@ -118,6 +120,9 @@ namespace exch {
     //! getter for user_id_ (access is Ro)
     User_id_t user_id() const { return user_id_; }
 
+    //! getter for side_ (access is Ro)
+    Side side() const { return side_; }
+
     //! getter for price_ (access is Ro)
     Price_t price() const { return price_; }
 
@@ -127,6 +132,7 @@ namespace exch {
     Req_id_t const req_id_;
     Market_id_t const market_id_;
     User_id_t const user_id_;
+    Side const side_;
     Price_t const price_;
     Quantity_t const quantity_;
 
@@ -512,6 +518,7 @@ namespace exch {
         submitted_id = market->next_order_id();
         Order order { submitted_id,
             fcs::timestamp::current_time(),
+            req.side(),
             req.quantity(),
             req.price() };
         result = market->submit(order);
@@ -551,6 +558,7 @@ namespace exch {
         revised_order_id = market->next_order_id();
         Order revised_order { revised_order_id,
             fcs::timestamp::current_time(),
+            No_side_e, // Side in book pulled from resting order
             req.quantity(),
             req.price() };
 

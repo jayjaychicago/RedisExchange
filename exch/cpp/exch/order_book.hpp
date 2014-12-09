@@ -4,9 +4,10 @@
 #include "exch/exch.hpp"
 
 namespace exch {
-  enum Order_type {
-    Buy_e,
-    Sell_e
+  enum Side {
+    Bid_side_e,
+    Ask_side_e,
+    No_side_e
   };
 
   enum Order_state {
@@ -54,10 +55,12 @@ namespace exch {
     Order(
       Order_id_t order_id,
       Timestamp_t timestamp,
+      Side side,
       Quantity_t quantity,
       Price_t price) :
       order_id_ { order_id },
       timestamp_ { timestamp },
+      side_ { side },
       quantity_ { quantity },
       price_ { price } {
     }
@@ -68,6 +71,9 @@ namespace exch {
     //! getter for timestamp_ (access is Ro)
     Timestamp_t timestamp() const { return timestamp_; }
 
+    //! getter for side_ (access is Ro)
+    Side side() const { return side_; }
+
     //! getter for quantity_ (access is Ro)
     Quantity_t quantity() const { return quantity_; }
 
@@ -76,6 +82,7 @@ namespace exch {
   private:
     Order_id_t const order_id_;
     Timestamp_t const timestamp_;
+    Side const side_;
     Quantity_t const quantity_;
     Price_t const price_;
 

@@ -29,11 +29,6 @@ namespace exch {
     Replace_invalid_order_details_e
   };
 
-  enum Side {
-    Bid_side_e,
-    Ask_side_e
-  };
-
   class Market_config
   {
   public:
@@ -139,7 +134,7 @@ namespace exch {
 
   private:
     Market_config market_config_;
-    int next_order_id_ { 1 };
+    int next_order_id_ { 0 };
 
   };
 
