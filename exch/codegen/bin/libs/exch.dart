@@ -20,6 +20,7 @@ final exch = lib('exch')
       'Price_t = int32_t',
       'Quantity_t = int32_t',
       'Order_id_t = int64_t',
+      'Fill_id_t = int64_t',
       'Order_id_list_t = std::vector< Order_id_t >',
       'Order_list_t = std::vector< Order >',
       'Timestamp_t = fcs::timestamp::Timestamp_t',
@@ -28,6 +29,7 @@ final exch = lib('exch')
     ],
     header('order_book')
     ..customBlocks = [ fcbBeginNamespace ]
+    ..usings = [ ]
     ..includes = [
       'sstream'
     ]
@@ -67,15 +69,18 @@ final exch = lib('exch')
         member('order_id')..type = 'Order_id_t',
         member('timestamp')..type = 'Timestamp_t',
         member('side')..type = 'Side',
-        member('quantity')..type = 'Quantity_t',
         member('price')..type = 'Price_t',
+        member('quantity')..type = 'Quantity_t',
       ],
       class_('fill')
       ..immutable = true
       ..streamable = true
+      ..customBlocks = [ clsPublic ]
       ..members = [
+        member('fill_id')..type = 'Fill_id_t',
         member('timestamp')..type = 'Timestamp_t',
-        member('order')..type = 'Order_id_t',
+        member('order_id')..type = 'Order_id_t',
+        member('side')..type = 'Side',
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
       ]

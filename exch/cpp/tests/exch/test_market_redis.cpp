@@ -12,6 +12,14 @@ namespace exch {
     std::cout << o.to_tuple() << std::endl;
     std::cout << o.from_tuple(o.to_tuple()) << std::endl;
 
+    Fill f {
+      123, fcs::timestamp::current_time(), 1, Ask_side_e, 2321, 4123
+    };
+
+    std::cout << f.to_tuple() << std::endl;
+    std::cout << f.from_tuple(f.to_tuple()) << std::endl;
+
+
     // end <market_redis>
   }
 

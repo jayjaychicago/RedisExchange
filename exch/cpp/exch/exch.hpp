@@ -13,6 +13,7 @@ namespace exch {
   using Price_t = int32_t;
   using Quantity_t = int32_t;
   using Order_id_t = int64_t;
+  using Fill_id_t = int64_t;
   using Order_id_list_t = std::vector< Order_id_t >;
   using Order_list_t = std::vector< Order >;
   using Timestamp_t = fcs::timestamp::Timestamp_t;

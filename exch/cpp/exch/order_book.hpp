@@ -8,10 +8,13 @@
 namespace exch {
   // custom <FcbBeginNamespace order_book>
 
-  inline
+  using Tokenizer_t = boost::tokenizer< boost::char_separator<char> >;
+  using Token_iter_t = boost::tokenizer< boost::char_separator<char> >::iterator;
+
   template< typename T >
-  bool next_token(boost::tokenizer< boost::char_separator<char> > tokens,
-                  boost::tokenizer< boost::char_separator<char> >::iterator &it,
+  inline
+  bool next_token(Tokenizer_t & tokens,
+                  Token_iter_t & it,
                   T & result) {
     if(it != tokens.end()) {
       result = boost::lexical_cast< T >(*it);
@@ -97,13 +100,13 @@ namespace exch {
       Order_id_t order_id,
       Timestamp_t timestamp,
       Side side,
-      Quantity_t quantity,
-      Price_t price) :
+      Price_t price,
+      Quantity_t quantity) :
       order_id_ { order_id },
       timestamp_ { timestamp },
       side_ { side },
-      quantity_ { quantity },
-      price_ { price } {
+      price_ { price },
+      quantity_ { quantity } {
     }
 
     // custom <ClsPublic Order>
@@ -116,8 +119,8 @@ namespace exch {
       out << lexical_cast< string >(order_id_) << ':'
           << lexical_cast< string >(ticks(timestamp_)) << ':'
           << lexical_cast< string >(side_ == Bid_side_e? 'B' : 'S') << ':'
-          << lexical_cast< string >(quantity_) << ':'
-          << lexical_cast< string >(price_);
+          << lexical_cast< string >(price_) << ':'
+          << lexical_cast< string >(quantity_);
       return out.str();
     }
 
@@ -130,24 +133,20 @@ namespace exch {
 
       Order_id_t order_id;
       long long ticks;
-      Side side;
+      char side;
       Quantity_t quantity;
       Price_t price;
 
       if(!next_token(tokens, it, order_id)) invalid_order(tuple);
       if(!next_token(tokens, it, ticks)) invalid_order(tuple);
-      if(it != tokens.end()) {
-        side = *it == "B"? Bid_side_e : Ask_side_e;
-        ++it;
-      } else {
-        invalid_order(tuple);
-      }
-      if(!next_token(tokens, it, quantity)) invalid_order(tuple);
+      if(!next_token(tokens, it, side)) invalid_order(tuple);
       if(!next_token(tokens, it, price)) invalid_order(tuple);
+      if(!next_token(tokens, it, quantity)) invalid_order(tuple);
 
       return Order(order_id,
                    Timestamp_t(Timestamp_t::time_rep_type(ticks)),
-                   side, quantity, price);
+                   side == 'B'? Bid_side_e : Ask_side_e,
+                   price, quantity);
     }
 
     // end <ClsPublic Order>
@@ -161,19 +160,19 @@ namespace exch {
     //! getter for side_ (access is Ro)
     Side side() const { return side_; }
 
-    //! getter for quantity_ (access is Ro)
-    Quantity_t quantity() const { return quantity_; }
-
     //! getter for price_ (access is Ro)
     Price_t price() const { return price_; }
+
+    //! getter for quantity_ (access is Ro)
+    Quantity_t quantity() const { return quantity_; }
     friend inline
     std::ostream& operator<<(std::ostream& out,
                              Order const& item) {
       out << '\n' << "order_id:" << item.order_id_;
       out << '\n' << "timestamp:" << item.timestamp_;
       out << '\n' << "side:" << item.side_;
-      out << '\n' << "quantity:" << item.quantity_;
       out << '\n' << "price:" << item.price_;
+      out << '\n' << "quantity:" << item.quantity_;
       return out;
     }
 
@@ -181,8 +180,8 @@ namespace exch {
     Order_id_t const order_id_;
     Timestamp_t const timestamp_;
     Side const side_;
-    Quantity_t const quantity_;
     Price_t const price_;
+    Quantity_t const quantity_;
 
   };
 
@@ -191,21 +190,78 @@ namespace exch {
   {
   public:
     Fill(
+      Fill_id_t fill_id,
       Timestamp_t timestamp,
-      Order_id_t order,
+      Order_id_t order_id,
+      Side side,
       Price_t price,
       Quantity_t quantity) :
+      fill_id_ { fill_id },
       timestamp_ { timestamp },
-      order_ { order },
+      order_id_ { order_id },
+      side_ { side },
       price_ { price },
       quantity_ { quantity } {
     }
 
+    // custom <ClsPublic Fill>
+
+    std::string to_tuple() const {
+      using namespace fcs::timestamp;
+      using namespace boost;
+      using namespace std;
+      std::stringstream out;
+      out << lexical_cast< string >(fill_id_) << ':'
+          << lexical_cast< string >(ticks(timestamp_)) << ':'
+          << lexical_cast< string >(order_id_) << ':'
+          << lexical_cast< string >(side_ == Bid_side_e? 'B' : 'S') << ':'
+          << lexical_cast< string >(price_) << ':'
+          << lexical_cast< string >(quantity_);
+      return out.str();
+    }
+
+    static Fill from_tuple(std::string const& tuple) {
+      using namespace boost;
+      using namespace fcs::timestamp;
+      char_separator<char> sep {":"};
+      tokenizer< char_separator<char> > tokens(tuple, sep);
+      boost::tokenizer< boost::char_separator<char> >::iterator it { tokens.begin() };
+
+      Fill_id_t fill_id;
+      long long ticks;
+      Order_id_t order_id;
+      char side;
+      Quantity_t quantity;
+      Price_t price;
+
+      if(!next_token(tokens, it, fill_id)) invalid_order(tuple);
+      if(!next_token(tokens, it, ticks)) invalid_order(tuple);
+      if(!next_token(tokens, it, order_id)) invalid_order(tuple);
+      if(!next_token(tokens, it, side)) invalid_order(tuple);
+      if(!next_token(tokens, it, price)) invalid_order(tuple);
+      if(!next_token(tokens, it, quantity)) invalid_order(tuple);
+
+      return Fill(fill_id,
+                  Timestamp_t(Timestamp_t::time_rep_type(ticks)),
+                  order_id,
+                  side == 'B'? Bid_side_e : Ask_side_e,
+                  price,
+                  quantity);
+    }
+
+    // end <ClsPublic Fill>
+
+    //! getter for fill_id_ (access is Ro)
+    Fill_id_t fill_id() const { return fill_id_; }
+
     //! getter for timestamp_ (access is Ro)
     Timestamp_t timestamp() const { return timestamp_; }
 
-    //! getter for order_ (access is Ro)
-    Order_id_t order() const { return order_; }
+    //! getter for order_id_ (access is Ro)
+    Order_id_t order_id() const { return order_id_; }
+
+    //! getter for side_ (access is Ro)
+    Side side() const { return side_; }
 
     //! getter for price_ (access is Ro)
     Price_t price() const { return price_; }
@@ -215,16 +271,20 @@ namespace exch {
     friend inline
     std::ostream& operator<<(std::ostream& out,
                              Fill const& item) {
+      out << '\n' << "fill_id:" << item.fill_id_;
       out << '\n' << "timestamp:" << item.timestamp_;
-      out << '\n' << "order:" << item.order_;
+      out << '\n' << "order_id:" << item.order_id_;
+      out << '\n' << "side:" << item.side_;
       out << '\n' << "price:" << item.price_;
       out << '\n' << "quantity:" << item.quantity_;
       return out;
     }
 
   private:
+    Fill_id_t const fill_id_;
     Timestamp_t const timestamp_;
-    Order_id_t const order_;
+    Order_id_t const order_id_;
+    Side const side_;
     Price_t const price_;
     Quantity_t const quantity_;
 
