@@ -1,9 +1,17 @@
 #include "exch/market_redis.hpp"
 #include <boost/test/included/unit_test.hpp>
+#include <iostream>
 
 namespace exch {
   void test_market_redis() {
     // custom <market_redis>
+    Order o {
+      1, fcs::timestamp::current_time(), Bid_side_e, 200, 300
+    };
+
+    std::cout << o.to_tuple() << std::endl;
+    std::cout << o.from_tuple(o.to_tuple()) << std::endl;
+
     // end <market_redis>
   }
 

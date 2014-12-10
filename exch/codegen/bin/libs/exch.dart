@@ -27,7 +27,9 @@ final exch = lib('exch')
       'Order_update_list_t = std::vector< Order_update_t >',
     ],
     header('order_book')
+    ..customBlocks = [ fcbBeginNamespace ]
     ..includes = [
+      'sstream'
     ]
     ..enums = [
       enum_('side')
@@ -60,6 +62,7 @@ final exch = lib('exch')
       class_('order')
       ..immutable = true
       ..streamable = true
+      ..customBlocks = [ clsPublic ]
       ..members = [
         member('order_id')..type = 'Order_id_t',
         member('timestamp')..type = 'Timestamp_t',
@@ -148,8 +151,10 @@ final exch = lib('exch')
     header('market_redis')
     ..includes = [
       'exch/market.hpp', 'redisclient/redisclient.h', 'boost/lexical_cast.hpp',
+      'sstream',
     ]
     ..includeTest = true
+    ..test.includes.addAll([ 'iostream' ])
     ..classes = [
       class_('market_exchange_redis')
       ..descr = 'Provides service for one market exchange, persisting books in redis'
@@ -166,7 +171,10 @@ final exch = lib('exch')
         member('redis_client')..type = 'RedisClient'..refType = ref,
         member('market_id_str')..type = 'std::string'
         ..isConst = true
-        ..ctorInit = 'boost::lexical_cast< std::string >(market_id)'
+        ..ctorInit = 'boost::lexical_cast< std::string >(market_id)',
+        member('orders_key')..type = 'std::string'
+        ..isConst = true
+        ..ctorInit = 'market_id_str_ + std::string(":ORDERS")',
       ],
       class_('market_exchange_redis_factory')
       ..customBlocks = [ clsPublic ]

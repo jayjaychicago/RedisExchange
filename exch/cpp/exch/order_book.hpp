@@ -3,8 +3,33 @@
 
 #include "exch/exch.hpp"
 #include <iosfwd>
+#include <sstream>
 
 namespace exch {
+  // custom <FcbBeginNamespace order_book>
+
+  inline
+  template< typename T >
+  bool next_token(boost::tokenizer< boost::char_separator<char> > tokens,
+                  boost::tokenizer< boost::char_separator<char> >::iterator &it,
+                  T & result) {
+    if(it != tokens.end()) {
+      result = boost::lexical_cast< T >(*it);
+      it++;
+      return true;
+    }
+    return false;
+  }
+
+  inline void invalid_order(std::string const& order) {
+    std::stringstream msg;
+    msg << "Order is invalid: " << order;
+    throw std::logic_error(msg.str());
+  }
+
+
+  // end <FcbBeginNamespace order_book>
+
   enum Side {
     Bid_side_e,
     Ask_side_e
@@ -80,6 +105,52 @@ namespace exch {
       quantity_ { quantity },
       price_ { price } {
     }
+
+    // custom <ClsPublic Order>
+
+    std::string to_tuple() const {
+      using namespace fcs::timestamp;
+      using namespace boost;
+      using namespace std;
+      std::stringstream out;
+      out << lexical_cast< string >(order_id_) << ':'
+          << lexical_cast< string >(ticks(timestamp_)) << ':'
+          << lexical_cast< string >(side_ == Bid_side_e? 'B' : 'S') << ':'
+          << lexical_cast< string >(quantity_) << ':'
+          << lexical_cast< string >(price_);
+      return out.str();
+    }
+
+    static Order from_tuple(std::string const& tuple) {
+      using namespace boost;
+      using namespace fcs::timestamp;
+      char_separator<char> sep {":"};
+      tokenizer< char_separator<char> > tokens(tuple, sep);
+      boost::tokenizer< boost::char_separator<char> >::iterator it { tokens.begin() };
+
+      Order_id_t order_id;
+      long long ticks;
+      Side side;
+      Quantity_t quantity;
+      Price_t price;
+
+      if(!next_token(tokens, it, order_id)) invalid_order(tuple);
+      if(!next_token(tokens, it, ticks)) invalid_order(tuple);
+      if(it != tokens.end()) {
+        side = *it == "B"? Bid_side_e : Ask_side_e;
+        ++it;
+      } else {
+        invalid_order(tuple);
+      }
+      if(!next_token(tokens, it, quantity)) invalid_order(tuple);
+      if(!next_token(tokens, it, price)) invalid_order(tuple);
+
+      return Order(order_id,
+                   Timestamp_t(Timestamp_t::time_rep_type(ticks)),
+                   side, quantity, price);
+    }
+
+    // end <ClsPublic Order>
 
     //! getter for order_id_ (access is Ro)
     Order_id_t order_id() const { return order_id_; }
