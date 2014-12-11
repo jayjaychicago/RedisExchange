@@ -3,6 +3,7 @@
 
 #include "fcs/timestamp/timestamp.hpp"
 #include <cstdint>
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -19,6 +20,43 @@ namespace exch {
   using Timestamp_t = fcs::timestamp::Timestamp_t;
   using Order_update_t = std::pair< Order_id_t, Order >;
   using Order_update_list_t = std::vector< Order_update_t >;
+  using Req_id_t = int64_t;
+
+  enum Side {
+    Bid_side_e,
+    Ask_side_e
+  };
+
+  enum Create_market_result {
+    Create_market_succeeded_e,
+    Create_market_failed_e
+  };
+
+  enum Submit_result {
+    Submit_succeeded_e,
+    Submit_invalid_market_e,
+    Submit_invalid_order_details_e
+  };
+
+  enum Cancel_result {
+    Cancel_succeeded_e,
+    Cancel_invalid_market_e,
+    Cancel_invalid_order_e
+  };
+
+  enum Replace_result {
+    Replace_succeeded_e,
+    Replace_invalid_market_e,
+    Replace_invalid_order_e,
+    Replace_invalid_order_details_e
+  };
+
+  // custom <FcbEndNamespace exch>
+
+  constexpr size_t Market_id_strlen =
+    size_t(8*sizeof(Market_id_t)/3.1622776601683795) + 1;
+
+  // end <FcbEndNamespace exch>
 
 } // namespace exch
 #endif // __EXCH_EXCH_HPP__

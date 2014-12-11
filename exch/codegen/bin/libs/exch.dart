@@ -9,10 +9,40 @@ final exch = lib('exch')
   ..headers = [
     header('exch')
     ..isApiHeader = true
-    ..includes = [ 'cstdint', 'vector', 'utility',
+    ..includes = [ 'cstdint', 'vector', 'utility', 'limits',
       'fcs/timestamp/timestamp.hpp' ]
+    ..customBlocks = [ fcbEndNamespace ]
     ..forwardDecls = [
       forwardDecl('Order'),
+    ]
+    ..enums = [
+      enum_('side')
+      ..values = [ 'bid_side', 'ask_side' ],
+      enum_('create_market_result')
+      ..values = [
+        'create_market_succeeded',
+        'create_market_failed', ],
+
+      enum_('submit_result')
+      ..values = [
+        'submit_succeeded',
+        'submit_invalid_market',
+        'submit_invalid_order_details' ],
+
+      enum_('cancel_result')
+      ..values = [
+        'cancel_succeeded',
+        'cancel_invalid_market',
+        'cancel_invalid_order'
+      ],
+
+      enum_('replace_result')
+      ..values = [
+        'replace_succeeded',
+        'replace_invalid_market',
+        'replace_invalid_order',
+        'replace_invalid_order_details',
+      ],
     ]
     ..usings = [
       'Market_id_t = int32_t',
@@ -26,6 +56,7 @@ final exch = lib('exch')
       'Timestamp_t = fcs::timestamp::Timestamp_t',
       'Order_update_t = std::pair< Order_id_t, Order >',
       'Order_update_list_t = std::vector< Order_update_t >',
+      'Req_id_t = int64_t',
     ],
     header('order_book')
     ..customBlocks = [ fcbBeginNamespace ]
@@ -34,8 +65,6 @@ final exch = lib('exch')
       'sstream'
     ]
     ..enums = [
-      enum_('side')
-      ..values = [ 'bid_side', 'ask_side' ],
       enum_('order_state')
       ..values = [ 'submitted', 'active', 'canceled', 'filled' ],
     ]
@@ -85,37 +114,9 @@ final exch = lib('exch')
         member('quantity')..type = 'Quantity_t',
       ]
     ],
-    header('market')
+    header('market_exch')
     ..includes = [ 'exch/order_book.hpp' ]
     ..enums = [
-      enum_('submit_result')
-      ..values = [
-        'submit_succeeded',
-        'submit_invalid_market',
-        'submit_invalid_order_details' ],
-
-      enum_('cancel_result')
-      ..values = [
-        'cancel_succeeded',
-        'cancel_invalid_market',
-        'cancel_invalid_order'
-      ],
-
-      enum_('replace_result')
-      ..values = [
-        'replace_succeeded',
-        'replace_invalid_market',
-        'replace_invalid_order',
-        'replace_invalid_order_details',
-      ],
-    ]
-    ..forwardDecls = [
-      forwardDecl('Market_exchange'),
-      forwardDecl('Managed_order'),
-    ]
-    ..usings = [
-      'Market_exchange_ptr = std::unique_ptr< Market_exchange >',
-      'Managed_order_list_t = std::vector< Managed_order >',
     ]
     ..classes = [
       class_('market_config')
@@ -140,77 +141,22 @@ final exch = lib('exch')
       class_('market_exchange')
       ..descr = 'Responsible for the exchange of a single market (e.g. one market id)'
       ..customBlocks = [ clsPublic ]
-      ..dtor.abstract = true
+      ..usings = [
+        'Managed_order_list_t = std::vector< Managed_order >',
+      ]
       ..memberCtors = [ memberCtor([ 'market_config', 'market_id' ] )]
       ..members = [
         member('market_config')..type = 'Market_config'..noInit = true..byRef = true,
         member('market_id')..type = 'Market_id_t'..isConst = true,
         member('next_order_id')..init = 0,
-      ],
-      class_('market_exchange_factory')
-      ..dtor.abstract = true
-      ..customBlocks = [ clsPublic ]
-      ..descr = 'Used to create market_exchange derivatives on demand',
-    ],
-    header('market_redis')
-    ..includes = [
-      'exch/market.hpp', 'redisclient/redisclient.h', 'boost/lexical_cast.hpp',
-      'sstream',
-    ]
-    ..includeTest = true
-    ..test.includes.addAll([ 'iostream' ])
-    ..classes = [
-      class_('market_exchange_redis')
-      ..descr = 'Provides service for one market exchange, persisting books in redis'
-      ..customBlocks = [ clsPublic, clsPrivate, clsPreDecl ]
-      ..bases = [
-        base('Market_exchange')
-        ..init = 'Market_exchange(market_config, market_id)'
-      ]
-      ..memberCtors = [
-        memberCtor([ 'redis_client' ])
-        ..decls = [ 'Market_config const& market_config', 'Market_id_t market_id' ]
-      ]
-      ..members = [
-        member('redis_client')..type = 'RedisClient'..refType = ref,
-        member('market_id_str')..type = 'std::string'
-        ..isConst = true
-        ..ctorInit = 'boost::lexical_cast< std::string >(market_id)',
-        member('orders_key')..type = 'std::string'
-        ..isConst = true
-        ..ctorInit = 'market_id_str_ + std::string(":ORDERS")',
-      ],
-      class_('market_exchange_redis_factory')
-      ..customBlocks = [ clsPublic ]
-      ..memberCtors = [ memberCtor([ 'redis_client' ]) ]
-      ..members = [
-        member('redis_client')..type = 'RedisClient'..refType = ref,
-      ],
-    ],
-    header('market_mem')
-    ..includes = [
-      'exch/market.hpp',
-    ]
-    ..classes = [
-      class_('market_exchange_mem')
-      ..includeTest = true
-      ..bases = [ base('Market_exchange') ]
-      ..customBlocks = [ clsPublic ]
-      ..members = [
+
         member('active_orders')..type = 'Managed_order_list_t',
         member('dead_orders')..type = 'Managed_order_list_t',
         member('net_volume')..type = 'Quantity_t',
-      ]
+      ],
     ],
-    header('exchange')
-    ..includes = [ 'exch/market.hpp', ]
-    ..usings = [ 'Req_id_t = int64_t' ]
-    ..enums = [
-      enum_('create_market_result')
-      ..values = [
-        'create_market_succeeded',
-        'create_market_failed', ],
-    ]
+    header('requests')
+    ..descr = 'Requests types available to clients of the exchange'
     ..classes = [
       ////////////////////////////////////////////////////////////
       // Requests/Responses
@@ -292,7 +238,10 @@ final exch = lib('exch')
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Replace_result',
       ],
-
+    ],
+    header('events')
+    ..descr = 'Events published by the exchange'
+    ..classes = [
       ////////////////////////////////////////////////////////////
       // Events
       ////////////////////////////////////////////////////////////
@@ -325,54 +274,84 @@ final exch = lib('exch')
         member('price')..type = 'Price_t',
         member('net_volume')..type = 'Quantity_t',
       ],
+    ],
+    header('exchange')
+    ..includes = [ 'exch/market_exch.hpp', 'exch/requests.hpp', 'exch/events.hpp' ]
+    ..classes = [
+
+      class_('request_listener')
+      ..descr = 'Listens for requests (submit, cancel, replace,...) from clients'
+      ..dtor.abstract = true
+      ..customBlocks = [ clsPublic ],
+
+      class_('request_persister')
+      ..descr = 'Persists requests (submit, cancel, replace,...) and results'
+      ..dtor.abstract = true
+      ..customBlocks = [ clsPublic ],
 
       class_('market_publisher')
+      ..descr = 'Publishes market events (fill, top_of_book,...)'
       ..dtor.abstract = true
       ..customBlocks = [ clsPublic ],
 
       class_('exchange')
       ..descr = '''
-Manages multiple markets. Requests are forwarded to the appropriate
-exchange for handling. Responses from the Market_exchange instances
-are used to create and publish events using the Market_publisher. An
-example publisher might serialize the responses to Json and post via
-redis - but that is an implementation detail from the perspective of
-this class.'''
+Manages multiple markets. Requests come from the listener, to which
+this exchange subscribes. Those requests are persisted and turned into
+Market_exchange type objects (e.g. order) which are forwarded to the
+appropriate Market_exchange for handling. Responses from the
+Market_exchange instances are then persisted and used to create and
+publish events using the Market_publisher. An example publisher might
+serialize the responses to Json and post via redis - but that is an
+implementation detail from the perspective of this class.'''
       ..includeTest = true
       ..customBlocks = [ clsPublic, clsPrivate ]
       ..memberCtors = [
-        memberCtor([ 'market_publisher', 'market_exchange_factory' ])..customLabel = 'from_args'
+        memberCtor([
+          'request_listener', 'request_persister', 'market_publisher',
+        ])..customLabel = 'from_args'
       ]
       ..usings = [
         'Market_exchange_naked_ptr = Market_exchange *',
+        'Market_exchange_ptr = std::unique_ptr< Market_exchange >',
         'Market_exchange_map_t = std::map< Market_id_t, Market_exchange_ptr >',
       ]
       ..members = [
+        member('request_listener')..type = 'Request_listener'..refType = ref,
+        member('request_persister')..type = 'Request_persister'..refType = ref,
         member('market_publisher')..type = 'Market_publisher'..refType = ref,
-        member('market_exchange_factory')..type = 'Market_exchange_factory'..refType = ref,
         member('market_exchanges')..type = 'Market_exchange_map_t',
       ],
     ],
-    header('redis_server')
+    header('redis_support')
     ..descr = '''
 Uses redis pub/sub as means to accept requests destined to a
 Market_exchange and publish responses destined for clients.'''
+    ..customBlocks = [ fcbBeginNamespace ]
     ..classes = [
 
       class_('redis_listener')
       ..descr = '''
-Subscribes to client requests on redis pub/sub channels''',
+Subscribes to client requests on redis pub/sub channels'''
+      ..customBlocks = [ clsPublic ]
+      ..bases = [ base('Request_listener') ]
+      ..members = [
+        member('redis_client')..type = 'RedisClient'..refType = ref,
+      ],
       class_('redis_publisher')
       ..descr = '''
 Implements the Market_publisher interface using redis as pub/sub
 middleware'''
+      ..customBlocks = [ clsPublic ]
       ..bases = [ base('Market_publisher') ]
-      ..members = [],
-      class_('redis_server')
-      ..bases = [ base('Exchange_server') ]
       ..members = [
-        member('exchange')..type = 'Exchange',
-        member('listener')..type = 'RedisListener',
+        member('redis_client')..type = 'RedisClient'..refType = ref,
+      ],
+      class_('redis_persister')
+      ..customBlocks = [ clsPublic ]
+      ..bases = [ base('Request_persister') ]
+      ..members = [
+        member('redis_client')..type = 'RedisClient'..refType = ref,
       ]
     ],
   ];

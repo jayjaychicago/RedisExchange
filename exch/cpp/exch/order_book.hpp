@@ -33,11 +33,6 @@ namespace exch {
 
   // end <FcbBeginNamespace order_book>
 
-  enum Side {
-    Bid_side_e,
-    Ask_side_e
-  };
-
   enum Order_state {
     Submitted_e,
     Active_e,

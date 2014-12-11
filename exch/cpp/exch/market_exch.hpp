@@ -1,5 +1,5 @@
-#ifndef __EXCH_MARKET_HPP__
-#define __EXCH_MARKET_HPP__
+#ifndef __EXCH_MARKET_EXCH_HPP__
+#define __EXCH_MARKET_EXCH_HPP__
 
 #include "exch/exch.hpp"
 #include "exch/order_book.hpp"
@@ -7,30 +7,6 @@
 #include <string>
 
 namespace exch {
-  class Market_exchange;
-  class Managed_order;
-  using Market_exchange_ptr = std::unique_ptr< Market_exchange >;
-  using Managed_order_list_t = std::vector< Managed_order >;
-
-  enum Submit_result {
-    Submit_succeeded_e,
-    Submit_invalid_market_e,
-    Submit_invalid_order_details_e
-  };
-
-  enum Cancel_result {
-    Cancel_succeeded_e,
-    Cancel_invalid_market_e,
-    Cancel_invalid_order_e
-  };
-
-  enum Replace_result {
-    Replace_succeeded_e,
-    Replace_invalid_market_e,
-    Replace_invalid_order_e,
-    Replace_invalid_order_details_e
-  };
-
   class Market_config
   {
   public:
@@ -101,11 +77,13 @@ namespace exch {
 
 
   /**
-     Responsible for the exchange of a single market (e.g. one market id)
+   Responsible for the exchange of a single market (e.g. one market id)
   */
   class Market_exchange
   {
   public:
+    using Managed_order_list_t = std::vector< Managed_order >;
+
     Market_exchange(
       Market_config const & market_config,
       Market_id_t market_id) :
@@ -113,17 +91,19 @@ namespace exch {
       market_id_ { market_id } {
     }
 
-    virtual ~Market_exchange() {}
     // custom <ClsPublic Market_exchange>
 
-    virtual
-    Submit_result submit(Order const& order) = 0;
+    Submit_result submit(Order const& order) {
+      return Submit_result();
+    }
 
-    virtual
-    Cancel_result cancel(Order_id_t const& order_id) = 0;
+    Cancel_result cancel(Order_id_t const& order_id) {
+      return Cancel_result();
+    }
 
-    virtual
-    Replace_result replace_order(Order_id_t original, Order const& order) = 0;
+    Replace_result replace_order(Order_id_t original, Order const& order) {
+      return Replace_result();
+    }
 
     Order_id_t next_order_id() { return ++next_order_id_; }
 
@@ -133,27 +113,12 @@ namespace exch {
     Market_config market_config_;
     Market_id_t const market_id_ {};
     int next_order_id_ { 0 };
-
-  };
-
-
-  /**
-     Used to create market_exchange derivatives on demand
-  */
-  class Market_exchange_factory
-  {
-  public:
-    virtual ~Market_exchange_factory() {}
-    // custom <ClsPublic Market_exchange_factory>
-
-    virtual
-    Market_exchange_ptr create_market(Market_config const& config,
-                                      Market_id_t market_id) = 0;
-
-    // end <ClsPublic Market_exchange_factory>
+    Managed_order_list_t active_orders_ {};
+    Managed_order_list_t dead_orders_ {};
+    Quantity_t net_volume_ {};
 
   };
 
 
 } // namespace exch
-#endif // __EXCH_MARKET_HPP__
+#endif // __EXCH_MARKET_EXCH_HPP__
