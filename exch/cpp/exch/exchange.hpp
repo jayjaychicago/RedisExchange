@@ -23,16 +23,14 @@ namespace exch {
       Timestamp_t start_time,
       Timestamp_t end_time,
       int decimal_shift,
-      int shifted_modulus,
-      Price_t max_price) :
+      int tick_size) :
       req_id_ { req_id },
       market_id_ { market_id },
       name_ { name },
       start_time_ { start_time },
       end_time_ { end_time },
       decimal_shift_ { decimal_shift },
-      shifted_modulus_ { shifted_modulus },
-      max_price_ { max_price } {
+      tick_size_ { tick_size } {
     }
 
     //! getter for req_id_ (access is Ro)
@@ -53,11 +51,8 @@ namespace exch {
     //! getter for decimal_shift_ (access is Ro)
     int decimal_shift() const { return decimal_shift_; }
 
-    //! getter for shifted_modulus_ (access is Ro)
-    int shifted_modulus() const { return shifted_modulus_; }
-
-    //! getter for max_price_ (access is Ro)
-    Price_t max_price() const { return max_price_; }
+    //! getter for tick_size_ (access is Ro)
+    int tick_size() const { return tick_size_; }
   private:
     Req_id_t const req_id_;
     Market_id_t const market_id_;
@@ -65,8 +60,7 @@ namespace exch {
     Timestamp_t const start_time_;
     Timestamp_t const end_time_;
     int const decimal_shift_;
-    int const shifted_modulus_;
-    Price_t const max_price_;
+    int const tick_size_;
 
   };
 
@@ -527,8 +521,7 @@ namespace exch {
       if(insert_result.second) {
         Market_config config { req.name(),
             req.start_time(), req.end_time(),
-            req.decimal_shift(), req.shifted_modulus(),
-            req.max_price()
+            req.decimal_shift(), req.tick_size(),
             };
 
         insert_result.first->second =

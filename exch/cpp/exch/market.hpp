@@ -39,14 +39,12 @@ namespace exch {
       Timestamp_t start_time,
       Timestamp_t end_time,
       int decimal_shift,
-      int shifted_modulus,
-      Price_t max_price) :
+      int tick_size) :
       name_ { name },
       start_time_ { start_time },
       end_time_ { end_time },
       decimal_shift_ { decimal_shift },
-      shifted_modulus_ { shifted_modulus },
-      max_price_ { max_price } {
+      tick_size_ { tick_size } {
     }
 
     //! getter for name_ (access is Ro)
@@ -61,11 +59,8 @@ namespace exch {
     //! getter for decimal_shift_ (access is Ro)
     int decimal_shift() const { return decimal_shift_; }
 
-    //! getter for shifted_modulus_ (access is Ro)
-    int shifted_modulus() const { return shifted_modulus_; }
-
-    //! getter for max_price_ (access is Ro)
-    Price_t max_price() const { return max_price_; }
+    //! getter for tick_size_ (access is Ro)
+    int tick_size() const { return tick_size_; }
     friend inline
     std::ostream& operator<<(std::ostream& out,
                              Market_config const& item) {
@@ -73,8 +68,7 @@ namespace exch {
       out << '\n' << "start_time:" << item.start_time_;
       out << '\n' << "end_time:" << item.end_time_;
       out << '\n' << "decimal_shift:" << item.decimal_shift_;
-      out << '\n' << "shifted_modulus:" << item.shifted_modulus_;
-      out << '\n' << "max_price:" << item.max_price_;
+      out << '\n' << "tick_size:" << item.tick_size_;
       return out;
     }
 
@@ -83,8 +77,7 @@ namespace exch {
     Timestamp_t const start_time_;
     Timestamp_t const end_time_;
     int const decimal_shift_;
-    int const shifted_modulus_;
-    Price_t const max_price_;
+    int const tick_size_;
 
   };
 

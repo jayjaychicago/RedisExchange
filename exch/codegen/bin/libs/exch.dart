@@ -126,8 +126,7 @@ final exch = lib('exch')
         member('start_time')..type = 'Timestamp_t',
         member('end_time')..type = 'Timestamp_t',
         member('decimal_shift')..type = 'int',
-        member('shifted_modulus')..type = 'int',
-        member('max_price')..type = 'Price_t',
+        member('tick_size')..type = 'int',
       ],
       class_('managed_order')
       ..customBlocks = [ clsPublic ]
@@ -225,8 +224,7 @@ final exch = lib('exch')
         member('start_time')..type = 'Timestamp_t',
         member('end_time')..type = 'Timestamp_t',
         member('decimal_shift')..type = 'int',
-        member('shifted_modulus')..type = 'int',
-        member('max_price')..type = 'Price_t',
+        member('tick_size')..type = 'int',
       ],
       class_('create_market_resp')
       ..immutable = true
