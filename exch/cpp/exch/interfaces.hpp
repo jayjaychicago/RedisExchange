@@ -7,7 +7,10 @@
 #include <boost/function.hpp>
 
 namespace exch {
-  using Req_func_t = boost::function< void(const std::string & request) >;
+  using Create_market_handler_t = boost::function< void(const Create_market_req & req) >;
+  using Submit_handler_t = boost::function< void(const Submit_req & req) >;
+  using Cancel_handler_t = boost::function< void(const Cancel_req & req) >;
+  using Replace_handler_t = boost::function< void(const Replace_req & req) >;
 
   /**
    Listens for requests (submit, cancel, replace,...) from clients
@@ -18,7 +21,10 @@ namespace exch {
     virtual ~Request_listener() {}
     // custom <ClsPublic Request_listener>
 
-    virtual void subscribe(Req_func_t handler);
+    virtual void subscribe(Create_market_handler_t & create_market_handler,
+                           Submit_handler_t & submit_handler,
+                           Cancel_handler_t & cancel_handler,
+                           Replace_handler_t & replace_handler) = 0;
 
     // end <ClsPublic Request_listener>
 
@@ -33,6 +39,12 @@ namespace exch {
   public:
     virtual ~Request_persister() {}
     // custom <ClsPublic Request_persister>
+
+    virtual void persist(Create_market_req const& req) = 0;
+    virtual void persist(Submit_req const& req) = 0;
+    virtual void persist(Cancel_req const& req) = 0;
+    virtual void persist(Replace_req const& req) = 0;
+
     // end <ClsPublic Request_persister>
 
   };

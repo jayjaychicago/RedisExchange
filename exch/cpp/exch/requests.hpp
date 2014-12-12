@@ -29,6 +29,7 @@ namespace exch {
       tick_size_ { tick_size } {
     }
 
+    Create_market_req() = default;
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
@@ -85,13 +86,13 @@ namespace exch {
 
 
   private:
-    Req_id_t const req_id_;
-    User_id_t const user_id_;
-    std::string const name_;
-    Timestamp_t const start_time_;
-    Timestamp_t const end_time_;
-    int const decimal_shift_;
-    int const tick_size_;
+    Req_id_t const req_id_ {};
+    User_id_t const user_id_ {};
+    std::string const name_ {};
+    Timestamp_t const start_time_ {};
+    Timestamp_t const end_time_ {};
+    int const decimal_shift_ {};
+    int const tick_size_ {};
 
   };
 
@@ -108,6 +109,7 @@ namespace exch {
       result_ { result } {
     }
 
+    Create_market_resp() = default;
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
@@ -144,9 +146,9 @@ namespace exch {
 
 
   private:
-    Req_id_t const req_id_;
-    Market_id_t const market_id_;
-    Create_market_result const result_;
+    Req_id_t const req_id_ {};
+    Market_id_t const market_id_ {};
+    Create_market_result const result_ {};
 
   };
 
@@ -169,6 +171,7 @@ namespace exch {
       quantity_ { quantity } {
     }
 
+    Submit_req() = default;
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
@@ -220,12 +223,12 @@ namespace exch {
 
 
   private:
-    Req_id_t const req_id_;
-    Market_id_t const market_id_;
-    User_id_t const user_id_;
-    Side const side_;
-    Price_t const price_;
-    Quantity_t const quantity_;
+    Req_id_t const req_id_ {};
+    Market_id_t const market_id_ {};
+    User_id_t const user_id_ {};
+    Side const side_ {};
+    Price_t const price_ {};
+    Quantity_t const quantity_ {};
 
   };
 
@@ -246,6 +249,7 @@ namespace exch {
       result_ { result } {
     }
 
+    Submit_resp() = default;
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
@@ -292,11 +296,11 @@ namespace exch {
 
 
   private:
-    Req_id_t const req_id_;
-    Market_id_t const market_id_;
-    User_id_t const user_id_;
-    Order_id_t const order_id_;
-    Submit_result const result_;
+    Req_id_t const req_id_ {};
+    Market_id_t const market_id_ {};
+    User_id_t const user_id_ {};
+    Order_id_t const order_id_ {};
+    Submit_result const result_ {};
 
   };
 
@@ -315,6 +319,7 @@ namespace exch {
       order_id_ { order_id } {
     }
 
+    Cancel_req() = default;
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
@@ -356,10 +361,10 @@ namespace exch {
 
 
   private:
-    Req_id_t const req_id_;
-    Market_id_t const market_id_;
-    User_id_t const user_id_;
-    Order_id_t const order_id_;
+    Req_id_t const req_id_ {};
+    Market_id_t const market_id_ {};
+    User_id_t const user_id_ {};
+    Order_id_t const order_id_ {};
 
   };
 
@@ -380,6 +385,7 @@ namespace exch {
       result_ { result } {
     }
 
+    Cancel_resp() = default;
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
@@ -426,11 +432,11 @@ namespace exch {
 
 
   private:
-    Req_id_t const req_id_;
-    Market_id_t const market_id_;
-    User_id_t const user_id_;
-    Order_id_t const order_id_;
-    Cancel_result const result_;
+    Req_id_t const req_id_ {};
+    Market_id_t const market_id_ {};
+    User_id_t const user_id_ {};
+    Order_id_t const order_id_ {};
+    Cancel_result const result_ {};
 
   };
 
@@ -453,6 +459,7 @@ namespace exch {
       quantity_ { quantity } {
     }
 
+    Replace_req() = default;
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
@@ -504,12 +511,12 @@ namespace exch {
 
 
   private:
-    Req_id_t const req_id_;
-    Market_id_t const market_id_;
-    User_id_t const user_id_;
-    Order_id_t const existing_order_id_;
-    Price_t const price_;
-    Quantity_t const quantity_;
+    Req_id_t const req_id_ {};
+    Market_id_t const market_id_ {};
+    User_id_t const user_id_ {};
+    Order_id_t const existing_order_id_ {};
+    Price_t const price_ {};
+    Quantity_t const quantity_ {};
 
   };
 
@@ -532,6 +539,7 @@ namespace exch {
       result_ { result } {
     }
 
+    Replace_resp() = default;
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
@@ -583,12 +591,12 @@ namespace exch {
 
 
   private:
-    Req_id_t const req_id_;
-    Market_id_t const market_id_;
-    User_id_t const user_id_;
-    Order_id_t const canceled_order_id_;
-    Order_id_t const order_id_;
-    Replace_result const result_;
+    Req_id_t const req_id_ {};
+    Market_id_t const market_id_ {};
+    User_id_t const user_id_ {};
+    Order_id_t const canceled_order_id_ {};
+    Order_id_t const order_id_ {};
+    Replace_result const result_ {};
 
   };
 

@@ -38,6 +38,21 @@ namespace exch {
 
     // custom <ClsPublic Exchange>
 
+    // end <ClsPublic Exchange>
+
+  private:
+    // custom <ClsPrivate Exchange>
+
+    Market_exchange_naked_ptr
+    get_market(Market_id_t market) {
+      Market_exchange_map_t::iterator found { market_exchanges_.find(market) };
+      if(found != market_exchanges_.end()) {
+        return found->second.get();
+      } else {
+        return nullptr;
+      }
+    }
+
     void create_market(Create_market_req const& req) {
 
       Create_market_result result;
@@ -139,20 +154,6 @@ namespace exch {
                      result));
     }
 
-    // end <ClsPublic Exchange>
-
-  private:
-    // custom <ClsPrivate Exchange>
-
-    Market_exchange_naked_ptr
-    get_market(Market_id_t market) {
-      Market_exchange_map_t::iterator found { market_exchanges_.find(market) };
-      if(found != market_exchanges_.end()) {
-        return found->second.get();
-      } else {
-        return nullptr;
-      }
-    }
 
     // end <ClsPrivate Exchange>
 
