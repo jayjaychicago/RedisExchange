@@ -264,17 +264,23 @@ final exch = lib('exch')
       // Events
       ////////////////////////////////////////////////////////////
       class_('market_created_evt')
+      ..streamable = true
+      ..serializers = [ cereal() ]
       ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
       ],
 
       class_('top_of_book_evt')
+      ..streamable = true
+      ..serializers = [ cereal() ]
       ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
       ],
       class_('book_update_evt')
+      ..streamable = true
+      ..serializers = [ cereal() ]
       ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
@@ -284,6 +290,8 @@ final exch = lib('exch')
         member('top_price')..type = 'Price_t',
       ],
       class_('trade_evt')
+      ..streamable = true
+      ..serializers = [ cereal() ]
       ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
@@ -293,10 +301,17 @@ final exch = lib('exch')
         member('net_volume')..type = 'Quantity_t',
       ],
     ],
-    header('exchange')
-    ..includes = [ 'exch/market_exch.hpp', 'exch/requests.hpp', 'exch/events.hpp' ]
-    ..classes = [
 
+    header('interfaces')
+    ..includes = [ 'exch/requests.hpp', 'exch/events.hpp',
+      'boost/function.hpp', ]
+    ..usings = [
+      'Req_func_t = boost::function< void(const std::string & request) >'
+    ]
+    ..descr = '''
+Includes abstract interfaces used by the exchange to decouple interface from implementation
+'''
+    ..classes = [
       class_('request_listener')
       ..descr = 'Listens for requests (submit, cancel, replace,...) from clients'
       ..dtor.abstract = true
@@ -311,6 +326,12 @@ final exch = lib('exch')
       ..descr = 'Publishes market events (fill, top_of_book,...)'
       ..dtor.abstract = true
       ..customBlocks = [ clsPublic ],
+    ],
+
+    header('exchange')
+    ..includes = [ 'exch/market_exch.hpp', 'exch/requests.hpp',
+      'exch/events.hpp', 'exch/interfaces.hpp' ]
+    ..classes = [
 
       class_('exchange')
       ..descr = '''
@@ -342,7 +363,15 @@ implementation detail from the perspective of this class.'''
         member('next_market_id')..init = 0,
       ],
     ],
+
     header('redis_support')
+    ..includes = [
+      'exch/order_book.hpp', 'exch/interfaces.hpp',
+      'sstream',
+      'redisclient/redisclient.h',
+    ]
+    ..usings = [
+    ]
     ..descr = '''
 Uses redis pub/sub as means to accept requests destined to a
 Market_exchange and publish responses destined for clients.'''
@@ -350,29 +379,40 @@ Market_exchange and publish responses destined for clients.'''
     ..classes = [
 
       class_('redis_listener')
+      ..includeTest = true
       ..descr = '''
 Subscribes to client requests on redis pub/sub channels'''
       ..customBlocks = [ clsPublic ]
+      ..memberCtors = [ memberCtor(['redis_client']) ]
       ..bases = [ base('Request_listener') ]
       ..members = [
         member('redis_client')..type = 'RedisClient'..refType = ref,
+        member('handle')..type = 'RedisClient::Handle'..initText = '0',
+        member('req_key')..init = 'EX_REQ'..type = 'char const*'..isStatic = true..isConstExpr = true,
       ],
-      class_('redis_publisher')
-      ..descr = '''
-Implements the Market_publisher interface using redis as pub/sub
-middleware'''
-      ..customBlocks = [ clsPublic ]
-      ..bases = [ base('Market_publisher') ]
-      ..members = [
-        member('redis_client')..type = 'RedisClient'..refType = ref,
-      ],
+
       class_('redis_persister')
       ..customBlocks = [ clsPublic ]
       ..bases = [ base('Request_persister') ]
       ..members = [
         member('redis_client')..type = 'RedisClient'..refType = ref,
-      ]
+      ],
+
+      class_('redis_publisher')
+      ..descr = '''
+Implements the Market_publisher interface using redis as pub/sub
+middleware'''
+      ..memberCtors = [ memberCtor(['redis_client']) ]
+      ..customBlocks = [ clsPublic, clsPrivate ]
+      ..bases = [ base('Market_publisher') ]
+      ..members = [
+        member('redis_client')..type = 'RedisClient'..refType = ref,
+        member('resp_key')..init = 'EX_RESP'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('event_key')..init = 'EX_EVENT'..type = 'char const*'..isStatic = true..isConstExpr = true,
+      ],
+
     ],
+
   ];
 
 addItems() => installation.addLibs([exch]);

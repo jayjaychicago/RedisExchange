@@ -98,7 +98,7 @@ namespace random_command {
     void generate_commands(std::ostream &out) {
       out << "Generating commands based on: " << spec_ << std::endl;
       for(int i=0; i<100; i++) {
-        std::cout << price() << '\t';
+
       }
     }
 

@@ -14,3 +14,13 @@ rule test_exchange
   ] ;
 }
 test-suite exchange : [ test_exchange ] ;
+
+rule test_redis_support
+{
+  all_rules += [ run test_redis_support.cpp
+  :
+  : # test-files
+  : # requirements
+  ] ;
+}
+test-suite redis_support : [ test_redis_support ] ;

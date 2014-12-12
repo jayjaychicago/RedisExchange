@@ -73,9 +73,9 @@ namespace exch {
       ar__(cereal::make_nvp("tick_size", tick_size_));
     }
 
-    void serialize_to_json(std::ostream & out__) {
+    void serialize_to_json(std::ostream & out__) const {
       cereal::JSONOutputArchive ar__(out__);
-      serialize(ar__);
+      const_cast<Create_market_req*>(this)->serialize(ar__);
     }
 
     void serialize_from_json(std::istream & in__) {
@@ -132,9 +132,9 @@ namespace exch {
       ar__(cereal::make_nvp("result", result_));
     }
 
-    void serialize_to_json(std::ostream & out__) {
+    void serialize_to_json(std::ostream & out__) const {
       cereal::JSONOutputArchive ar__(out__);
-      serialize(ar__);
+      const_cast<Create_market_resp*>(this)->serialize(ar__);
     }
 
     void serialize_from_json(std::istream & in__) {
@@ -208,9 +208,9 @@ namespace exch {
       ar__(cereal::make_nvp("quantity", quantity_));
     }
 
-    void serialize_to_json(std::ostream & out__) {
+    void serialize_to_json(std::ostream & out__) const {
       cereal::JSONOutputArchive ar__(out__);
-      serialize(ar__);
+      const_cast<Submit_req*>(this)->serialize(ar__);
     }
 
     void serialize_from_json(std::istream & in__) {
@@ -280,9 +280,9 @@ namespace exch {
       ar__(cereal::make_nvp("result", result_));
     }
 
-    void serialize_to_json(std::ostream & out__) {
+    void serialize_to_json(std::ostream & out__) const {
       cereal::JSONOutputArchive ar__(out__);
-      serialize(ar__);
+      const_cast<Submit_resp*>(this)->serialize(ar__);
     }
 
     void serialize_from_json(std::istream & in__) {
@@ -344,9 +344,9 @@ namespace exch {
       ar__(cereal::make_nvp("order_id", order_id_));
     }
 
-    void serialize_to_json(std::ostream & out__) {
+    void serialize_to_json(std::ostream & out__) const {
       cereal::JSONOutputArchive ar__(out__);
-      serialize(ar__);
+      const_cast<Cancel_req*>(this)->serialize(ar__);
     }
 
     void serialize_from_json(std::istream & in__) {
@@ -414,9 +414,9 @@ namespace exch {
       ar__(cereal::make_nvp("result", result_));
     }
 
-    void serialize_to_json(std::ostream & out__) {
+    void serialize_to_json(std::ostream & out__) const {
       cereal::JSONOutputArchive ar__(out__);
-      serialize(ar__);
+      const_cast<Cancel_resp*>(this)->serialize(ar__);
     }
 
     void serialize_from_json(std::istream & in__) {
@@ -492,9 +492,9 @@ namespace exch {
       ar__(cereal::make_nvp("quantity", quantity_));
     }
 
-    void serialize_to_json(std::ostream & out__) {
+    void serialize_to_json(std::ostream & out__) const {
       cereal::JSONOutputArchive ar__(out__);
-      serialize(ar__);
+      const_cast<Replace_req*>(this)->serialize(ar__);
     }
 
     void serialize_from_json(std::istream & in__) {
@@ -571,9 +571,9 @@ namespace exch {
       ar__(cereal::make_nvp("result", result_));
     }
 
-    void serialize_to_json(std::ostream & out__) {
+    void serialize_to_json(std::ostream & out__) const {
       cereal::JSONOutputArchive ar__(out__);
-      serialize(ar__);
+      const_cast<Replace_resp*>(this)->serialize(ar__);
     }
 
     void serialize_from_json(std::istream & in__) {

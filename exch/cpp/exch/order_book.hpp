@@ -183,9 +183,9 @@ namespace exch {
       ar__(cereal::make_nvp("quantity", quantity_));
     }
 
-    void serialize_to_json(std::ostream & out__) {
+    void serialize_to_json(std::ostream & out__) const {
       cereal::JSONOutputArchive ar__(out__);
-      serialize(ar__);
+      const_cast<Order*>(this)->serialize(ar__);
     }
 
     void serialize_from_json(std::istream & in__) {
@@ -308,9 +308,9 @@ namespace exch {
       ar__(cereal::make_nvp("quantity", quantity_));
     }
 
-    void serialize_to_json(std::ostream & out__) {
+    void serialize_to_json(std::ostream & out__) const {
       cereal::JSONOutputArchive ar__(out__);
-      serialize(ar__);
+      const_cast<Fill*>(this)->serialize(ar__);
     }
 
     void serialize_from_json(std::istream & in__) {
