@@ -90,7 +90,7 @@ namespace exch {
     void create_market(Create_market_req const& req) {
 
       Create_market_result result;
-      Market_id_t market_id { req.market_id() };
+      Market_id_t market_id { ++next_market_id_ };
 
       using Insert_result_t = std::pair<
         Market_exchange_map_t::iterator,
@@ -118,7 +118,7 @@ namespace exch {
       }
 
       market_publisher_.publish(
-        Create_market_resp(req.req_id(), req.market_id(), result));
+        Create_market_resp(req.req_id(), market_id, result));
     };
 
     void submit(Submit_req const& req) {
@@ -209,6 +209,7 @@ namespace exch {
     Request_persister & request_persister_;
     Market_publisher & market_publisher_;
     Market_exchange_map_t market_exchanges_ {};
+    int next_market_id_ { 0 };
 
   };
 

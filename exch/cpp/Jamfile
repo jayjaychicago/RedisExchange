@@ -29,6 +29,7 @@ project exch_projects
 # custom <additional_includes>
 <include>/Users/dbdavidson/dev/open_source/fcs/cpp
 <include>/Users/dbdavidson/dev/open_source/redisclient/src
+<include>/Users/dbdavidson/dev/open_source/cereal/include
 # end <additional_includes>
 
           <tag>@$(__name__).tag

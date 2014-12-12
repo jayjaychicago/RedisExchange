@@ -93,6 +93,7 @@ final exch = lib('exch')
       class_('order')
       ..immutable = true
       ..streamable = true
+      ..serializers = [ cereal() ]
       ..customBlocks = [ clsPublic ]
       ..members = [
         member('order_id')..type = 'Order_id_t',
@@ -104,6 +105,7 @@ final exch = lib('exch')
       class_('fill')
       ..immutable = true
       ..streamable = true
+      ..serializers = [ cereal() ]
       ..customBlocks = [ clsPublic ]
       ..members = [
         member('fill_id')..type = 'Fill_id_t',
@@ -162,10 +164,12 @@ final exch = lib('exch')
       // Requests/Responses
       ////////////////////////////////////////////////////////////
       class_('create_market_req')
+      ..streamable = true
+      ..serializers = [ cereal() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('market_id')..type = 'Market_id_t',
+        member('user_id')..type = 'User_id_t',
         member('name')..type = 'std::string',
         member('start_time')..type = 'Timestamp_t',
         member('end_time')..type = 'Timestamp_t',
@@ -173,6 +177,8 @@ final exch = lib('exch')
         member('tick_size')..type = 'int',
       ],
       class_('create_market_resp')
+      ..streamable = true
+      ..serializers = [ cereal() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
@@ -181,6 +187,8 @@ final exch = lib('exch')
       ],
 
       class_('submit_req')
+      ..streamable = true
+      ..serializers = [ cereal() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
@@ -191,6 +199,8 @@ final exch = lib('exch')
         member('quantity')..type = 'Quantity_t',
       ],
       class_('submit_resp')
+      ..streamable = true
+      ..serializers = [ cereal() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
@@ -201,6 +211,8 @@ final exch = lib('exch')
       ],
 
       class_('cancel_req')
+      ..streamable = true
+      ..serializers = [ cereal() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
@@ -209,6 +221,8 @@ final exch = lib('exch')
         member('order_id')..type = 'Order_id_t',
       ],
       class_('cancel_resp')
+      ..streamable = true
+      ..serializers = [ cereal() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
@@ -219,6 +233,8 @@ final exch = lib('exch')
       ],
 
       class_('replace_req')
+      ..streamable = true
+      ..serializers = [ cereal() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
@@ -229,6 +245,8 @@ final exch = lib('exch')
         member('quantity')..type = 'Quantity_t',
       ],
       class_('replace_resp')
+      ..streamable = true
+      ..serializers = [ cereal() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
@@ -321,6 +339,7 @@ implementation detail from the perspective of this class.'''
         member('request_persister')..type = 'Request_persister'..refType = ref,
         member('market_publisher')..type = 'Market_publisher'..refType = ref,
         member('market_exchanges')..type = 'Market_exchange_map_t',
+        member('next_market_id')..init = 0,
       ],
     ],
     header('redis_support')

@@ -1,7 +1,10 @@
 #ifndef __EXCH_ORDER_BOOK_HPP__
 #define __EXCH_ORDER_BOOK_HPP__
 
+#include "cereal/archives/json.hpp"
+#include "cereal/cereal.hpp"
 #include "exch/exch.hpp"
+#include "fcs/timestamp/cereal.hpp"
 #include <iosfwd>
 #include <sstream>
 
@@ -171,6 +174,26 @@ namespace exch {
       return out;
     }
 
+    template <class Archive>
+    void serialize(Archive &ar__) {
+      ar__(cereal::make_nvp("order_id", order_id_));
+      ar__(cereal::make_nvp("timestamp", timestamp_));
+      ar__(cereal::make_nvp("side", side_));
+      ar__(cereal::make_nvp("price", price_));
+      ar__(cereal::make_nvp("quantity", quantity_));
+    }
+
+    void serialize_to_json(std::ostream & out__) {
+      cereal::JSONOutputArchive ar__(out__);
+      serialize(ar__);
+    }
+
+    void serialize_from_json(std::istream & in__) {
+      cereal::JSONInputArchive ar__ { in__ };
+      serialize(ar__);
+    }
+
+
   private:
     Order_id_t const order_id_;
     Timestamp_t const timestamp_;
@@ -274,6 +297,27 @@ namespace exch {
       out << '\n' << "quantity:" << item.quantity_;
       return out;
     }
+
+    template <class Archive>
+    void serialize(Archive &ar__) {
+      ar__(cereal::make_nvp("fill_id", fill_id_));
+      ar__(cereal::make_nvp("timestamp", timestamp_));
+      ar__(cereal::make_nvp("order_id", order_id_));
+      ar__(cereal::make_nvp("side", side_));
+      ar__(cereal::make_nvp("price", price_));
+      ar__(cereal::make_nvp("quantity", quantity_));
+    }
+
+    void serialize_to_json(std::ostream & out__) {
+      cereal::JSONOutputArchive ar__(out__);
+      serialize(ar__);
+    }
+
+    void serialize_from_json(std::istream & in__) {
+      cereal::JSONInputArchive ar__ { in__ };
+      serialize(ar__);
+    }
+
 
   private:
     Fill_id_t const fill_id_;
