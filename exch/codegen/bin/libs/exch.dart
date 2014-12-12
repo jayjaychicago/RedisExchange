@@ -265,6 +265,7 @@ final exch = lib('exch')
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Replace_result',
       ],
+
     ],
     header('events')
     ..descr = 'Events published by the exchange'
@@ -319,6 +320,7 @@ final exch = lib('exch')
       'Submit_handler_t = boost::function< void(const Submit_req & req) >',
       'Cancel_handler_t = boost::function< void(const Cancel_req & req) >',
       'Replace_handler_t = boost::function< void(const Replace_req & req) >',
+      'Halt_handler_t = boost::function< void() >',
     ]
     ..descr = '''
 Includes abstract interfaces used by the exchange to decouple interface from implementation
@@ -406,12 +408,15 @@ Subscribes to client requests on redis pub/sub channels'''
         member('submit_handler')..type = 'Submit_handler_t',
         member('cancel_handler')..type = 'Cancel_handler_t',
         member('replace_handler')..type = 'Replace_handler_t',
-        member('req_key')..init = 'EX_REQ:*'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('halt_handler')..type = 'Halt_handler_t',
+        member('req_key')..init = 'EX_REQ:*'
+        ..type = 'char const*'..isStatic = true..isConstExpr = true,
       ],
 
       class_('redis_persister')
       ..customBlocks = [ clsPublic, clsPrivate ]
       ..bases = [ base('Request_persister') ]
+      ..memberCtors = [ memberCtor(['redis_client']) ]
       ..members = [
         member('redis_client')..type = 'RedisClient'..refType = ref,
         member('cmd_key')..init = 'CMD'

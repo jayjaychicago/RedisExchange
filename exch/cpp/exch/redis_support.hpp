@@ -40,15 +40,22 @@ namespace exch {
     // custom <ClsPublic Redis_listener>
 
     virtual void subscribe(
-      Create_market_handler_t & create_market_handler,
-      Submit_handler_t & submit_handler,
-      Cancel_handler_t & cancel_handler,
-      Replace_handler_t & replace_handler) {
+      Create_market_handler_t create_market_handler,
+      Submit_handler_t submit_handler,
+      Cancel_handler_t cancel_handler,
+      Replace_handler_t replace_handler,
+      Halt_handler_t halt_handler) {
       assert(handle_.id == 0);
       handle_ = redis_client_
-        .subscribe(REQ_KEY,
-                   std::bind(
-                     &Redis_listener::dispatch, this, std::placeholders::_1));
+        .subscribe(
+          REQ_KEY,
+          std::bind(&Redis_listener::dispatch, this, std::placeholders::_1));
+    }
+
+    virtual void unsubscribe() {
+      if(handle_.id) {
+        redis_client_.unsubscribe(handle_);
+      }
     }
 
     void dispatch(std::string const& command) {
@@ -59,12 +66,6 @@ namespace exch {
       std::istringstream input { contents };
 
       switch(choice) {
-       case 'M' : {
-         Create_market_req req;
-         req.serialize_from_json(input);
-         create_market_handler_(req);
-         break;
-       }
        case 'S': {
          Submit_req req;
          req.serialize_from_json(input);
@@ -83,13 +84,20 @@ namespace exch {
          replace_handler_(req);
          break;
        }
+       case 'M' : {
+         Create_market_req req;
+         req.serialize_from_json(input);
+         create_market_handler_(req);
+         break;
+       }
+       case 'H' : {
+         halt_handler_();
+       }
       }
     }
 
     virtual ~Redis_listener() {
-      if(handle_.id) {
-        redis_client_.unsubscribe(handle_);
-      }
+      unsubscribe();
     }
 
     // end <ClsPublic Redis_listener>
@@ -101,6 +109,7 @@ namespace exch {
     Submit_handler_t submit_handler_ {};
     Cancel_handler_t cancel_handler_ {};
     Replace_handler_t replace_handler_ {};
+    Halt_handler_t halt_handler_ {};
     static constexpr char const* REQ_KEY { "EX_REQ:*" };
 
   };
@@ -110,6 +119,11 @@ namespace exch {
     public Request_persister
   {
   public:
+    Redis_persister(
+      RedisClient & redis_client) :
+      redis_client_ { redis_client } {
+    }
+
     // custom <ClsPublic Redis_persister>
 
     virtual void persist(Create_market_req const& req) {

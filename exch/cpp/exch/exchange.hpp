@@ -33,6 +33,14 @@ namespace exch {
       request_persister_ { request_persister },
       market_publisher_ { market_publisher } {
       // custom <Exchange(from_args)>
+
+        request_listener_.subscribe(
+          std::bind(&Exchange::create_market, this, std::placeholders::_1),
+          std::bind(&Exchange::submit, this, std::placeholders::_1),
+          std::bind(&Exchange::cancel, this, std::placeholders::_1),
+          std::bind(&Exchange::replace, this, std::placeholders::_1),
+          std::bind(&Exchange::halt_handler, this));
+
       // end <Exchange(from_args)>
     }
 
@@ -42,6 +50,10 @@ namespace exch {
 
   private:
     // custom <ClsPrivate Exchange>
+
+    void halt_handler() {
+      request_listener_.unsubscribe();
+    }
 
     Market_exchange_naked_ptr
     get_market(Market_id_t market) {
@@ -154,6 +166,8 @@ namespace exch {
                      result));
     }
 
+    void shutdown() {
+    }
 
     // end <ClsPrivate Exchange>
 

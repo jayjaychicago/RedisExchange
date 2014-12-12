@@ -1,0 +1,36 @@
+import os ;
+project exch_server
+    :
+    :
+    ;
+ENV_CXXFLAGS = [ os.environ CXXFLAGS ] ;
+ENV_LINKFLAGS = [ os.environ LINKFLAGS ] ;
+SOURCES =
+     exch_server
+;
+
+exe exch_server
+    : exch_server.cpp
+      $(SOURCES).cpp
+      /site-config//boost_program_options
+    : <define>DEBUG_FCS_STARTUP
+      <cxxflags>$(ENV_CXXFLAGS)
+      <linkflags>$(ENV_LINKFLAGS)
+      <variant>debug:<define>DEBUG
+      <variant>release:<define>NDEBUG
+    ;
+
+install install_app : exch_server :
+   <link>static
+      <variant>debug:<location>$(FCS_INSTALL_PATH)/static/debug
+      <variant>release:<location>$(FCS_INSTALL_PATH)/static/release
+;
+
+install install_app : exch_server :
+   <link>shared
+      <variant>debug:<location>$(FCS_INSTALL_PATH)/shared/debug
+      <variant>release:<location>$(FCS_INSTALL_PATH)/shared/release
+;
+
+explicit install_app ;
+
