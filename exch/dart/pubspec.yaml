@@ -1,0 +1,27 @@
+name: exch_client
+version: 0.0.1
+author: Daniel Davidson <dbdavidson@yahoo.com>
+dependencies:
+
+# custom <exch_client dependencies>
+
+  redis_client: "any"
+  ebisu:
+    path: /Users/dbdavidson/dev/open_source/ebisu
+
+# end <exch_client dependencies>
+
+dev_dependencies:
+  unittest: ">=0.11.0"
+  browser: "any"
+  hop: ">=0.31.0"
+  hop_docgen: ">=0.1.0 <0.2.0"
+
+# custom <exch_client dev dependencies>
+# end <exch_client dev dependencies>
+
+transformers:
+
+# custom <exch_client transformers>
+# end <exch_client transformers>
+

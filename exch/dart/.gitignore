@@ -1,0 +1,16 @@
+*.~*~
+packages
+build/
+.pub/
+.project
+*.iml
+*.ipr
+*.iws
+.idea/
+*.dart.js
+*.js_
+*.js.deps
+*.js.map
+# custom <additional>
+# end <additional>
+
