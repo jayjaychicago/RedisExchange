@@ -102,9 +102,11 @@ namespace exch {
   public:
     Create_market_resp(
       Req_id_t req_id,
+      User_id_t user_id,
       Market_id_t market_id,
       Create_market_result result) :
       req_id_ { req_id },
+      user_id_ { user_id },
       market_id_ { market_id },
       result_ { result } {
     }
@@ -112,6 +114,9 @@ namespace exch {
     Create_market_resp() = default;
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
+
+    //! getter for user_id_ (access is Ro)
+    User_id_t user_id() const { return user_id_; }
 
     //! getter for market_id_ (access is Ro)
     Market_id_t market_id() const { return market_id_; }
@@ -122,6 +127,7 @@ namespace exch {
     std::ostream& operator<<(std::ostream& out,
                              Create_market_resp const& item) {
       out << '\n' << "req_id:" << item.req_id_;
+      out << '\n' << "user_id:" << item.user_id_;
       out << '\n' << "market_id:" << item.market_id_;
       out << '\n' << "result:" << item.result_;
       return out;
@@ -130,6 +136,7 @@ namespace exch {
     template <class Archive>
     void serialize(Archive &ar__) {
       ar__(cereal::make_nvp("req_id", req_id_));
+      ar__(cereal::make_nvp("user_id", user_id_));
       ar__(cereal::make_nvp("market_id", market_id_));
       ar__(cereal::make_nvp("result", result_));
     }
@@ -147,6 +154,7 @@ namespace exch {
 
   private:
     Req_id_t const req_id_ {};
+    User_id_t const user_id_ {};
     Market_id_t const market_id_ {};
     Create_market_result const result_ {};
 
@@ -158,14 +166,14 @@ namespace exch {
   public:
     Submit_req(
       Req_id_t req_id,
-      Market_id_t market_id,
       User_id_t user_id,
+      Market_id_t market_id,
       Side side,
       Price_t price,
       Quantity_t quantity) :
       req_id_ { req_id },
-      market_id_ { market_id },
       user_id_ { user_id },
+      market_id_ { market_id },
       side_ { side },
       price_ { price },
       quantity_ { quantity } {
@@ -175,11 +183,11 @@ namespace exch {
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
-    //! getter for market_id_ (access is Ro)
-    Market_id_t market_id() const { return market_id_; }
-
     //! getter for user_id_ (access is Ro)
     User_id_t user_id() const { return user_id_; }
+
+    //! getter for market_id_ (access is Ro)
+    Market_id_t market_id() const { return market_id_; }
 
     //! getter for side_ (access is Ro)
     Side side() const { return side_; }
@@ -193,8 +201,8 @@ namespace exch {
     std::ostream& operator<<(std::ostream& out,
                              Submit_req const& item) {
       out << '\n' << "req_id:" << item.req_id_;
-      out << '\n' << "market_id:" << item.market_id_;
       out << '\n' << "user_id:" << item.user_id_;
+      out << '\n' << "market_id:" << item.market_id_;
       out << '\n' << "side:" << item.side_;
       out << '\n' << "price:" << item.price_;
       out << '\n' << "quantity:" << item.quantity_;
@@ -204,8 +212,8 @@ namespace exch {
     template <class Archive>
     void serialize(Archive &ar__) {
       ar__(cereal::make_nvp("req_id", req_id_));
-      ar__(cereal::make_nvp("market_id", market_id_));
       ar__(cereal::make_nvp("user_id", user_id_));
+      ar__(cereal::make_nvp("market_id", market_id_));
       ar__(cereal::make_nvp("side", side_));
       ar__(cereal::make_nvp("price", price_));
       ar__(cereal::make_nvp("quantity", quantity_));
@@ -224,8 +232,8 @@ namespace exch {
 
   private:
     Req_id_t const req_id_ {};
-    Market_id_t const market_id_ {};
     User_id_t const user_id_ {};
+    Market_id_t const market_id_ {};
     Side const side_ {};
     Price_t const price_ {};
     Quantity_t const quantity_ {};
@@ -238,13 +246,13 @@ namespace exch {
   public:
     Submit_resp(
       Req_id_t req_id,
-      Market_id_t market_id,
       User_id_t user_id,
+      Market_id_t market_id,
       Order_id_t order_id,
       Submit_result result) :
       req_id_ { req_id },
-      market_id_ { market_id },
       user_id_ { user_id },
+      market_id_ { market_id },
       order_id_ { order_id },
       result_ { result } {
     }
@@ -253,11 +261,11 @@ namespace exch {
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
-    //! getter for market_id_ (access is Ro)
-    Market_id_t market_id() const { return market_id_; }
-
     //! getter for user_id_ (access is Ro)
     User_id_t user_id() const { return user_id_; }
+
+    //! getter for market_id_ (access is Ro)
+    Market_id_t market_id() const { return market_id_; }
 
     //! getter for order_id_ (access is Ro)
     Order_id_t order_id() const { return order_id_; }
@@ -268,8 +276,8 @@ namespace exch {
     std::ostream& operator<<(std::ostream& out,
                              Submit_resp const& item) {
       out << '\n' << "req_id:" << item.req_id_;
-      out << '\n' << "market_id:" << item.market_id_;
       out << '\n' << "user_id:" << item.user_id_;
+      out << '\n' << "market_id:" << item.market_id_;
       out << '\n' << "order_id:" << item.order_id_;
       out << '\n' << "result:" << item.result_;
       return out;
@@ -278,8 +286,8 @@ namespace exch {
     template <class Archive>
     void serialize(Archive &ar__) {
       ar__(cereal::make_nvp("req_id", req_id_));
-      ar__(cereal::make_nvp("market_id", market_id_));
       ar__(cereal::make_nvp("user_id", user_id_));
+      ar__(cereal::make_nvp("market_id", market_id_));
       ar__(cereal::make_nvp("order_id", order_id_));
       ar__(cereal::make_nvp("result", result_));
     }
@@ -297,8 +305,8 @@ namespace exch {
 
   private:
     Req_id_t const req_id_ {};
-    Market_id_t const market_id_ {};
     User_id_t const user_id_ {};
+    Market_id_t const market_id_ {};
     Order_id_t const order_id_ {};
     Submit_result const result_ {};
 
@@ -310,12 +318,12 @@ namespace exch {
   public:
     Cancel_req(
       Req_id_t req_id,
-      Market_id_t market_id,
       User_id_t user_id,
+      Market_id_t market_id,
       Order_id_t order_id) :
       req_id_ { req_id },
-      market_id_ { market_id },
       user_id_ { user_id },
+      market_id_ { market_id },
       order_id_ { order_id } {
     }
 
@@ -323,11 +331,11 @@ namespace exch {
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
-    //! getter for market_id_ (access is Ro)
-    Market_id_t market_id() const { return market_id_; }
-
     //! getter for user_id_ (access is Ro)
     User_id_t user_id() const { return user_id_; }
+
+    //! getter for market_id_ (access is Ro)
+    Market_id_t market_id() const { return market_id_; }
 
     //! getter for order_id_ (access is Ro)
     Order_id_t order_id() const { return order_id_; }
@@ -335,8 +343,8 @@ namespace exch {
     std::ostream& operator<<(std::ostream& out,
                              Cancel_req const& item) {
       out << '\n' << "req_id:" << item.req_id_;
-      out << '\n' << "market_id:" << item.market_id_;
       out << '\n' << "user_id:" << item.user_id_;
+      out << '\n' << "market_id:" << item.market_id_;
       out << '\n' << "order_id:" << item.order_id_;
       return out;
     }
@@ -344,8 +352,8 @@ namespace exch {
     template <class Archive>
     void serialize(Archive &ar__) {
       ar__(cereal::make_nvp("req_id", req_id_));
-      ar__(cereal::make_nvp("market_id", market_id_));
       ar__(cereal::make_nvp("user_id", user_id_));
+      ar__(cereal::make_nvp("market_id", market_id_));
       ar__(cereal::make_nvp("order_id", order_id_));
     }
 
@@ -362,8 +370,8 @@ namespace exch {
 
   private:
     Req_id_t const req_id_ {};
-    Market_id_t const market_id_ {};
     User_id_t const user_id_ {};
+    Market_id_t const market_id_ {};
     Order_id_t const order_id_ {};
 
   };
@@ -374,13 +382,13 @@ namespace exch {
   public:
     Cancel_resp(
       Req_id_t req_id,
-      Market_id_t market_id,
       User_id_t user_id,
+      Market_id_t market_id,
       Order_id_t order_id,
       Cancel_result result) :
       req_id_ { req_id },
-      market_id_ { market_id },
       user_id_ { user_id },
+      market_id_ { market_id },
       order_id_ { order_id },
       result_ { result } {
     }
@@ -389,11 +397,11 @@ namespace exch {
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
-    //! getter for market_id_ (access is Ro)
-    Market_id_t market_id() const { return market_id_; }
-
     //! getter for user_id_ (access is Ro)
     User_id_t user_id() const { return user_id_; }
+
+    //! getter for market_id_ (access is Ro)
+    Market_id_t market_id() const { return market_id_; }
 
     //! getter for order_id_ (access is Ro)
     Order_id_t order_id() const { return order_id_; }
@@ -404,8 +412,8 @@ namespace exch {
     std::ostream& operator<<(std::ostream& out,
                              Cancel_resp const& item) {
       out << '\n' << "req_id:" << item.req_id_;
-      out << '\n' << "market_id:" << item.market_id_;
       out << '\n' << "user_id:" << item.user_id_;
+      out << '\n' << "market_id:" << item.market_id_;
       out << '\n' << "order_id:" << item.order_id_;
       out << '\n' << "result:" << item.result_;
       return out;
@@ -414,8 +422,8 @@ namespace exch {
     template <class Archive>
     void serialize(Archive &ar__) {
       ar__(cereal::make_nvp("req_id", req_id_));
-      ar__(cereal::make_nvp("market_id", market_id_));
       ar__(cereal::make_nvp("user_id", user_id_));
+      ar__(cereal::make_nvp("market_id", market_id_));
       ar__(cereal::make_nvp("order_id", order_id_));
       ar__(cereal::make_nvp("result", result_));
     }
@@ -433,8 +441,8 @@ namespace exch {
 
   private:
     Req_id_t const req_id_ {};
-    Market_id_t const market_id_ {};
     User_id_t const user_id_ {};
+    Market_id_t const market_id_ {};
     Order_id_t const order_id_ {};
     Cancel_result const result_ {};
 
@@ -446,15 +454,15 @@ namespace exch {
   public:
     Replace_req(
       Req_id_t req_id,
-      Market_id_t market_id,
       User_id_t user_id,
-      Order_id_t existing_order_id,
+      Market_id_t market_id,
+      Order_id_t order_id,
       Price_t price,
       Quantity_t quantity) :
       req_id_ { req_id },
-      market_id_ { market_id },
       user_id_ { user_id },
-      existing_order_id_ { existing_order_id },
+      market_id_ { market_id },
+      order_id_ { order_id },
       price_ { price },
       quantity_ { quantity } {
     }
@@ -463,14 +471,14 @@ namespace exch {
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
-    //! getter for market_id_ (access is Ro)
-    Market_id_t market_id() const { return market_id_; }
-
     //! getter for user_id_ (access is Ro)
     User_id_t user_id() const { return user_id_; }
 
-    //! getter for existing_order_id_ (access is Ro)
-    Order_id_t existing_order_id() const { return existing_order_id_; }
+    //! getter for market_id_ (access is Ro)
+    Market_id_t market_id() const { return market_id_; }
+
+    //! getter for order_id_ (access is Ro)
+    Order_id_t order_id() const { return order_id_; }
 
     //! getter for price_ (access is Ro)
     Price_t price() const { return price_; }
@@ -481,9 +489,9 @@ namespace exch {
     std::ostream& operator<<(std::ostream& out,
                              Replace_req const& item) {
       out << '\n' << "req_id:" << item.req_id_;
-      out << '\n' << "market_id:" << item.market_id_;
       out << '\n' << "user_id:" << item.user_id_;
-      out << '\n' << "existing_order_id:" << item.existing_order_id_;
+      out << '\n' << "market_id:" << item.market_id_;
+      out << '\n' << "order_id:" << item.order_id_;
       out << '\n' << "price:" << item.price_;
       out << '\n' << "quantity:" << item.quantity_;
       return out;
@@ -492,9 +500,9 @@ namespace exch {
     template <class Archive>
     void serialize(Archive &ar__) {
       ar__(cereal::make_nvp("req_id", req_id_));
-      ar__(cereal::make_nvp("market_id", market_id_));
       ar__(cereal::make_nvp("user_id", user_id_));
-      ar__(cereal::make_nvp("existing_order_id", existing_order_id_));
+      ar__(cereal::make_nvp("market_id", market_id_));
+      ar__(cereal::make_nvp("order_id", order_id_));
       ar__(cereal::make_nvp("price", price_));
       ar__(cereal::make_nvp("quantity", quantity_));
     }
@@ -512,9 +520,9 @@ namespace exch {
 
   private:
     Req_id_t const req_id_ {};
-    Market_id_t const market_id_ {};
     User_id_t const user_id_ {};
-    Order_id_t const existing_order_id_ {};
+    Market_id_t const market_id_ {};
+    Order_id_t const order_id_ {};
     Price_t const price_ {};
     Quantity_t const quantity_ {};
 
@@ -526,14 +534,14 @@ namespace exch {
   public:
     Replace_resp(
       Req_id_t req_id,
-      Market_id_t market_id,
       User_id_t user_id,
+      Market_id_t market_id,
       Order_id_t canceled_order_id,
       Order_id_t order_id,
       Replace_result result) :
       req_id_ { req_id },
-      market_id_ { market_id },
       user_id_ { user_id },
+      market_id_ { market_id },
       canceled_order_id_ { canceled_order_id },
       order_id_ { order_id },
       result_ { result } {
@@ -543,11 +551,11 @@ namespace exch {
     //! getter for req_id_ (access is Ro)
     Req_id_t req_id() const { return req_id_; }
 
-    //! getter for market_id_ (access is Ro)
-    Market_id_t market_id() const { return market_id_; }
-
     //! getter for user_id_ (access is Ro)
     User_id_t user_id() const { return user_id_; }
+
+    //! getter for market_id_ (access is Ro)
+    Market_id_t market_id() const { return market_id_; }
 
     //! getter for canceled_order_id_ (access is Ro)
     Order_id_t canceled_order_id() const { return canceled_order_id_; }
@@ -561,8 +569,8 @@ namespace exch {
     std::ostream& operator<<(std::ostream& out,
                              Replace_resp const& item) {
       out << '\n' << "req_id:" << item.req_id_;
-      out << '\n' << "market_id:" << item.market_id_;
       out << '\n' << "user_id:" << item.user_id_;
+      out << '\n' << "market_id:" << item.market_id_;
       out << '\n' << "canceled_order_id:" << item.canceled_order_id_;
       out << '\n' << "order_id:" << item.order_id_;
       out << '\n' << "result:" << item.result_;
@@ -572,8 +580,8 @@ namespace exch {
     template <class Archive>
     void serialize(Archive &ar__) {
       ar__(cereal::make_nvp("req_id", req_id_));
-      ar__(cereal::make_nvp("market_id", market_id_));
       ar__(cereal::make_nvp("user_id", user_id_));
+      ar__(cereal::make_nvp("market_id", market_id_));
       ar__(cereal::make_nvp("canceled_order_id", canceled_order_id_));
       ar__(cereal::make_nvp("order_id", order_id_));
       ar__(cereal::make_nvp("result", result_));
@@ -592,8 +600,8 @@ namespace exch {
 
   private:
     Req_id_t const req_id_ {};
-    Market_id_t const market_id_ {};
     User_id_t const user_id_ {};
+    Market_id_t const market_id_ {};
     Order_id_t const canceled_order_id_ {};
     Order_id_t const order_id_ {};
     Replace_result const result_ {};

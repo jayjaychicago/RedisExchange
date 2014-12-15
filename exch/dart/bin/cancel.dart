@@ -33,7 +33,7 @@ Map _parseArgs(List<String> args) {
 Display this help screen
 ''',
       abbr: 'h',
-      defaultsTo: null
+      defaultsTo: false
     );
 
     _parser.addOption('redis-host',
@@ -122,14 +122,15 @@ main(List<String> args) {
 
   // custom <cancel main>
 
-  final client = new ExchClient();
   final host = options['redis-host'];
   final port = options['redis-port'];
   RedisClient
     .connect('$host:$port')
     .then((RedisClient redisClient) {
+      final client = new ExchClient(redisClient);
       final req= new CancelReq(
-        1, 1, 1, 1);
+        options['req-id'], options['user-id'],
+        options['market-id'], options['order-id']);
       client.cancel(req);
       redisClient.close();
     });

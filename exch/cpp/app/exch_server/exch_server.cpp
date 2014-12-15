@@ -96,18 +96,21 @@ int main(int argc, char** argv) {
     using namespace boost::asio;
 
     io_service io_service;
-    RedisClient redis_client(io_service);
-
+    int port { options.redis_port() };
+    RedisClient redis_client_listener { io_service };
+    RedisClient redis_client_publisher { io_service };
     ip::address address { ip::address::from_string(options.redis_address()) };
-    if(!redis_client.connect(address, options.redis_port())) {
+
+    if(!redis_client_listener.connect(address, port) ||
+       !redis_client_publisher.connect(address, port)) {
       std::cerr << "Unable to connect to redis server:\n"
                 << options << std::endl;
       return -1;
     }
 
-    Redis_listener redis_listener { redis_client };
-    Redis_persister redis_persister { redis_client };
-    Redis_publisher redis_publisher { redis_client };
+    Redis_listener redis_listener { redis_client_listener };
+    Redis_persister redis_persister { redis_client_publisher };
+    Redis_publisher redis_publisher { redis_client_publisher };
 
     Exchange exchange {
       redis_listener,
@@ -115,6 +118,7 @@ int main(int argc, char** argv) {
         redis_publisher,
     };
 
+    std::cout << "Exchange server waiting for requests" << std::endl;
     io_service.run();
 
     // end <main>

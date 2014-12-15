@@ -33,7 +33,7 @@ Map _parseArgs(List<String> args) {
 Display this help screen
 ''',
       abbr: 'h',
-      defaultsTo: null
+      defaultsTo: false
     );
 
     _parser.addOption('redis-host',
@@ -69,21 +69,31 @@ redis port used by pub/sub
       allowed: null
     );
     _parser.addOption('market-name',
-      help: '',
+      help: '''
+Name of market to be created
+''',
       defaultsTo: 'mkt-1',
       allowMultiple: false,
       abbr: 'm',
       allowed: null
     );
     _parser.addOption('decimal-shift',
-      help: '',
+      help: '''
+Number of decimal digits to shift for display purposes
+''',
       defaultsTo: '2',
       allowMultiple: false,
       abbr: 's',
       allowed: null
     );
     _parser.addOption('tick-size',
-      help: '',
+      help: '''
+Increment for price = e.g. decimal-shift of 2 and tick-size of 1 means display
+is dollars and cents, with prices occuring at every penny. decimal-shift of 2
+and tick-size of 5 means display is in dollars and cents and prices vary by
+dimes (i.e. 100.07 is not valid but 100.05 is)
+
+''',
       defaultsTo: '1',
       allowMultiple: false,
       abbr: 't',
@@ -130,6 +140,21 @@ main(List<String> args) {
 
   // custom <create main>
 
+
+  final host = options['redis-host'];
+  final port = options['redis-port'];
+
+  RedisClient
+    .connect('$host:$port')
+    .then((RedisClient redisClient) {
+      final client = new ExchClient(redisClient);
+      final req= new CreateMarketReq(
+        options['req-id'], options['user-id'],
+        options['market-name'], 't1', 't2',
+        options['decimal-shift'], options['tick-size']);
+      client.createMarket(req);
+      redisClient.close();
+    });
 
 
   // end <create main>

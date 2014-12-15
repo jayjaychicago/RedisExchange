@@ -96,7 +96,10 @@ namespace exch {
       }
 
       market_publisher_.publish(
-        Create_market_resp(req.req_id(), market_id, result));
+        Create_market_resp(req.req_id(),
+                           req.user_id(),
+                           market_id,
+                           result));
     };
 
     void submit(Submit_req const& req) {
@@ -118,8 +121,8 @@ namespace exch {
 
       market_publisher_.publish(
         Submit_resp(req.req_id(),
-                    req.market_id(),
                     req.user_id(),
+                    req.market_id(),
                     submitted_id,
                     result));
     }
@@ -133,8 +136,8 @@ namespace exch {
 
       market_publisher_.publish(
         Cancel_resp(req.req_id(),
-                    req.market_id(),
                     req.user_id(),
+                    req.market_id(),
                     req.order_id(),
                     result));
     }
@@ -154,14 +157,14 @@ namespace exch {
             req.quantity(),
             req.price() };
 
-        result = market->replace_order(req.existing_order_id(), revised_order);
+        result = market->replace_order(req.order_id(), revised_order);
       }
 
       market_publisher_.publish(
         Replace_resp(req.req_id(),
-                     req.market_id(),
                      req.user_id(),
-                     req.existing_order_id(),
+                     req.market_id(),
+                     req.order_id(),
                      revised_order_id,
                      result));
     }

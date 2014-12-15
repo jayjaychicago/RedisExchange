@@ -185,6 +185,7 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
+        member('user_id')..type = 'User_id_t',
         member('market_id')..type = 'Market_id_t',
         member('result')..type = 'Create_market_result',
       ],
@@ -196,8 +197,8 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
+        member('market_id')..type = 'Market_id_t',
         member('side')..type = 'Side',
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
@@ -209,8 +210,8 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
+        member('market_id')..type = 'Market_id_t',
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Submit_result',
       ],
@@ -222,8 +223,8 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
+        member('market_id')..type = 'Market_id_t',
         member('order_id')..type = 'Order_id_t',
       ],
       class_('cancel_resp')
@@ -233,8 +234,8 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
+        member('market_id')..type = 'Market_id_t',
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Cancel_result',
       ],
@@ -246,9 +247,9 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
-        member('existing_order_id')..type = 'Order_id_t',
+        member('market_id')..type = 'Market_id_t',
+        member('order_id')..type = 'Order_id_t',
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
       ],
@@ -259,13 +260,12 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
+        member('market_id')..type = 'Market_id_t',
         member('canceled_order_id')..type = 'Order_id_t',
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Replace_result',
       ],
-
     ],
     header('events')
     ..descr = 'Events published by the exchange'
@@ -403,14 +403,18 @@ Subscribes to client requests on redis pub/sub channels'''
       ..bases = [ base('Request_listener') ]
       ..members = [
         member('redis_client')..type = 'RedisClient'..refType = ref,
-        member('handle')..type = 'RedisClient::Handle'..initText = '0',
+        member('m_handle')..type = 'RedisClient::Handle'..initText = '0',
+        member('s_handle')..type = 'RedisClient::Handle'..initText = '0',
+        member('c_handle')..type = 'RedisClient::Handle'..initText = '0',
+        member('r_handle')..type = 'RedisClient::Handle'..initText = '0',
+        member('h_handle')..type = 'RedisClient::Handle'..initText = '0',
         member('create_market_handler')..type = 'Create_market_handler_t',
         member('submit_handler')..type = 'Submit_handler_t',
         member('cancel_handler')..type = 'Cancel_handler_t',
         member('replace_handler')..type = 'Replace_handler_t',
         member('halt_handler')..type = 'Halt_handler_t',
-        member('req_key')..init = 'EX_REQ:*'
-        ..type = 'char const*'..isStatic = true..isConstExpr = true,
+        // member('req_key')..init = 'EX_REQ:*'
+        // ..type = 'char const*'..isStatic = true..isConstExpr = true,
       ],
 
       class_('redis_persister')

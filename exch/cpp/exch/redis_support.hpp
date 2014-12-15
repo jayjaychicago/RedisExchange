@@ -45,55 +45,93 @@ namespace exch {
       Cancel_handler_t cancel_handler,
       Replace_handler_t replace_handler,
       Halt_handler_t halt_handler) {
-      assert(handle_.id == 0);
-      handle_ = redis_client_
-        .subscribe(
-          REQ_KEY,
-          std::bind(&Redis_listener::dispatch, this, std::placeholders::_1));
+
+      create_market_handler_ = create_market_handler;
+      submit_handler_ = submit_handler;
+      cancel_handler_ = cancel_handler;
+      replace_handler_ = replace_handler;
+      halt_handler_ = halt_handler;
+
+      m_handle_ = redis_client_
+        .subscribe("EX_REQ:M",
+                   std::bind(&Redis_listener::create_market, this,
+                             std::placeholders::_1));
+
+      s_handle_ = redis_client_
+        .subscribe("EX_REQ:S",
+                   std::bind(&Redis_listener::submit, this,
+                             std::placeholders::_1));
+
+      c_handle_ = redis_client_
+        .subscribe("EX_REQ:C",
+                   std::bind(&Redis_listener::cancel, this,
+                             std::placeholders::_1));
+
+
+      r_handle_ = redis_client_
+        .subscribe("EX_REQ:R",
+                   std::bind(&Redis_listener::replace, this,
+                             std::placeholders::_1));
+
+      h_handle_ = redis_client_
+        .subscribe("EX_REQ:H",
+                   std::bind(&Redis_listener::halt, this));
     }
 
     virtual void unsubscribe() {
-      if(handle_.id) {
-        redis_client_.unsubscribe(handle_);
+      if(m_handle_.id) {
+        redis_client_.unsubscribe(m_handle_);
+      }
+      if(s_handle_.id) {
+        redis_client_.unsubscribe(s_handle_);
+      }
+      if(c_handle_.id) {
+        redis_client_.unsubscribe(c_handle_);
+      }
+      if(r_handle_.id) {
+        redis_client_.unsubscribe(r_handle_);
+      }
+      if(h_handle_.id) {
+        redis_client_.unsubscribe(h_handle_);
       }
     }
 
-    void dispatch(std::string const& command) {
-      assert(command.substr(0, 6) == "EX_REQ:");
-      assert(command.length() > 6);
-      char choice { command[6] };
-      std::string contents { command.substr(6) };
-      std::istringstream input { contents };
+    void create_market(std::string const& command) {
+      Create_market_req req;
+      std::istringstream in { command };
+      req.serialize_from_json(in);
+      std::cout << "create req " << req << std::endl;
+      create_market_handler_(req);
+    }
 
-      switch(choice) {
-       case 'S': {
-         Submit_req req;
-         req.serialize_from_json(input);
-         submit_handler_(req);
-         break;
-       }
-       case 'C': {
-         Cancel_req req;
-         req.serialize_from_json(input);
-         cancel_handler_(req);
-         break;
-       }
-       case 'R': {
-         Replace_req req;
-         req.serialize_from_json(input);
-         replace_handler_(req);
-         break;
-       }
-       case 'M' : {
-         Create_market_req req;
-         req.serialize_from_json(input);
-         create_market_handler_(req);
-         break;
-       }
-       case 'H' : {
-         halt_handler_();
-       }
-      }
+    void submit(std::string const& command) {
+      Submit_req req;
+      std::istringstream in { command };
+      req.serialize_from_json(in);
+      std::cout << "submit req " << req << std::endl;
+      submit_handler_(req);
+    }
+
+    void cancel(std::string const& command) {
+      Cancel_req req;
+      std::istringstream in { command };
+      req.serialize_from_json(in);
+      std::cout << "cancel req " << req << std::endl;
+      cancel_handler_(req);
+    }
+
+    void replace(std::string const& command) {
+      std::cout << "replace req to parse " << command << std::endl;
+      Replace_req req;
+      std::istringstream in { command };
+      req.serialize_from_json(in);
+      std::cout << "replace req " << req << std::endl;
+      replace_handler_(req);
+    }
+
+    void halt() {
+      std::cout << "halt req " << std::endl;
+      halt_handler_();
     }
 
     virtual ~Redis_listener() {
@@ -104,13 +142,16 @@ namespace exch {
 
   private:
     RedisClient & redis_client_;
-    RedisClient::Handle handle_ { 0 };
+    RedisClient::Handle m_handle_ { 0 };
+    RedisClient::Handle s_handle_ { 0 };
+    RedisClient::Handle c_handle_ { 0 };
+    RedisClient::Handle r_handle_ { 0 };
+    RedisClient::Handle h_handle_ { 0 };
     Create_market_handler_t create_market_handler_ {};
     Submit_handler_t submit_handler_ {};
     Cancel_handler_t cancel_handler_ {};
     Replace_handler_t replace_handler_ {};
     Halt_handler_t halt_handler_ {};
-    static constexpr char const* REQ_KEY { "EX_REQ:*" };
 
   };
 
