@@ -23,19 +23,14 @@ namespace exch {
 
   // end <FcbBeginNamespace redis_support>
 
-  using Req_func_t = boost::function< void(const std::string & request) >;
+using Req_func_t = boost::function<void(const std::string &request)>;
 
-  /**
-   Subscribes to client requests on redis pub/sub channels
-  */
-  class Redis_listener :
-    public Request_listener
-  {
-  public:
-    Redis_listener(
-      RedisClient & redis_client) :
-      redis_client_ { redis_client } {
-    }
+/**
+ Subscribes to client requests on redis pub/sub channels
+*/
+class Redis_listener : public Request_listener {
+public:
+  Redis_listener(RedisClient &redis_client) : redis_client_{ redis_client } {}
 
     // custom <ClsPublic Redis_listener>
 
@@ -140,30 +135,23 @@ namespace exch {
 
     // end <ClsPublic Redis_listener>
 
-  private:
-    RedisClient & redis_client_;
-    RedisClient::Handle m_handle_ { 0 };
-    RedisClient::Handle s_handle_ { 0 };
-    RedisClient::Handle c_handle_ { 0 };
-    RedisClient::Handle r_handle_ { 0 };
-    RedisClient::Handle h_handle_ { 0 };
-    Create_market_handler_t create_market_handler_ {};
-    Submit_handler_t submit_handler_ {};
-    Cancel_handler_t cancel_handler_ {};
-    Replace_handler_t replace_handler_ {};
-    Halt_handler_t halt_handler_ {};
+private:
+  RedisClient &redis_client_;
+  RedisClient::Handle m_handle_{ 0 };
+  RedisClient::Handle s_handle_{ 0 };
+  RedisClient::Handle c_handle_{ 0 };
+  RedisClient::Handle r_handle_{ 0 };
+  RedisClient::Handle h_handle_{ 0 };
+  Create_market_handler_t create_market_handler_{};
+  Submit_handler_t submit_handler_{};
+  Cancel_handler_t cancel_handler_{};
+  Replace_handler_t replace_handler_{};
+  Halt_handler_t halt_handler_{};
+};
 
-  };
-
-
-  class Redis_persister :
-    public Request_persister
-  {
-  public:
-    Redis_persister(
-      RedisClient & redis_client) :
-      redis_client_ { redis_client } {
-    }
+class Redis_persister : public Request_persister {
+public:
+  Redis_persister(RedisClient &redis_client) : redis_client_{ redis_client } {}
 
     // custom <ClsPublic Redis_persister>
 
@@ -185,7 +173,7 @@ namespace exch {
 
     // end <ClsPublic Redis_persister>
 
-  private:
+private:
     // custom <ClsPrivate Redis_persister>
 
     template< typename T > void _persist(T const& item) {
@@ -196,24 +184,17 @@ namespace exch {
 
     // end <ClsPrivate Redis_persister>
 
-    RedisClient & redis_client_;
-    static constexpr char const* CMD_KEY { "CMD" };
+  RedisClient &redis_client_;
+  static constexpr char const *CMD_KEY{ "CMD" };
+};
 
-  };
-
-
-  /**
-   Implements the Market_publisher interface using redis as pub/sub
-   middleware
-  */
-  class Redis_publisher :
-    public Market_publisher
-  {
-  public:
-    Redis_publisher(
-      RedisClient & redis_client) :
-      redis_client_ { redis_client } {
-    }
+/**
+ Implements the Market_publisher interface using redis as pub/sub
+ middleware
+*/
+class Redis_publisher : public Market_publisher {
+public:
+  Redis_publisher(RedisClient &redis_client) : redis_client_{ redis_client } {}
 
     // custom <ClsPublic Redis_publisher>
 
@@ -253,7 +234,7 @@ namespace exch {
 
     // end <ClsPublic Redis_publisher>
 
-  private:
+private:
     // custom <ClsPrivate Redis_publisher>
 
     template< typename T > void _publish(T const& item) {
@@ -264,12 +245,10 @@ namespace exch {
 
     // end <ClsPrivate Redis_publisher>
 
-    RedisClient & redis_client_;
-    static constexpr char const* RESP_KEY { "EX_RESP" };
-    static constexpr char const* EVENT_KEY { "EX_EVENT" };
-
-  };
-
+  RedisClient &redis_client_;
+  static constexpr char const *RESP_KEY{ "EX_RESP" };
+  static constexpr char const *EVENT_KEY{ "EX_EVENT" };
+};
 
 } // namespace exch
 #endif // __EXCH_REDIS_SUPPORT_HPP__

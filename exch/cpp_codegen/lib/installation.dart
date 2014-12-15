@@ -9,5 +9,8 @@ String _getPath() {
   return script.substring(0, script.indexOf('exch/cpp_codegen')) + 'exch';
 }
 
-final installation = new Installation(new Id('exch'))
-  ..root = _getPath();
+final installation = () {
+  useClangFormatter = true;
+  return new Installation(new Id('exch'))
+    ..root = _getPath();
+}();
