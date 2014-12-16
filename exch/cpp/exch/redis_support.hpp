@@ -95,7 +95,6 @@ public:
       Create_market_req req;
       std::istringstream in { command };
       req.serialize_from_json(in);
-      std::cout << "create req " << req << std::endl;
       create_market_handler_(req);
     }
 
@@ -103,7 +102,6 @@ public:
       Submit_req req;
       std::istringstream in { command };
       req.serialize_from_json(in);
-      std::cout << "submit req " << req << std::endl;
       submit_handler_(req);
     }
 
@@ -111,16 +109,13 @@ public:
       Cancel_req req;
       std::istringstream in { command };
       req.serialize_from_json(in);
-      std::cout << "cancel req " << req << std::endl;
       cancel_handler_(req);
     }
 
     void replace(std::string const& command) {
-      std::cout << "replace req to parse " << command << std::endl;
       Replace_req req;
       std::istringstream in { command };
       req.serialize_from_json(in);
-      std::cout << "replace req " << req << std::endl;
       replace_handler_(req);
     }
 
