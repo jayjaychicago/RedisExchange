@@ -53,6 +53,12 @@ void main() {
             scriptArg('market_name')
             ..doc = 'Name of market to be created'
             ..defaultsTo = 'mkt-1'..abbr = 'm',
+            scriptArg('start_time')
+            ..doc = 'Time market begins - sample format: '
+            ..defaultsTo = '2015-01-03 13:30:00',
+            scriptArg('end_time')
+            ..doc = 'Time market end - sample format: '
+            ..defaultsTo = '2015-01-03 14:30:00',
             scriptArg('decimal_shift')
             ..doc = 'Number of decimal digits to shift for display purposes'
             ..defaultsTo = 2..abbr = 's',
@@ -110,8 +116,12 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
             member('req_id')..type = 'int',
             member('user_id')..type = 'int',
             member('name'),
-            member('start_time'),
-            member('end_time'),
+            member('start_time')
+            ..doc = 'seconds since epoch indicating start time'
+            ..type = 'int',
+            member('end_time')
+            ..doc = 'seconds since epoch indicating end time'
+            ..type = 'int',
             member('decimal_shift')..classInit = 2,
             member('tick_size')..classInit = 1,
           ],

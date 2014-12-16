@@ -50,8 +50,10 @@ class CreateMarketReq {
   final int reqId;
   final int userId;
   final String name;
-  final String startTime;
-  final String endTime;
+  /// seconds since epoch indicating start time
+  final int startTime;
+  /// seconds since epoch indicating end time
+  final int endTime;
   final int decimalShift;
   final int tickSize;
   // custom <class CreateMarketReq>
@@ -234,4 +236,13 @@ class ReplaceReq {
 
 }
 // custom <part requests>
+
+CreateMarketReq createMarketReq(int reqId, int userId,
+    String name, DateTime startTime, DateTime endTime,
+    int decimalShift, int tickSize) =>
+  new CreateMarketReq(reqId, userId, name,
+      startTime.millisecondsSinceEpoch ~/ 1000,
+      endTime.millisecondsSinceEpoch ~/ 1000,
+      decimalShift, tickSize);
+
 // end <part requests>

@@ -77,6 +77,24 @@ Name of market to be created
       abbr: 'm',
       allowed: null
     );
+    _parser.addOption('start-time',
+      help: '''
+Time market begins - sample format: 
+''',
+      defaultsTo: '2015-01-03 13:30:00',
+      allowMultiple: false,
+      abbr: null,
+      allowed: null
+    );
+    _parser.addOption('end-time',
+      help: '''
+Time market end - sample format: 
+''',
+      defaultsTo: '2015-01-03 14:30:00',
+      allowMultiple: false,
+      abbr: null,
+      allowed: null
+    );
     _parser.addOption('decimal-shift',
       help: '''
 Number of decimal digits to shift for display purposes
@@ -114,6 +132,8 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
     result['user-id'] = argResults['user-id'] != null?
       int.parse(argResults['user-id']) : null;
     result['market-name'] = argResults['market-name'];
+    result['start-time'] = argResults['start-time'];
+    result['end-time'] = argResults['end-time'];
     result['decimal-shift'] = argResults['decimal-shift'] != null?
       int.parse(argResults['decimal-shift']) : null;
     result['tick-size'] = argResults['tick-size'] != null?
@@ -143,14 +163,18 @@ main(List<String> args) {
 
   final host = options['redis-host'];
   final port = options['redis-port'];
+  final startTime = DateTime.parse(options['start-time']);
+  final endTime = DateTime.parse(options['end-time']);
 
   RedisClient
     .connect('$host:$port')
     .then((RedisClient redisClient) {
       final client = new ExchClient(redisClient);
-      final req= new CreateMarketReq(
+      final req = createMarketReq(
         options['req-id'], options['user-id'],
-        options['market-name'], 't1', 't2',
+        options['market-name'],
+        startTime,
+        endTime,
         options['decimal-shift'], options['tick-size']);
       client.createMarket(req);
       redisClient.close();
