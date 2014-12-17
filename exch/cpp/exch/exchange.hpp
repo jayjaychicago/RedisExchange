@@ -52,7 +52,7 @@ class Exchange {
   void halt_handler() { request_listener_.unsubscribe(); }
 
   Market_exchange_naked_ptr get_market(Market_id_t market) {
-    Market_exchange_map_t::iterator found{ market_exchanges_.find(market) };
+    Market_exchange_map_t::iterator found{market_exchanges_.find(market)};
     if (found != market_exchanges_.end()) {
       return found->second.get();
     } else {
@@ -63,17 +63,17 @@ class Exchange {
   void create_market(Create_market_req const &req) {
 
     Create_market_result result;
-    Market_id_t market_id{ ++next_market_id_ };
+    Market_id_t market_id{++next_market_id_};
 
     using Insert_result_t = std::pair<Market_exchange_map_t::iterator, bool>;
 
-    Insert_result_t insert_result{ market_exchanges_.insert(
-        Market_exchange_map_t::value_type(market_id, Market_exchange_ptr())) };
+    Insert_result_t insert_result{market_exchanges_.insert(
+        Market_exchange_map_t::value_type(market_id, Market_exchange_ptr()))};
 
     if (insert_result.second) {
-      Market_config config{ req.name(),      req.start_time(),
-                            req.end_time(),  req.decimal_shift(),
-                            req.tick_size(), };
+      Market_config config{req.name(),      req.start_time(),
+                           req.end_time(),  req.decimal_shift(),
+                           req.tick_size(), };
 
       insert_result.first->second =
           Market_exchange_ptr(new Market_exchange(config, market_id));
@@ -89,7 +89,7 @@ class Exchange {
   };
 
   void submit(Submit_req const &req) {
-    Market_exchange_naked_ptr market{ get_market(req.market_id()) };
+    Market_exchange_naked_ptr market{get_market(req.market_id())};
     Submit_result result;
     Order_id_t submitted_id{};
 
@@ -97,8 +97,8 @@ class Exchange {
       result = Submit_invalid_market_e;
     } else {
       submitted_id = market->next_order_id();
-      Order order{ submitted_id, fcs::timestamp::current_time(), req.side(),
-                   req.quantity(), req.price() };
+      Order order{submitted_id, fcs::timestamp::current_time(), req.side(),
+                  req.quantity(), req.price()};
       result = market->submit(order);
     }
 
@@ -108,7 +108,7 @@ class Exchange {
   }
 
   void cancel(Cancel_req const &req) {
-    Market_exchange_naked_ptr market{ get_market(req.market_id()) };
+    Market_exchange_naked_ptr market{get_market(req.market_id())};
     Cancel_result result;
 
     result = (market == nullptr) ? Cancel_invalid_market_e
@@ -120,7 +120,7 @@ class Exchange {
   }
 
   void replace(Replace_req const &req) {
-    Market_exchange_naked_ptr market{ get_market(req.market_id()) };
+    Market_exchange_naked_ptr market{get_market(req.market_id())};
     Replace_result result;
     Order_id_t revised_order_id{};
 
@@ -129,10 +129,9 @@ class Exchange {
     } else {
       revised_order_id = market->next_order_id();
       Order revised_order{
-        revised_order_id, fcs::timestamp::current_time(),
-        Bid_side_e, // Not used: Side in book pulled from resting order
-        req.quantity(), req.price()
-      };
+          revised_order_id, fcs::timestamp::current_time(),
+          Bid_side_e,  // Not used: Side in book pulled from resting order
+          req.quantity(), req.price()};
 
       result = market->replace_order(req.order_id(), revised_order);
     }

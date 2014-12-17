@@ -9,32 +9,28 @@
 #include <sstream>
 
 namespace exch {
-  // custom <FcbBeginNamespace order_book>
+// custom <FcbBeginNamespace order_book>
 
-  using Tokenizer_t = boost::tokenizer< boost::char_separator<char> >;
-  using Token_iter_t = boost::tokenizer< boost::char_separator<char> >::iterator;
+using Tokenizer_t = boost::tokenizer<boost::char_separator<char> >;
+using Token_iter_t = boost::tokenizer<boost::char_separator<char> >::iterator;
 
-  template< typename T >
-  inline
-  bool next_token(Tokenizer_t & tokens,
-                  Token_iter_t & it,
-                  T & result) {
-    if(it != tokens.end()) {
-      result = boost::lexical_cast< T >(*it);
-      it++;
-      return true;
-    }
-    return false;
+template <typename T>
+inline bool next_token(Tokenizer_t& tokens, Token_iter_t& it, T& result) {
+  if (it != tokens.end()) {
+    result = boost::lexical_cast<T>(*it);
+    it++;
+    return true;
   }
+  return false;
+}
 
-  inline void invalid_order(std::string const& order) {
-    std::stringstream msg;
-    msg << "Order is invalid: " << order;
-    throw std::logic_error(msg.str());
-  }
+inline void invalid_order(std::string const& order) {
+  std::stringstream msg;
+  msg << "Order is invalid: " << order;
+  throw std::logic_error(msg.str());
+}
 
-
-  // end <FcbBeginNamespace order_book>
+// end <FcbBeginNamespace order_book>
 
 enum Order_state { Submitted_e, Active_e, Canceled_e, Filled_e };
 
@@ -79,47 +75,45 @@ class Order {
         price_{price},
         quantity_{quantity} {}
 
-    // custom <ClsPublic Order>
+  // custom <ClsPublic Order>
 
-    std::string to_tuple() const {
-      using namespace fcs::timestamp;
-      using namespace boost;
-      using namespace std;
-      std::stringstream out;
-      out << lexical_cast< string >(order_id_) << ':'
-          << lexical_cast< string >(ticks(timestamp_)) << ':'
-          << lexical_cast< string >(side_ == Bid_side_e? 'B' : 'S') << ':'
-          << lexical_cast< string >(price_) << ':'
-          << lexical_cast< string >(quantity_);
-      return out.str();
-    }
+  std::string to_tuple() const {
+    using namespace fcs::timestamp;
+    using namespace boost;
+    using namespace std;
+    std::stringstream out;
+    out << lexical_cast<string>(order_id_) << ':'
+        << lexical_cast<string>(ticks(timestamp_)) << ':'
+        << lexical_cast<string>(side_ == Bid_side_e ? 'B' : 'S') << ':'
+        << lexical_cast<string>(price_) << ':'
+        << lexical_cast<string>(quantity_);
+    return out.str();
+  }
 
-    static Order from_tuple(std::string const& tuple) {
-      using namespace boost;
-      using namespace fcs::timestamp;
-      char_separator<char> sep {":"};
-      tokenizer< char_separator<char> > tokens(tuple, sep);
-      boost::tokenizer< boost::char_separator<char> >::iterator it { tokens.begin() };
+  static Order from_tuple(std::string const& tuple) {
+    using namespace boost;
+    using namespace fcs::timestamp;
+    char_separator<char> sep{":"};
+    tokenizer<char_separator<char> > tokens(tuple, sep);
+    boost::tokenizer<boost::char_separator<char> >::iterator it{tokens.begin()};
 
-      Order_id_t order_id;
-      long long ticks;
-      char side;
-      Quantity_t quantity;
-      Price_t price;
+    Order_id_t order_id;
+    long long ticks;
+    char side;
+    Quantity_t quantity;
+    Price_t price;
 
-      if(!next_token(tokens, it, order_id)) invalid_order(tuple);
-      if(!next_token(tokens, it, ticks)) invalid_order(tuple);
-      if(!next_token(tokens, it, side)) invalid_order(tuple);
-      if(!next_token(tokens, it, price)) invalid_order(tuple);
-      if(!next_token(tokens, it, quantity)) invalid_order(tuple);
+    if (!next_token(tokens, it, order_id)) invalid_order(tuple);
+    if (!next_token(tokens, it, ticks)) invalid_order(tuple);
+    if (!next_token(tokens, it, side)) invalid_order(tuple);
+    if (!next_token(tokens, it, price)) invalid_order(tuple);
+    if (!next_token(tokens, it, quantity)) invalid_order(tuple);
 
-      return Order(order_id,
-                   Timestamp_t(Timestamp_t::time_rep_type(ticks)),
-                   side == 'B'? Bid_side_e : Ask_side_e,
-                   price, quantity);
-    }
+    return Order(order_id, Timestamp_t(Timestamp_t::time_rep_type(ticks)),
+                 side == 'B' ? Bid_side_e : Ask_side_e, price, quantity);
+  }
 
-    // end <ClsPublic Order>
+  // end <ClsPublic Order>
 
   //! getter for order_id_ (access is Ro)
   Order_id_t order_id() const { return order_id_; }
@@ -182,52 +176,49 @@ class Fill {
         price_{price},
         quantity_{quantity} {}
 
-    // custom <ClsPublic Fill>
+  // custom <ClsPublic Fill>
 
-    std::string to_tuple() const {
-      using namespace fcs::timestamp;
-      using namespace boost;
-      using namespace std;
-      std::stringstream out;
-      out << lexical_cast< string >(fill_id_) << ':'
-          << lexical_cast< string >(ticks(timestamp_)) << ':'
-          << lexical_cast< string >(order_id_) << ':'
-          << lexical_cast< string >(side_ == Bid_side_e? 'B' : 'S') << ':'
-          << lexical_cast< string >(price_) << ':'
-          << lexical_cast< string >(quantity_);
-      return out.str();
-    }
+  std::string to_tuple() const {
+    using namespace fcs::timestamp;
+    using namespace boost;
+    using namespace std;
+    std::stringstream out;
+    out << lexical_cast<string>(fill_id_) << ':'
+        << lexical_cast<string>(ticks(timestamp_)) << ':'
+        << lexical_cast<string>(order_id_) << ':'
+        << lexical_cast<string>(side_ == Bid_side_e ? 'B' : 'S') << ':'
+        << lexical_cast<string>(price_) << ':'
+        << lexical_cast<string>(quantity_);
+    return out.str();
+  }
 
-    static Fill from_tuple(std::string const& tuple) {
-      using namespace boost;
-      using namespace fcs::timestamp;
-      char_separator<char> sep {":"};
-      tokenizer< char_separator<char> > tokens(tuple, sep);
-      boost::tokenizer< boost::char_separator<char> >::iterator it { tokens.begin() };
+  static Fill from_tuple(std::string const& tuple) {
+    using namespace boost;
+    using namespace fcs::timestamp;
+    char_separator<char> sep{":"};
+    tokenizer<char_separator<char> > tokens(tuple, sep);
+    boost::tokenizer<boost::char_separator<char> >::iterator it{tokens.begin()};
 
-      Fill_id_t fill_id;
-      long long ticks;
-      Order_id_t order_id;
-      char side;
-      Quantity_t quantity;
-      Price_t price;
+    Fill_id_t fill_id;
+    long long ticks;
+    Order_id_t order_id;
+    char side;
+    Quantity_t quantity;
+    Price_t price;
 
-      if(!next_token(tokens, it, fill_id)) invalid_order(tuple);
-      if(!next_token(tokens, it, ticks)) invalid_order(tuple);
-      if(!next_token(tokens, it, order_id)) invalid_order(tuple);
-      if(!next_token(tokens, it, side)) invalid_order(tuple);
-      if(!next_token(tokens, it, price)) invalid_order(tuple);
-      if(!next_token(tokens, it, quantity)) invalid_order(tuple);
+    if (!next_token(tokens, it, fill_id)) invalid_order(tuple);
+    if (!next_token(tokens, it, ticks)) invalid_order(tuple);
+    if (!next_token(tokens, it, order_id)) invalid_order(tuple);
+    if (!next_token(tokens, it, side)) invalid_order(tuple);
+    if (!next_token(tokens, it, price)) invalid_order(tuple);
+    if (!next_token(tokens, it, quantity)) invalid_order(tuple);
 
-      return Fill(fill_id,
-                  Timestamp_t(Timestamp_t::time_rep_type(ticks)),
-                  order_id,
-                  side == 'B'? Bid_side_e : Ask_side_e,
-                  price,
-                  quantity);
-    }
+    return Fill(fill_id, Timestamp_t(Timestamp_t::time_rep_type(ticks)),
+                order_id, side == 'B' ? Bid_side_e : Ask_side_e, price,
+                quantity);
+  }
 
-    // end <ClsPublic Fill>
+  // end <ClsPublic Fill>
 
   //! getter for fill_id_ (access is Ro)
   Fill_id_t fill_id() const { return fill_id_; }

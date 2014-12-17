@@ -53,8 +53,8 @@ class Managed_order {
  public:
   Managed_order(Order const& order) : order{order} {}
 
-    // custom <ClsPublic Managed_order>
-    // end <ClsPublic Managed_order>
+  // custom <ClsPublic Managed_order>
+  // end <ClsPublic Managed_order>
 
   Order const order;
   Order_state order_state{Submitted_e};
@@ -71,26 +71,27 @@ class Market_exchange {
   Market_exchange(Market_config const& market_config, Market_id_t market_id)
       : market_config_{market_config}, market_id_{market_id} {}
 
-    // custom <ClsPublic Market_exchange>
+  // custom <ClsPublic Market_exchange>
 
-    Submit_result submit(Order const& order) {
-      std::cout << "Submit being processed:" << order << std::endl;
-      return Submit_result();
-    }
+  Submit_result submit(Order const& order) {
+    std::cout << "Submit being processed:" << order << std::endl;
+    return Submit_result();
+  }
 
-    Cancel_result cancel(Order_id_t const& order_id) {
-      std::cout << "Cancel being processed:" << order_id << std::endl;
-      return Cancel_result();
-    }
+  Cancel_result cancel(Order_id_t const& order_id) {
+    std::cout << "Cancel being processed:" << order_id << std::endl;
+    return Cancel_result();
+  }
 
-    Replace_result replace_order(Order_id_t original, Order const& order) {
-      std::cout << "replace being processed:" << original << " replaced with " << order << std::endl;
-      return Replace_result();
-    }
+  Replace_result replace_order(Order_id_t original, Order const& order) {
+    std::cout << "replace being processed:" << original << " replaced with "
+              << order << std::endl;
+    return Replace_result();
+  }
 
-    Order_id_t next_order_id() { return ++next_order_id_; }
+  Order_id_t next_order_id() { return ++next_order_id_; }
 
-    // end <ClsPublic Market_exchange>
+  // end <ClsPublic Market_exchange>
 
  private:
   Market_config market_config_;

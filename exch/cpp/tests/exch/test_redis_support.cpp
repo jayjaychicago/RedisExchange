@@ -3,8 +3,8 @@
 
 namespace exch {
 void test_redis_listener() {
-    // custom <redis_listener>
-    // end <redis_listener>
+  // custom <redis_listener>
+  // end <redis_listener>
 }
 
 }  // namespace exch

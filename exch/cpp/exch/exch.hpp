@@ -45,12 +45,12 @@ enum Replace_result {
   Replace_invalid_order_details_e
 };
 
-  // custom <FcbEndNamespace exch>
+// custom <FcbEndNamespace exch>
 
-  constexpr size_t Market_id_strlen =
-    size_t(8*sizeof(Market_id_t)/3.1622776601683795) + 1;
+constexpr size_t Market_id_strlen =
+    size_t(8 * sizeof(Market_id_t) / 3.1622776601683795) + 1;
 
-  // end <FcbEndNamespace exch>
+// end <FcbEndNamespace exch>
 
 }  // namespace exch
 #endif  // __EXCH_EXCH_HPP__

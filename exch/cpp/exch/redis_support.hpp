@@ -9,19 +9,19 @@
 #include <sstream>
 
 namespace exch {
-  // custom <FcbBeginNamespace redis_support>
+// custom <FcbBeginNamespace redis_support>
 
-  std::string redis_key(std::string const& market_id, Order const& order) {
-    std::string result;
-    result.reserve(32); // 11 for market id + 1 for colon + 11 order id up
-    // to power of 2
-    result.append(market_id);
-    result.push_back(':');
-    result.append(boost::lexical_cast< std::string >(order.order_id()));
-    return result;
-  }
+std::string redis_key(std::string const& market_id, Order const& order) {
+  std::string result;
+  result.reserve(32);  // 11 for market id + 1 for colon + 11 order id up
+  // to power of 2
+  result.append(market_id);
+  result.push_back(':');
+  result.append(boost::lexical_cast<std::string>(order.order_id()));
+  return result;
+}
 
-  // end <FcbBeginNamespace redis_support>
+// end <FcbBeginNamespace redis_support>
 
 using Req_func_t = boost::function<void(const std::string& request)>;
 
@@ -32,103 +32,94 @@ class Redis_listener : public Request_listener {
  public:
   Redis_listener(RedisClient& redis_client) : redis_client_{redis_client} {}
 
-    // custom <ClsPublic Redis_listener>
+  // custom <ClsPublic Redis_listener>
 
-    virtual void subscribe(
-      Create_market_handler_t create_market_handler,
-      Submit_handler_t submit_handler,
-      Cancel_handler_t cancel_handler,
-      Replace_handler_t replace_handler,
-      Halt_handler_t halt_handler) {
+  virtual void subscribe(Create_market_handler_t create_market_handler,
+                         Submit_handler_t submit_handler,
+                         Cancel_handler_t cancel_handler,
+                         Replace_handler_t replace_handler,
+                         Halt_handler_t halt_handler) {
 
-      create_market_handler_ = create_market_handler;
-      submit_handler_ = submit_handler;
-      cancel_handler_ = cancel_handler;
-      replace_handler_ = replace_handler;
-      halt_handler_ = halt_handler;
+    create_market_handler_ = create_market_handler;
+    submit_handler_ = submit_handler;
+    cancel_handler_ = cancel_handler;
+    replace_handler_ = replace_handler;
+    halt_handler_ = halt_handler;
 
-      m_handle_ = redis_client_
-        .subscribe("EX_REQ:M",
-                   std::bind(&Redis_listener::create_market, this,
-                             std::placeholders::_1));
+    m_handle_ = redis_client_.subscribe(
+        "EX_REQ:M",
+        std::bind(&Redis_listener::create_market, this, std::placeholders::_1));
 
-      s_handle_ = redis_client_
-        .subscribe("EX_REQ:S",
-                   std::bind(&Redis_listener::submit, this,
-                             std::placeholders::_1));
+    s_handle_ = redis_client_.subscribe(
+        "EX_REQ:S",
+        std::bind(&Redis_listener::submit, this, std::placeholders::_1));
 
-      c_handle_ = redis_client_
-        .subscribe("EX_REQ:C",
-                   std::bind(&Redis_listener::cancel, this,
-                             std::placeholders::_1));
+    c_handle_ = redis_client_.subscribe(
+        "EX_REQ:C",
+        std::bind(&Redis_listener::cancel, this, std::placeholders::_1));
 
+    r_handle_ = redis_client_.subscribe(
+        "EX_REQ:R",
+        std::bind(&Redis_listener::replace, this, std::placeholders::_1));
 
-      r_handle_ = redis_client_
-        .subscribe("EX_REQ:R",
-                   std::bind(&Redis_listener::replace, this,
-                             std::placeholders::_1));
+    h_handle_ = redis_client_.subscribe("EX_REQ:H",
+                                        std::bind(&Redis_listener::halt, this));
+  }
 
-      h_handle_ = redis_client_
-        .subscribe("EX_REQ:H",
-                   std::bind(&Redis_listener::halt, this));
+  virtual void unsubscribe() {
+    if (m_handle_.id) {
+      redis_client_.unsubscribe(m_handle_);
     }
-
-    virtual void unsubscribe() {
-      if(m_handle_.id) {
-        redis_client_.unsubscribe(m_handle_);
-      }
-      if(s_handle_.id) {
-        redis_client_.unsubscribe(s_handle_);
-      }
-      if(c_handle_.id) {
-        redis_client_.unsubscribe(c_handle_);
-      }
-      if(r_handle_.id) {
-        redis_client_.unsubscribe(r_handle_);
-      }
-      if(h_handle_.id) {
-        redis_client_.unsubscribe(h_handle_);
-      }
+    if (s_handle_.id) {
+      redis_client_.unsubscribe(s_handle_);
     }
-
-    void create_market(std::string const& command) {
-      Create_market_req req;
-      std::istringstream in { command };
-      req.serialize_from_json(in);
-      create_market_handler_(req);
+    if (c_handle_.id) {
+      redis_client_.unsubscribe(c_handle_);
     }
-
-    void submit(std::string const& command) {
-      Submit_req req;
-      std::istringstream in { command };
-      req.serialize_from_json(in);
-      submit_handler_(req);
+    if (r_handle_.id) {
+      redis_client_.unsubscribe(r_handle_);
     }
-
-    void cancel(std::string const& command) {
-      Cancel_req req;
-      std::istringstream in { command };
-      req.serialize_from_json(in);
-      cancel_handler_(req);
+    if (h_handle_.id) {
+      redis_client_.unsubscribe(h_handle_);
     }
+  }
 
-    void replace(std::string const& command) {
-      Replace_req req;
-      std::istringstream in { command };
-      req.serialize_from_json(in);
-      replace_handler_(req);
-    }
+  void create_market(std::string const& command) {
+    Create_market_req req;
+    std::istringstream in{command};
+    req.serialize_from_json(in);
+    create_market_handler_(req);
+  }
 
-    void halt() {
-      std::cout << "halt req " << std::endl;
-      halt_handler_();
-    }
+  void submit(std::string const& command) {
+    Submit_req req;
+    std::istringstream in{command};
+    req.serialize_from_json(in);
+    submit_handler_(req);
+  }
 
-    virtual ~Redis_listener() {
-      unsubscribe();
-    }
+  void cancel(std::string const& command) {
+    Cancel_req req;
+    std::istringstream in{command};
+    req.serialize_from_json(in);
+    cancel_handler_(req);
+  }
 
-    // end <ClsPublic Redis_listener>
+  void replace(std::string const& command) {
+    Replace_req req;
+    std::istringstream in{command};
+    req.serialize_from_json(in);
+    replace_handler_(req);
+  }
+
+  void halt() {
+    std::cout << "halt req " << std::endl;
+    halt_handler_();
+  }
+
+  virtual ~Redis_listener() { unsubscribe(); }
+
+  // end <ClsPublic Redis_listener>
 
  private:
   RedisClient& redis_client_;
@@ -148,36 +139,29 @@ class Redis_persister : public Request_persister {
  public:
   Redis_persister(RedisClient& redis_client) : redis_client_{redis_client} {}
 
-    // custom <ClsPublic Redis_persister>
+  // custom <ClsPublic Redis_persister>
 
-    virtual void persist(Create_market_req const& req) {
-      _persist(req);
-    }
+  virtual void persist(Create_market_req const& req) { _persist(req); }
 
-    virtual void persist(Submit_req const& req) {
-      _persist(req);
-    }
+  virtual void persist(Submit_req const& req) { _persist(req); }
 
-    virtual void persist(Cancel_req const& req) {
-      _persist(req);
-    }
+  virtual void persist(Cancel_req const& req) { _persist(req); }
 
-    virtual void persist(Replace_req const& req) {
-      _persist(req);
-    }
+  virtual void persist(Replace_req const& req) { _persist(req); }
 
-    // end <ClsPublic Redis_persister>
+  // end <ClsPublic Redis_persister>
 
  private:
-    // custom <ClsPrivate Redis_persister>
+  // custom <ClsPrivate Redis_persister>
 
-    template< typename T > void _persist(T const& item) {
-      std::ostringstream out;
-      item.serialize_to_json(out);
-      redis_client_.command("LPUSH", CMD_KEY, out.str());
-    }
+  template <typename T>
+  void _persist(T const& item) {
+    std::ostringstream out;
+    item.serialize_to_json(out);
+    redis_client_.command("LPUSH", CMD_KEY, out.str());
+  }
 
-    // end <ClsPrivate Redis_persister>
+  // end <ClsPrivate Redis_persister>
 
   RedisClient& redis_client_;
   static constexpr char const* CMD_KEY{"CMD"};
@@ -191,54 +175,37 @@ class Redis_publisher : public Market_publisher {
  public:
   Redis_publisher(RedisClient& redis_client) : redis_client_{redis_client} {}
 
-    // custom <ClsPublic Redis_publisher>
+  // custom <ClsPublic Redis_publisher>
 
-    virtual void publish(Create_market_resp const& resp) {
-      _publish(resp);
-    }
+  virtual void publish(Create_market_resp const& resp) { _publish(resp); }
 
-    virtual void publish(Submit_resp const& resp) {
-      _publish(resp);
-    }
+  virtual void publish(Submit_resp const& resp) { _publish(resp); }
 
-    virtual void publish(Cancel_resp const& resp) {
-      _publish(resp);
-    }
+  virtual void publish(Cancel_resp const& resp) { _publish(resp); }
 
-    virtual void publish(Replace_resp const& resp) {
-      _publish(resp);
-    }
+  virtual void publish(Replace_resp const& resp) { _publish(resp); }
 
+  virtual void publish(Market_created_evt const& evt) { _publish(evt); }
 
-    virtual void publish(Market_created_evt const& evt) {
-      _publish(evt);
-    }
+  virtual void publish(Top_of_book_evt const& evt) { _publish(evt); }
 
-    virtual void publish(Top_of_book_evt const& evt) {
-      _publish(evt);
-    }
+  virtual void publish(Book_update_evt const& evt) { _publish(evt); }
 
-    virtual void publish(Book_update_evt const& evt) {
-      _publish(evt);
-    }
+  virtual void publish(Trade_evt const& evt) { _publish(evt); }
 
-    virtual void publish(Trade_evt const& evt) {
-      _publish(evt);
-    }
-
-
-    // end <ClsPublic Redis_publisher>
+  // end <ClsPublic Redis_publisher>
 
  private:
-    // custom <ClsPrivate Redis_publisher>
+  // custom <ClsPrivate Redis_publisher>
 
-    template< typename T > void _publish(T const& item) {
-      std::ostringstream out;
-      item.serialize_to_json(out);
-      redis_client_.publish(RESP_KEY, out.str());
-    }
+  template <typename T>
+  void _publish(T const& item) {
+    std::ostringstream out;
+    item.serialize_to_json(out);
+    redis_client_.publish(RESP_KEY, out.str());
+  }
 
-    // end <ClsPrivate Redis_publisher>
+  // end <ClsPrivate Redis_publisher>
 
   RedisClient& redis_client_;
   static constexpr char const* RESP_KEY{"EX_RESP"};
