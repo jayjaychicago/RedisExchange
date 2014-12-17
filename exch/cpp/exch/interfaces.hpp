@@ -8,17 +8,17 @@
 
 namespace exch {
 using Create_market_handler_t =
-    boost::function<void(const Create_market_req &req)>;
-using Submit_handler_t = boost::function<void(const Submit_req &req)>;
-using Cancel_handler_t = boost::function<void(const Cancel_req &req)>;
-using Replace_handler_t = boost::function<void(const Replace_req &req)>;
+    boost::function<void(const Create_market_req& req)>;
+using Submit_handler_t = boost::function<void(const Submit_req& req)>;
+using Cancel_handler_t = boost::function<void(const Cancel_req& req)>;
+using Replace_handler_t = boost::function<void(const Replace_req& req)>;
 using Halt_handler_t = boost::function<void()>;
 
 /**
  Listens for requests (submit, cancel, replace,...) from clients
 */
 class Request_listener {
-public:
+ public:
   virtual ~Request_listener() {}
     // custom <ClsPublic Request_listener>
 
@@ -37,14 +37,14 @@ public:
  Persists requests (submit, cancel, replace,...) and results
 */
 class Request_persister {
-public:
+ public:
   virtual ~Request_persister() {}
     // custom <ClsPublic Request_persister>
 
-    virtual void persist(Create_market_req const& req) = 0;
-    virtual void persist(Submit_req const& req) = 0;
-    virtual void persist(Cancel_req const& req) = 0;
-    virtual void persist(Replace_req const& req) = 0;
+  virtual void persist(Create_market_req const& req) = 0;
+  virtual void persist(Submit_req const& req) = 0;
+  virtual void persist(Cancel_req const& req) = 0;
+  virtual void persist(Replace_req const& req) = 0;
 
     // end <ClsPublic Request_persister>
 };
@@ -53,7 +53,7 @@ public:
  Publishes market events (fill, top_of_book,...)
 */
 class Market_publisher {
-public:
+ public:
   virtual ~Market_publisher() {}
     // custom <ClsPublic Market_publisher>
 
@@ -70,5 +70,5 @@ public:
     // end <ClsPublic Market_publisher>
 };
 
-} // namespace exch
-#endif // __EXCH_INTERFACES_HPP__
+}  // namespace exch
+#endif  // __EXCH_INTERFACES_HPP__

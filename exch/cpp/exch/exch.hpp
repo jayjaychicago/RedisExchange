@@ -52,5 +52,5 @@ enum Replace_result {
 
   // end <FcbEndNamespace exch>
 
-} // namespace exch
-#endif // __EXCH_EXCH_HPP__
+}  // namespace exch
+#endif  // __EXCH_EXCH_HPP__

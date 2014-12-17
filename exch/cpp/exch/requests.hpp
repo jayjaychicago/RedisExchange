@@ -10,13 +10,17 @@
 
 namespace exch {
 class Create_market_req {
-public:
-  Create_market_req(Req_id_t req_id, User_id_t user_id, std::string const &name,
+ public:
+  Create_market_req(Req_id_t req_id, User_id_t user_id, std::string const& name,
                     Timestamp_t start_time, Timestamp_t end_time,
                     int decimal_shift, int tick_size)
-      : req_id_{ req_id }, user_id_{ user_id }, name_{ name },
-        start_time_{ start_time }, end_time_{ end_time },
-        decimal_shift_{ decimal_shift }, tick_size_{ tick_size } {}
+      : req_id_{req_id},
+        user_id_{user_id},
+        name_{name},
+        start_time_{start_time},
+        end_time_{end_time},
+        decimal_shift_{decimal_shift},
+        tick_size_{tick_size} {}
 
   Create_market_req() = default;
   //! getter for req_id_ (access is Ro)
@@ -26,7 +30,7 @@ public:
   User_id_t user_id() const { return user_id_; }
 
   //! getter for name_ (access is Ro)
-  std::string const &name() const { return name_; }
+  std::string const& name() const { return name_; }
 
   //! getter for start_time_ (access is Ro)
   Timestamp_t start_time() const { return start_time_; }
@@ -39,8 +43,8 @@ public:
 
   //! getter for tick_size_ (access is Ro)
   int tick_size() const { return tick_size_; }
-  friend inline std::ostream &operator<<(std::ostream &out,
-                                         Create_market_req const &item) {
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Create_market_req const& item) {
     out << '\n' << "req_id:" << item.req_id_;
     out << '\n' << "user_id:" << item.user_id_;
     out << '\n' << "name:" << item.name_;
@@ -51,7 +55,8 @@ public:
     return out;
   }
 
-  template <class Archive> void serialize(Archive &ar__) {
+  template <class Archive>
+  void serialize(Archive& ar__) {
     ar__(cereal::make_nvp("req_id", req_id_));
     ar__(cereal::make_nvp("user_id", user_id_));
     ar__(cereal::make_nvp("name", name_));
@@ -61,17 +66,17 @@ public:
     ar__(cereal::make_nvp("tick_size", tick_size_));
   }
 
-  void serialize_to_json(std::ostream &out__) const {
+  void serialize_to_json(std::ostream& out__) const {
     cereal::JSONOutputArchive ar__(out__);
-    const_cast<Create_market_req *>(this)->serialize(ar__);
+    const_cast<Create_market_req*>(this)->serialize(ar__);
   }
 
-  void serialize_from_json(std::istream &in__) {
-    cereal::JSONInputArchive ar__{ in__ };
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
     serialize(ar__);
   }
 
-private:
+ private:
   Req_id_t const req_id_{};
   User_id_t const user_id_{};
   std::string const name_{};
@@ -82,11 +87,13 @@ private:
 };
 
 class Create_market_resp {
-public:
+ public:
   Create_market_resp(Req_id_t req_id, User_id_t user_id, Market_id_t market_id,
                      Create_market_result result)
-      : req_id_{ req_id }, user_id_{ user_id }, market_id_{ market_id },
-        result_{ result } {}
+      : req_id_{req_id},
+        user_id_{user_id},
+        market_id_{market_id},
+        result_{result} {}
 
   Create_market_resp() = default;
   //! getter for req_id_ (access is Ro)
@@ -100,8 +107,8 @@ public:
 
   //! getter for result_ (access is Ro)
   Create_market_result result() const { return result_; }
-  friend inline std::ostream &operator<<(std::ostream &out,
-                                         Create_market_resp const &item) {
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Create_market_resp const& item) {
     out << '\n' << "req_id:" << item.req_id_;
     out << '\n' << "user_id:" << item.user_id_;
     out << '\n' << "market_id:" << item.market_id_;
@@ -109,24 +116,25 @@ public:
     return out;
   }
 
-  template <class Archive> void serialize(Archive &ar__) {
+  template <class Archive>
+  void serialize(Archive& ar__) {
     ar__(cereal::make_nvp("req_id", req_id_));
     ar__(cereal::make_nvp("user_id", user_id_));
     ar__(cereal::make_nvp("market_id", market_id_));
     ar__(cereal::make_nvp("result", result_));
   }
 
-  void serialize_to_json(std::ostream &out__) const {
+  void serialize_to_json(std::ostream& out__) const {
     cereal::JSONOutputArchive ar__(out__);
-    const_cast<Create_market_resp *>(this)->serialize(ar__);
+    const_cast<Create_market_resp*>(this)->serialize(ar__);
   }
 
-  void serialize_from_json(std::istream &in__) {
-    cereal::JSONInputArchive ar__{ in__ };
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
     serialize(ar__);
   }
 
-private:
+ private:
   Req_id_t const req_id_{};
   User_id_t const user_id_{};
   Market_id_t const market_id_{};
@@ -134,11 +142,15 @@ private:
 };
 
 class Submit_req {
-public:
+ public:
   Submit_req(Req_id_t req_id, User_id_t user_id, Market_id_t market_id,
              Side side, Price_t price, Quantity_t quantity)
-      : req_id_{ req_id }, user_id_{ user_id }, market_id_{ market_id },
-        side_{ side }, price_{ price }, quantity_{ quantity } {}
+      : req_id_{req_id},
+        user_id_{user_id},
+        market_id_{market_id},
+        side_{side},
+        price_{price},
+        quantity_{quantity} {}
 
   Submit_req() = default;
   //! getter for req_id_ (access is Ro)
@@ -158,8 +170,8 @@ public:
 
   //! getter for quantity_ (access is Ro)
   Quantity_t quantity() const { return quantity_; }
-  friend inline std::ostream &operator<<(std::ostream &out,
-                                         Submit_req const &item) {
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Submit_req const& item) {
     out << '\n' << "req_id:" << item.req_id_;
     out << '\n' << "user_id:" << item.user_id_;
     out << '\n' << "market_id:" << item.market_id_;
@@ -169,7 +181,8 @@ public:
     return out;
   }
 
-  template <class Archive> void serialize(Archive &ar__) {
+  template <class Archive>
+  void serialize(Archive& ar__) {
     ar__(cereal::make_nvp("req_id", req_id_));
     ar__(cereal::make_nvp("user_id", user_id_));
     ar__(cereal::make_nvp("market_id", market_id_));
@@ -178,17 +191,17 @@ public:
     ar__(cereal::make_nvp("quantity", quantity_));
   }
 
-  void serialize_to_json(std::ostream &out__) const {
+  void serialize_to_json(std::ostream& out__) const {
     cereal::JSONOutputArchive ar__(out__);
-    const_cast<Submit_req *>(this)->serialize(ar__);
+    const_cast<Submit_req*>(this)->serialize(ar__);
   }
 
-  void serialize_from_json(std::istream &in__) {
-    cereal::JSONInputArchive ar__{ in__ };
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
     serialize(ar__);
   }
 
-private:
+ private:
   Req_id_t const req_id_{};
   User_id_t const user_id_{};
   Market_id_t const market_id_{};
@@ -198,11 +211,14 @@ private:
 };
 
 class Submit_resp {
-public:
+ public:
   Submit_resp(Req_id_t req_id, User_id_t user_id, Market_id_t market_id,
               Order_id_t order_id, Submit_result result)
-      : req_id_{ req_id }, user_id_{ user_id }, market_id_{ market_id },
-        order_id_{ order_id }, result_{ result } {}
+      : req_id_{req_id},
+        user_id_{user_id},
+        market_id_{market_id},
+        order_id_{order_id},
+        result_{result} {}
 
   Submit_resp() = default;
   //! getter for req_id_ (access is Ro)
@@ -219,8 +235,8 @@ public:
 
   //! getter for result_ (access is Ro)
   Submit_result result() const { return result_; }
-  friend inline std::ostream &operator<<(std::ostream &out,
-                                         Submit_resp const &item) {
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Submit_resp const& item) {
     out << '\n' << "req_id:" << item.req_id_;
     out << '\n' << "user_id:" << item.user_id_;
     out << '\n' << "market_id:" << item.market_id_;
@@ -229,7 +245,8 @@ public:
     return out;
   }
 
-  template <class Archive> void serialize(Archive &ar__) {
+  template <class Archive>
+  void serialize(Archive& ar__) {
     ar__(cereal::make_nvp("req_id", req_id_));
     ar__(cereal::make_nvp("user_id", user_id_));
     ar__(cereal::make_nvp("market_id", market_id_));
@@ -237,17 +254,17 @@ public:
     ar__(cereal::make_nvp("result", result_));
   }
 
-  void serialize_to_json(std::ostream &out__) const {
+  void serialize_to_json(std::ostream& out__) const {
     cereal::JSONOutputArchive ar__(out__);
-    const_cast<Submit_resp *>(this)->serialize(ar__);
+    const_cast<Submit_resp*>(this)->serialize(ar__);
   }
 
-  void serialize_from_json(std::istream &in__) {
-    cereal::JSONInputArchive ar__{ in__ };
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
     serialize(ar__);
   }
 
-private:
+ private:
   Req_id_t const req_id_{};
   User_id_t const user_id_{};
   Market_id_t const market_id_{};
@@ -256,11 +273,13 @@ private:
 };
 
 class Cancel_req {
-public:
+ public:
   Cancel_req(Req_id_t req_id, User_id_t user_id, Market_id_t market_id,
              Order_id_t order_id)
-      : req_id_{ req_id }, user_id_{ user_id }, market_id_{ market_id },
-        order_id_{ order_id } {}
+      : req_id_{req_id},
+        user_id_{user_id},
+        market_id_{market_id},
+        order_id_{order_id} {}
 
   Cancel_req() = default;
   //! getter for req_id_ (access is Ro)
@@ -274,8 +293,8 @@ public:
 
   //! getter for order_id_ (access is Ro)
   Order_id_t order_id() const { return order_id_; }
-  friend inline std::ostream &operator<<(std::ostream &out,
-                                         Cancel_req const &item) {
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Cancel_req const& item) {
     out << '\n' << "req_id:" << item.req_id_;
     out << '\n' << "user_id:" << item.user_id_;
     out << '\n' << "market_id:" << item.market_id_;
@@ -283,24 +302,25 @@ public:
     return out;
   }
 
-  template <class Archive> void serialize(Archive &ar__) {
+  template <class Archive>
+  void serialize(Archive& ar__) {
     ar__(cereal::make_nvp("req_id", req_id_));
     ar__(cereal::make_nvp("user_id", user_id_));
     ar__(cereal::make_nvp("market_id", market_id_));
     ar__(cereal::make_nvp("order_id", order_id_));
   }
 
-  void serialize_to_json(std::ostream &out__) const {
+  void serialize_to_json(std::ostream& out__) const {
     cereal::JSONOutputArchive ar__(out__);
-    const_cast<Cancel_req *>(this)->serialize(ar__);
+    const_cast<Cancel_req*>(this)->serialize(ar__);
   }
 
-  void serialize_from_json(std::istream &in__) {
-    cereal::JSONInputArchive ar__{ in__ };
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
     serialize(ar__);
   }
 
-private:
+ private:
   Req_id_t const req_id_{};
   User_id_t const user_id_{};
   Market_id_t const market_id_{};
@@ -308,11 +328,14 @@ private:
 };
 
 class Cancel_resp {
-public:
+ public:
   Cancel_resp(Req_id_t req_id, User_id_t user_id, Market_id_t market_id,
               Order_id_t order_id, Cancel_result result)
-      : req_id_{ req_id }, user_id_{ user_id }, market_id_{ market_id },
-        order_id_{ order_id }, result_{ result } {}
+      : req_id_{req_id},
+        user_id_{user_id},
+        market_id_{market_id},
+        order_id_{order_id},
+        result_{result} {}
 
   Cancel_resp() = default;
   //! getter for req_id_ (access is Ro)
@@ -329,8 +352,8 @@ public:
 
   //! getter for result_ (access is Ro)
   Cancel_result result() const { return result_; }
-  friend inline std::ostream &operator<<(std::ostream &out,
-                                         Cancel_resp const &item) {
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Cancel_resp const& item) {
     out << '\n' << "req_id:" << item.req_id_;
     out << '\n' << "user_id:" << item.user_id_;
     out << '\n' << "market_id:" << item.market_id_;
@@ -339,7 +362,8 @@ public:
     return out;
   }
 
-  template <class Archive> void serialize(Archive &ar__) {
+  template <class Archive>
+  void serialize(Archive& ar__) {
     ar__(cereal::make_nvp("req_id", req_id_));
     ar__(cereal::make_nvp("user_id", user_id_));
     ar__(cereal::make_nvp("market_id", market_id_));
@@ -347,17 +371,17 @@ public:
     ar__(cereal::make_nvp("result", result_));
   }
 
-  void serialize_to_json(std::ostream &out__) const {
+  void serialize_to_json(std::ostream& out__) const {
     cereal::JSONOutputArchive ar__(out__);
-    const_cast<Cancel_resp *>(this)->serialize(ar__);
+    const_cast<Cancel_resp*>(this)->serialize(ar__);
   }
 
-  void serialize_from_json(std::istream &in__) {
-    cereal::JSONInputArchive ar__{ in__ };
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
     serialize(ar__);
   }
 
-private:
+ private:
   Req_id_t const req_id_{};
   User_id_t const user_id_{};
   Market_id_t const market_id_{};
@@ -366,11 +390,15 @@ private:
 };
 
 class Replace_req {
-public:
+ public:
   Replace_req(Req_id_t req_id, User_id_t user_id, Market_id_t market_id,
               Order_id_t order_id, Price_t price, Quantity_t quantity)
-      : req_id_{ req_id }, user_id_{ user_id }, market_id_{ market_id },
-        order_id_{ order_id }, price_{ price }, quantity_{ quantity } {}
+      : req_id_{req_id},
+        user_id_{user_id},
+        market_id_{market_id},
+        order_id_{order_id},
+        price_{price},
+        quantity_{quantity} {}
 
   Replace_req() = default;
   //! getter for req_id_ (access is Ro)
@@ -390,8 +418,8 @@ public:
 
   //! getter for quantity_ (access is Ro)
   Quantity_t quantity() const { return quantity_; }
-  friend inline std::ostream &operator<<(std::ostream &out,
-                                         Replace_req const &item) {
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Replace_req const& item) {
     out << '\n' << "req_id:" << item.req_id_;
     out << '\n' << "user_id:" << item.user_id_;
     out << '\n' << "market_id:" << item.market_id_;
@@ -401,7 +429,8 @@ public:
     return out;
   }
 
-  template <class Archive> void serialize(Archive &ar__) {
+  template <class Archive>
+  void serialize(Archive& ar__) {
     ar__(cereal::make_nvp("req_id", req_id_));
     ar__(cereal::make_nvp("user_id", user_id_));
     ar__(cereal::make_nvp("market_id", market_id_));
@@ -410,17 +439,17 @@ public:
     ar__(cereal::make_nvp("quantity", quantity_));
   }
 
-  void serialize_to_json(std::ostream &out__) const {
+  void serialize_to_json(std::ostream& out__) const {
     cereal::JSONOutputArchive ar__(out__);
-    const_cast<Replace_req *>(this)->serialize(ar__);
+    const_cast<Replace_req*>(this)->serialize(ar__);
   }
 
-  void serialize_from_json(std::istream &in__) {
-    cereal::JSONInputArchive ar__{ in__ };
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
     serialize(ar__);
   }
 
-private:
+ private:
   Req_id_t const req_id_{};
   User_id_t const user_id_{};
   Market_id_t const market_id_{};
@@ -430,13 +459,16 @@ private:
 };
 
 class Replace_resp {
-public:
+ public:
   Replace_resp(Req_id_t req_id, User_id_t user_id, Market_id_t market_id,
                Order_id_t canceled_order_id, Order_id_t order_id,
                Replace_result result)
-      : req_id_{ req_id }, user_id_{ user_id }, market_id_{ market_id },
-        canceled_order_id_{ canceled_order_id }, order_id_{ order_id },
-        result_{ result } {}
+      : req_id_{req_id},
+        user_id_{user_id},
+        market_id_{market_id},
+        canceled_order_id_{canceled_order_id},
+        order_id_{order_id},
+        result_{result} {}
 
   Replace_resp() = default;
   //! getter for req_id_ (access is Ro)
@@ -456,8 +488,8 @@ public:
 
   //! getter for result_ (access is Ro)
   Replace_result result() const { return result_; }
-  friend inline std::ostream &operator<<(std::ostream &out,
-                                         Replace_resp const &item) {
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Replace_resp const& item) {
     out << '\n' << "req_id:" << item.req_id_;
     out << '\n' << "user_id:" << item.user_id_;
     out << '\n' << "market_id:" << item.market_id_;
@@ -467,7 +499,8 @@ public:
     return out;
   }
 
-  template <class Archive> void serialize(Archive &ar__) {
+  template <class Archive>
+  void serialize(Archive& ar__) {
     ar__(cereal::make_nvp("req_id", req_id_));
     ar__(cereal::make_nvp("user_id", user_id_));
     ar__(cereal::make_nvp("market_id", market_id_));
@@ -476,17 +509,17 @@ public:
     ar__(cereal::make_nvp("result", result_));
   }
 
-  void serialize_to_json(std::ostream &out__) const {
+  void serialize_to_json(std::ostream& out__) const {
     cereal::JSONOutputArchive ar__(out__);
-    const_cast<Replace_resp *>(this)->serialize(ar__);
+    const_cast<Replace_resp*>(this)->serialize(ar__);
   }
 
-  void serialize_from_json(std::istream &in__) {
-    cereal::JSONInputArchive ar__{ in__ };
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
     serialize(ar__);
   }
 
-private:
+ private:
   Req_id_t const req_id_{};
   User_id_t const user_id_{};
   Market_id_t const market_id_{};
@@ -495,5 +528,5 @@ private:
   Replace_result const result_{};
 };
 
-} // namespace exch
-#endif // __EXCH_REQUESTS_HPP__
+}  // namespace exch
+#endif  // __EXCH_REQUESTS_HPP__

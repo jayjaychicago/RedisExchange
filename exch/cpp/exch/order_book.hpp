@@ -40,14 +40,14 @@ enum Order_state { Submitted_e, Active_e, Canceled_e, Filled_e };
 
 struct Book_entry {
   Book_entry(Price_t price, Quantity_t quantity)
-      : price{ price }, quantity{ quantity } {}
+      : price{price}, quantity{quantity} {}
 
   Book_entry() = default;
   Price_t price;
   Quantity_t quantity;
 
-  friend inline std::ostream &operator<<(std::ostream &out,
-                                         Book_entry const &item) {
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Book_entry const& item) {
     out << '\n' << "price:" << item.price;
     out << '\n' << "quantity:" << item.quantity;
     return out;
@@ -55,14 +55,14 @@ struct Book_entry {
 };
 
 struct Market {
-  Market(Book_entry bid, Book_entry ask) : bid{ bid }, ask{ ask } {}
+  Market(Book_entry bid, Book_entry ask) : bid{bid}, ask{ask} {}
 
   Market() = default;
   Book_entry bid;
   Book_entry ask;
 
-  friend inline std::ostream &operator<<(std::ostream &out,
-                                         Market const &item) {
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Market const& item) {
     out << '\n' << "bid:" << item.bid;
     out << '\n' << "ask:" << item.ask;
     return out;
@@ -70,11 +70,14 @@ struct Market {
 };
 
 class Order {
-public:
+ public:
   Order(Order_id_t order_id, Timestamp_t timestamp, Side side, Price_t price,
         Quantity_t quantity)
-      : order_id_{ order_id }, timestamp_{ timestamp }, side_{ side },
-        price_{ price }, quantity_{ quantity } {}
+      : order_id_{order_id},
+        timestamp_{timestamp},
+        side_{side},
+        price_{price},
+        quantity_{quantity} {}
 
     // custom <ClsPublic Order>
 
@@ -132,7 +135,7 @@ public:
 
   //! getter for quantity_ (access is Ro)
   Quantity_t quantity() const { return quantity_; }
-  friend inline std::ostream &operator<<(std::ostream &out, Order const &item) {
+  friend inline std::ostream& operator<<(std::ostream& out, Order const& item) {
     out << '\n' << "order_id:" << item.order_id_;
     out << '\n' << "timestamp:" << item.timestamp_;
     out << '\n' << "side:" << item.side_;
@@ -141,7 +144,8 @@ public:
     return out;
   }
 
-  template <class Archive> void serialize(Archive &ar__) {
+  template <class Archive>
+  void serialize(Archive& ar__) {
     ar__(cereal::make_nvp("order_id", order_id_));
     ar__(cereal::make_nvp("timestamp", timestamp_));
     ar__(cereal::make_nvp("side", side_));
@@ -149,17 +153,17 @@ public:
     ar__(cereal::make_nvp("quantity", quantity_));
   }
 
-  void serialize_to_json(std::ostream &out__) const {
+  void serialize_to_json(std::ostream& out__) const {
     cereal::JSONOutputArchive ar__(out__);
-    const_cast<Order *>(this)->serialize(ar__);
+    const_cast<Order*>(this)->serialize(ar__);
   }
 
-  void serialize_from_json(std::istream &in__) {
-    cereal::JSONInputArchive ar__{ in__ };
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
     serialize(ar__);
   }
 
-private:
+ private:
   Order_id_t const order_id_;
   Timestamp_t const timestamp_;
   Side const side_;
@@ -168,11 +172,15 @@ private:
 };
 
 class Fill {
-public:
+ public:
   Fill(Fill_id_t fill_id, Timestamp_t timestamp, Order_id_t order_id, Side side,
        Price_t price, Quantity_t quantity)
-      : fill_id_{ fill_id }, timestamp_{ timestamp }, order_id_{ order_id },
-        side_{ side }, price_{ price }, quantity_{ quantity } {}
+      : fill_id_{fill_id},
+        timestamp_{timestamp},
+        order_id_{order_id},
+        side_{side},
+        price_{price},
+        quantity_{quantity} {}
 
     // custom <ClsPublic Fill>
 
@@ -238,7 +246,7 @@ public:
 
   //! getter for quantity_ (access is Ro)
   Quantity_t quantity() const { return quantity_; }
-  friend inline std::ostream &operator<<(std::ostream &out, Fill const &item) {
+  friend inline std::ostream& operator<<(std::ostream& out, Fill const& item) {
     out << '\n' << "fill_id:" << item.fill_id_;
     out << '\n' << "timestamp:" << item.timestamp_;
     out << '\n' << "order_id:" << item.order_id_;
@@ -248,7 +256,8 @@ public:
     return out;
   }
 
-  template <class Archive> void serialize(Archive &ar__) {
+  template <class Archive>
+  void serialize(Archive& ar__) {
     ar__(cereal::make_nvp("fill_id", fill_id_));
     ar__(cereal::make_nvp("timestamp", timestamp_));
     ar__(cereal::make_nvp("order_id", order_id_));
@@ -257,17 +266,17 @@ public:
     ar__(cereal::make_nvp("quantity", quantity_));
   }
 
-  void serialize_to_json(std::ostream &out__) const {
+  void serialize_to_json(std::ostream& out__) const {
     cereal::JSONOutputArchive ar__(out__);
-    const_cast<Fill *>(this)->serialize(ar__);
+    const_cast<Fill*>(this)->serialize(ar__);
   }
 
-  void serialize_from_json(std::istream &in__) {
-    cereal::JSONInputArchive ar__{ in__ };
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
     serialize(ar__);
   }
 
-private:
+ private:
   Fill_id_t const fill_id_;
   Timestamp_t const timestamp_;
   Order_id_t const order_id_;
@@ -276,5 +285,5 @@ private:
   Quantity_t const quantity_;
 };
 
-} // namespace exch
-#endif // __EXCH_ORDER_BOOK_HPP__
+}  // namespace exch
+#endif  // __EXCH_ORDER_BOOK_HPP__

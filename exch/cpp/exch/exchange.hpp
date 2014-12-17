@@ -19,7 +19,7 @@ namespace exch {
  implementation detail from the perspective of this class.
 */
 class Exchange {
-public:
+ public:
   using Market_exchange_naked_ptr = Market_exchange *;
   using Market_exchange_ptr = std::unique_ptr<Market_exchange>;
   using Market_exchange_map_t = std::map<Market_id_t, Market_exchange_ptr>;
@@ -27,9 +27,9 @@ public:
   Exchange(Request_listener &request_listener,
            Request_persister &request_persister,
            Market_publisher &market_publisher)
-      : request_listener_{ request_listener },
-        request_persister_{ request_persister },
-        market_publisher_{ market_publisher } {
+      : request_listener_{request_listener},
+        request_persister_{request_persister},
+        market_publisher_{market_publisher} {
     // custom <Exchange(from_args)>
 
     request_listener_.subscribe(
@@ -46,7 +46,7 @@ public:
 
   // end <ClsPublic Exchange>
 
-private:
+ private:
   // custom <ClsPrivate Exchange>
 
   void halt_handler() { request_listener_.unsubscribe(); }
@@ -151,8 +151,8 @@ private:
   Request_persister &request_persister_;
   Market_publisher &market_publisher_;
   Market_exchange_map_t market_exchanges_{};
-  int next_market_id_{ 0 };
+  int next_market_id_{0};
 };
 
-} // namespace exch
-#endif // __EXCH_EXCHANGE_HPP__
+}  // namespace exch
+#endif  // __EXCH_EXCHANGE_HPP__
