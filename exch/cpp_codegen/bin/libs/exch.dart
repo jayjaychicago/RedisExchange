@@ -99,7 +99,7 @@ final exch = lib('exch')
       ..members = [
         member('order_id')..type = 'Order_id_t',
         member('timestamp')..type = 'Timestamp_t',
-        member('side')..type = 'Side',
+        member('side')..type = 'Side'..serializeInt = true,
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
       ],
@@ -112,7 +112,7 @@ final exch = lib('exch')
         member('fill_id')..type = 'Fill_id_t',
         member('timestamp')..type = 'Timestamp_t',
         member('order_id')..type = 'Order_id_t',
-        member('side')..type = 'Side',
+        member('side')..type = 'Side'..serializeInt = true,
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
       ]
@@ -160,6 +160,7 @@ final exch = lib('exch')
     ],
     header('requests')
     ..descr = 'Requests types available to clients of the exchange'
+    ..includes = [ 'fcs/timestamp/conversion.hpp', ]
     ..classes = [
       ////////////////////////////////////////////////////////////
       // Requests/Responses
@@ -167,7 +168,7 @@ final exch = lib('exch')
       class_('create_market_req')
       ..defaultCtor.useDefault = true
       ..streamable = true
-      ..serializers = [ cereal() ]
+      ..serializers = [ cereal(), dsv() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
@@ -193,13 +194,13 @@ final exch = lib('exch')
       class_('submit_req')
       ..defaultCtor.useDefault = true
       ..streamable = true
-      ..serializers = [ cereal() ]
+      ..serializers = [ cereal(), dsv() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
         member('market_id')..type = 'Market_id_t',
-        member('side')..type = 'Side',
+        member('side')..type = 'Side'..serializeInt = true,
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
       ],
@@ -219,7 +220,7 @@ final exch = lib('exch')
       class_('cancel_req')
       ..defaultCtor.useDefault = true
       ..streamable = true
-      ..serializers = [ cereal() ]
+      ..serializers = [ cereal(), dsv() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
@@ -243,7 +244,7 @@ final exch = lib('exch')
       class_('replace_req')
       ..defaultCtor.useDefault = true
       ..streamable = true
-      ..serializers = [ cereal() ]
+      ..serializers = [ cereal(), dsv() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
@@ -294,7 +295,7 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
-        member('side')..type = 'Side',
+        member('side')..type = 'Side'..serializeInt = true,
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
         member('top_price')..type = 'Price_t',
@@ -305,7 +306,7 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
-        member('side')..type = 'Side',
+        member('side')..type = 'Side'..serializeInt = true,
         member('quantity')..type = 'Quantity_t',
         member('price')..type = 'Price_t',
         member('net_volume')..type = 'Quantity_t',
@@ -361,7 +362,7 @@ implementation detail from the perspective of this class.'''
       ..customBlocks = [ clsPublic, clsPrivate ]
       ..memberCtors = [
         memberCtor([
-          'request_listener', 'request_persister', 'market_publisher',
+          'bootstrap_listener', 'request_listener', 'request_persister', 'market_publisher',
         ])..customLabel = 'from_args'
       ]
       ..usings = [
@@ -370,17 +371,30 @@ implementation detail from the perspective of this class.'''
         'Market_exchange_map_t = std::map< Market_id_t, Market_exchange_ptr >',
       ]
       ..members = [
+        member('bootstrap_listener')..type = 'Request_listener'..refType = ref,
         member('request_listener')..type = 'Request_listener'..refType = ref,
         member('request_persister')..type = 'Request_persister'..refType = ref,
         member('market_publisher')..type = 'Market_publisher'..refType = ref,
         member('market_exchanges')..type = 'Market_exchange_map_t',
+        member('is_live')
+        ..descr = 'Indicates bootstrapping is complete and new commands should be saved and responses published'
+        ..init = false,
         member('next_market_id')..init = 0,
       ],
     ],
 
     header('redis_support')
+    ..constExprs = [
+      constExpr('m_req_key', 'EX_REQ:M'),
+      constExpr('s_req_key', 'EX_REQ:S'),
+      constExpr('c_req_key', 'EX_REQ:C'),
+      constExpr('r_req_key', 'EX_REQ:R'),
+      constExpr('h_req_key', 'EX_REQ:H'),
+      constExpr('cmd_key', 'CMD'),
+    ]
     ..includes = [
-      'exch/order_book.hpp', 'exch/interfaces.hpp',
+      'exch/order_book.hpp',
+      'exch/interfaces.hpp',
       'sstream',
       'functional',
       'redisclient/redisclient.h',
@@ -417,15 +431,27 @@ Subscribes to client requests on redis pub/sub channels'''
         // ..type = 'char const*'..isStatic = true..isConstExpr = true,
       ],
 
+      class_('redis_bootstrap_listener')
+      ..descr = '''
+Loads all saved commands from persistent storage at startup, effectively turning
+previously saved commands into a stream of commands for a subscriber (i.e. an
+exchange) to use at startup to process all messages to get to state just prior
+to last message before last shutdown.
+'''
+      ..customBlocks = [ clsPublic ]
+      ..memberCtors = [ memberCtor(['redis_client']) ]
+      ..bases = [ base('Request_listener') ]
+      ..members = [
+        member('redis_client')..type = 'RedisClient'..refType = ref,
+      ],
+
+
       class_('redis_persister')
       ..customBlocks = [ clsPublic, clsPrivate ]
       ..bases = [ base('Request_persister') ]
       ..memberCtors = [ memberCtor(['redis_client']) ]
       ..members = [
         member('redis_client')..type = 'RedisClient'..refType = ref,
-        member('cmd_key')..init = 'CMD'
-        ..type = 'char const*'
-        ..isStatic = true..isConstExpr = true,
       ],
 
       class_('redis_publisher')

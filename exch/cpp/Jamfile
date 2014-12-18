@@ -30,6 +30,7 @@ project exch_projects
 <include>/Users/dbdavidson/dev/open_source/fcs/cpp
 <include>/Users/dbdavidson/dev/open_source/redisclient/src
 <include>/Users/dbdavidson/dev/open_source/cereal/include
+<include>/Users/dbdavidson/install/include
 # end <additional_includes>
 
           <tag>@$(__name__).tag
@@ -41,7 +42,10 @@ project exch_projects
           <library>/site-config//boost_thread
           <library>/site-config//boost_system
           <library>/usr/local/lib/libodbc.2.dylib
+# custom <additional_libs>
+<library>/Users/dbdavidson/install/lib/libformat.a
+# end <additional_libs>
+
        :
         : build-dir ../../build-dir
         ;
-

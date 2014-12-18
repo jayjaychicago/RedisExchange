@@ -3,8 +3,10 @@
 
 #include "cereal/archives/json.hpp"
 #include "cereal/cereal.hpp"
+#include "cppformat/format.h"
 #include "exch/exch.hpp"
 #include "fcs/timestamp/cereal.hpp"
+#include "fcs/timestamp/conversion.hpp"
 #include <iosfwd>
 #include <string>
 
@@ -74,6 +76,101 @@ class Create_market_req {
   void serialize_from_json(std::istream& in__) {
     cereal::JSONInputArchive ar__{in__};
     serialize(ar__);
+  }
+
+  std::string serialize_to_dsv() const {
+    fmt::MemoryWriter w__;
+    w__ << req_id_ << ':' << user_id_ << ':' << name_ << ':'
+        << fcs::timestamp::ticks(start_time_) << ':'
+        << fcs::timestamp::ticks(end_time_) << ':' << decimal_shift_ << ':'
+        << tick_size_;
+
+    return w__.str();
+  }
+
+  static Create_market_req serialize_from_dsv(std::string const& tuple__) {
+    using namespace boost;
+    char_separator<char> const sep__{":"};
+    tokenizer<char_separator<char> > tokens__(tuple__, sep__);
+    tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
+
+    Req_id_t req_id_;
+    User_id_t user_id_;
+    std::string name_;
+    Timestamp_t start_time_;
+    Timestamp_t end_time_;
+    int decimal_shift_;
+    int tick_size_;
+
+    if (it__ != tokens__.end()) {
+      req_id_ = lexical_cast<Req_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Create_market_req failed: expected req_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      user_id_ = lexical_cast<User_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Create_market_req failed: expected user_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      name_ = lexical_cast<std::string>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Create_market_req failed: expected name_");
+    }
+
+    if (it__ != tokens__.end()) {
+      if (!fcs::timestamp::convert_to_timestamp_from_ticks(*it__,
+                                                           start_time_)) {
+        std::string msg{"Encountered invalid timestamp ticks:"};
+        msg += *it__;
+        throw std::logic_error(msg);
+      }
+
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Create_market_req failed: expected start_time_");
+    }
+
+    if (it__ != tokens__.end()) {
+      if (!fcs::timestamp::convert_to_timestamp_from_ticks(*it__, end_time_)) {
+        std::string msg{"Encountered invalid timestamp ticks:"};
+        msg += *it__;
+        throw std::logic_error(msg);
+      }
+
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Create_market_req failed: expected end_time_");
+    }
+
+    if (it__ != tokens__.end()) {
+      decimal_shift_ = lexical_cast<int>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Create_market_req failed: expected decimal_shift_");
+    }
+
+    if (it__ != tokens__.end()) {
+      tick_size_ = lexical_cast<int>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Create_market_req failed: expected tick_size_");
+    }
+
+    return Create_market_req(req_id_, user_id_, name_, start_time_, end_time_,
+                             decimal_shift_, tick_size_);
   }
 
  private:
@@ -201,6 +298,72 @@ class Submit_req {
     serialize(ar__);
   }
 
+  std::string serialize_to_dsv() const {
+    fmt::MemoryWriter w__;
+    w__ << req_id_ << ':' << user_id_ << ':' << market_id_ << ':' << side_
+        << ':' << price_ << ':' << quantity_;
+
+    return w__.str();
+  }
+
+  static Submit_req serialize_from_dsv(std::string const& tuple__) {
+    using namespace boost;
+    char_separator<char> const sep__{":"};
+    tokenizer<char_separator<char> > tokens__(tuple__, sep__);
+    tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
+
+    Req_id_t req_id_;
+    User_id_t user_id_;
+    Market_id_t market_id_;
+    Side side_;
+    Price_t price_;
+    Quantity_t quantity_;
+
+    if (it__ != tokens__.end()) {
+      req_id_ = lexical_cast<Req_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Submit_req failed: expected req_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      user_id_ = lexical_cast<User_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Submit_req failed: expected user_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      market_id_ = lexical_cast<Market_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Submit_req failed: expected market_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      side_ = Side(lexical_cast<int>(*it__));
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Submit_req failed: expected side_");
+    }
+
+    if (it__ != tokens__.end()) {
+      price_ = lexical_cast<Price_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Submit_req failed: expected price_");
+    }
+
+    if (it__ != tokens__.end()) {
+      quantity_ = lexical_cast<Quantity_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Submit_req failed: expected quantity_");
+    }
+
+    return Submit_req(req_id_, user_id_, market_id_, side_, price_, quantity_);
+  }
+
  private:
   Req_id_t const req_id_{};
   User_id_t const user_id_{};
@@ -318,6 +481,55 @@ class Cancel_req {
   void serialize_from_json(std::istream& in__) {
     cereal::JSONInputArchive ar__{in__};
     serialize(ar__);
+  }
+
+  std::string serialize_to_dsv() const {
+    fmt::MemoryWriter w__;
+    w__ << req_id_ << ':' << user_id_ << ':' << market_id_ << ':' << order_id_;
+
+    return w__.str();
+  }
+
+  static Cancel_req serialize_from_dsv(std::string const& tuple__) {
+    using namespace boost;
+    char_separator<char> const sep__{":"};
+    tokenizer<char_separator<char> > tokens__(tuple__, sep__);
+    tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
+
+    Req_id_t req_id_;
+    User_id_t user_id_;
+    Market_id_t market_id_;
+    Order_id_t order_id_;
+
+    if (it__ != tokens__.end()) {
+      req_id_ = lexical_cast<Req_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Cancel_req failed: expected req_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      user_id_ = lexical_cast<User_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Cancel_req failed: expected user_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      market_id_ = lexical_cast<Market_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Cancel_req failed: expected market_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      order_id_ = lexical_cast<Order_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Cancel_req failed: expected order_id_");
+    }
+
+    return Cancel_req(req_id_, user_id_, market_id_, order_id_);
   }
 
  private:
@@ -447,6 +659,74 @@ class Replace_req {
   void serialize_from_json(std::istream& in__) {
     cereal::JSONInputArchive ar__{in__};
     serialize(ar__);
+  }
+
+  std::string serialize_to_dsv() const {
+    fmt::MemoryWriter w__;
+    w__ << req_id_ << ':' << user_id_ << ':' << market_id_ << ':' << order_id_
+        << ':' << price_ << ':' << quantity_;
+
+    return w__.str();
+  }
+
+  static Replace_req serialize_from_dsv(std::string const& tuple__) {
+    using namespace boost;
+    char_separator<char> const sep__{":"};
+    tokenizer<char_separator<char> > tokens__(tuple__, sep__);
+    tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
+
+    Req_id_t req_id_;
+    User_id_t user_id_;
+    Market_id_t market_id_;
+    Order_id_t order_id_;
+    Price_t price_;
+    Quantity_t quantity_;
+
+    if (it__ != tokens__.end()) {
+      req_id_ = lexical_cast<Req_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Replace_req failed: expected req_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      user_id_ = lexical_cast<User_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Replace_req failed: expected user_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      market_id_ = lexical_cast<Market_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Replace_req failed: expected market_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      order_id_ = lexical_cast<Order_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Replace_req failed: expected order_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      price_ = lexical_cast<Price_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Replace_req failed: expected price_");
+    }
+
+    if (it__ != tokens__.end()) {
+      quantity_ = lexical_cast<Quantity_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Replace_req failed: expected quantity_");
+    }
+
+    return Replace_req(req_id_, user_id_, market_id_, order_id_, price_,
+                       quantity_);
   }
 
  private:
