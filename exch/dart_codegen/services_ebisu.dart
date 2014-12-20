@@ -94,6 +94,11 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
             priceArg, quantityArg,
           ]))
       ..doc = 'Replace an order in a market',
+      script('bootstrap_scenario_1')
+      ..doc = 'Creates a market, does sequence of other commands on that market'
+      ..imports = (commonImports..addAll([ 'math' ]))
+      ..args = (commonArgs..addAll([ marketIdArg ])),
+
     ]
     ..libraries = [
       library('exch_client')

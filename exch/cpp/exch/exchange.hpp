@@ -34,12 +34,12 @@ class Exchange {
         market_publisher_{market_publisher} {
     // custom <Exchange(from_args)>
 
-    bootstrap_listener_.subscribe(
-        std::bind(&Exchange::create_market, this, std::placeholders::_1),
-        std::bind(&Exchange::submit, this, std::placeholders::_1),
-        std::bind(&Exchange::cancel, this, std::placeholders::_1),
-        std::bind(&Exchange::replace, this, std::placeholders::_1),
-        std::bind(&Exchange::halt_handler, this));
+    // bootstrap_listener_.subscribe(
+    //     std::bind(&Exchange::create_market, this, std::placeholders::_1),
+    //     std::bind(&Exchange::submit, this, std::placeholders::_1),
+    //     std::bind(&Exchange::cancel, this, std::placeholders::_1),
+    //     std::bind(&Exchange::replace, this, std::placeholders::_1),
+    //     std::bind(&Exchange::halt_handler, this));
 
     is_live_ = true;
 
@@ -111,7 +111,7 @@ class Exchange {
     } else {
       submitted_id = market->next_order_id();
       Order order{submitted_id, fcs::timestamp::current_time(), req.side(),
-                  req.quantity(), req.price()};
+                  req.price(), req.quantity()};
       result = market->submit(order);
     }
 

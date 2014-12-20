@@ -61,9 +61,21 @@ final exch = lib('exch')
     ],
     header('order_book')
     ..customBlocks = [ fcbBeginNamespace ]
-    ..usings = [ ]
+    ..forwardDecls = [
+      forwardDecl('Fill'),
+    ]
+    ..usings = [
+      'Fill_list_t = std::vector<Fill>',
+      'Price_list_t = std::vector<Price_t>',
+    ]
     ..includes = [
-      'sstream'
+      'sstream',
+      'map',
+      'vector',
+      'functional',
+      'fcs/utils/streamers/containers.hpp',
+      'fcs/utils/streamers/table.hpp',
+      'boost/range/adaptor/reversed.hpp',
     ]
     ..enums = [
       enum_('order_state')
@@ -103,22 +115,56 @@ final exch = lib('exch')
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
       ],
+
+      class_('managed_order')
+      ..customBlocks = [ clsPublic, clsPostDecl ]
+      ..streamable = true
+      ..memberCtors = [ memberCtor([ 'order' ]) ]
+      ..usingsPostDecl = [
+        'Managed_order_list_t = std::vector< Managed_order >'
+      ]
+      ..members = [
+        member('order')..type = 'Order'..noInit = true..isConst = true
+        ..cppAccess = public..byRef = true,
+        member('order_state')..type = 'Order_state'..init = 'Submitted_e'..cppAccess = public,
+        member('filled')..type = 'Quantity_t'..init = 0..cppAccess = private,
+      ],
+
       class_('fill')
       ..immutable = true
       ..streamable = true
-      ..serializers = [ cereal() ]
+      ..serializers = [ cereal(), dsv() ]
       ..customBlocks = [ clsPublic ]
+      ..defaultCtor.useDefault = true
       ..members = [
         member('fill_id')..type = 'Fill_id_t',
         member('timestamp')..type = 'Timestamp_t',
-        member('order_id')..type = 'Order_id_t',
-        member('side')..type = 'Side'..serializeInt = true,
+        member('bid_id')..type = 'Order_id_t',
+        member('ask_id')..type = 'Order_id_t',
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
+      ],
+
+      class_('order_book')
+      ..customBlocks = [ clsPublic ]
+      ..usesStreamers = true
+      ..usings = [
+        'Bid_compare_t = std::greater< Price_t >',
+        'Bids_t = std::map< Price_t, Managed_order_list_t, Bid_compare_t >',
+        'Asks_t = std::map< Price_t, Managed_order_list_t >',
       ]
+      ..members = [
+        member('bids')..type = 'Bids_t',
+        member('asks')..type = 'Asks_t',
+        member('next_fill_id')..init = 0,
+      ],
+
     ],
     header('market_exch')
-    ..includes = [ 'exch/order_book.hpp' ]
+    ..includes = [
+      'exch/order_book.hpp',
+      'fcs/utils/streamers/containers.hpp',
+    ]
     ..enums = [
     ]
     ..classes = [
@@ -132,20 +178,10 @@ final exch = lib('exch')
         member('decimal_shift')..type = 'int',
         member('tick_size')..type = 'int',
       ],
-      class_('managed_order')
-      ..customBlocks = [ clsPublic ]
-      ..memberCtors = [ memberCtor([ 'order' ]) ]
-      ..members = [
-        member('order')..type = 'Order'..noInit = true..isConst = true
-        ..cppAccess = public..byRef = true,
-        member('order_state')..type = 'Order_state'..init = 'Submitted_e'..cppAccess = public,
-        member('filled')..type = 'Quantity_t'..init = 0..cppAccess = public,
-      ],
       class_('market_exchange')
       ..descr = 'Responsible for the exchange of a single market (e.g. one market id)'
       ..customBlocks = [ clsPublic ]
       ..usings = [
-        'Managed_order_list_t = std::vector< Managed_order >',
       ]
       ..memberCtors = [ memberCtor([ 'market_config', 'market_id' ] )]
       ..members = [
@@ -153,7 +189,9 @@ final exch = lib('exch')
         member('market_id')..type = 'Market_id_t'..isConst = true,
         member('next_order_id')..init = 0,
 
-        member('active_orders')..type = 'Managed_order_list_t',
+        member('order_book')..type = 'Order_book',
+        member('fills')..type = 'Fill_list_t'..init = 32,
+        member('prices_affected')..type = 'Price_list_t'..init = 32,
         member('dead_orders')..type = 'Managed_order_list_t',
         member('net_volume')..type = 'Quantity_t',
       ],
@@ -344,8 +382,10 @@ Includes abstract interfaces used by the exchange to decouple interface from imp
     ],
 
     header('exchange')
-    ..includes = [ 'exch/market_exch.hpp', 'exch/requests.hpp',
-      'exch/events.hpp', 'exch/interfaces.hpp' ]
+    ..includes = [
+      'exch/market_exch.hpp', 'exch/requests.hpp',
+      'exch/events.hpp', 'exch/interfaces.hpp',
+    ]
     ..classes = [
 
       class_('exchange')

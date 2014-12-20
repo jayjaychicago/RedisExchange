@@ -3,6 +3,7 @@
 
 #include "exch/exch.hpp"
 #include "exch/order_book.hpp"
+#include "fcs/utils/streamers/containers.hpp"
 #include <iosfwd>
 #include <string>
 
@@ -49,32 +50,31 @@ class Market_config {
   int const tick_size_;
 };
 
-class Managed_order {
- public:
-  Managed_order(Order const& order) : order{order} {}
-
-  // custom <ClsPublic Managed_order>
-  // end <ClsPublic Managed_order>
-
-  Order const order;
-  Order_state order_state{Submitted_e};
-  Quantity_t filled{0};
-};
-
 /**
  Responsible for the exchange of a single market (e.g. one market id)
 */
 class Market_exchange {
  public:
-  using Managed_order_list_t = std::vector<Managed_order>;
-
   Market_exchange(Market_config const& market_config, Market_id_t market_id)
       : market_config_{market_config}, market_id_{market_id} {}
 
   // custom <ClsPublic Market_exchange>
 
   Submit_result submit(Order const& order) {
-    std::cout << "Submit being processed:" << order << std::endl;
+    fills_.clear();
+    prices_affected_.clear();
+
+    if (order.is_bid()) {
+      order_book_.process_bid(order, fills_, prices_affected_);
+    } else {
+      order_book_.process_ask(order, fills_, prices_affected_);
+    }
+
+    using fcs::utils::streamers::operator<<;
+    std::cout << "Book after submit:\n" << order_book_ << std::endl;
+    std::cout << "Fills:\n" << fills_ << std::endl;
+    std::cout << "Prices Affected:\n" << prices_affected_ << std::endl;
+
     return Submit_result();
   }
 
@@ -97,7 +97,9 @@ class Market_exchange {
   Market_config market_config_;
   Market_id_t const market_id_{};
   int next_order_id_{0};
-  Managed_order_list_t active_orders_{};
+  Order_book order_book_{};
+  Fill_list_t fills_{32};
+  Price_list_t prices_affected_{32};
   Managed_order_list_t dead_orders_{};
   Quantity_t net_volume_{};
 };
