@@ -61,9 +61,21 @@ final exch = lib('exch')
     ],
     header('order_book')
     ..customBlocks = [ fcbBeginNamespace ]
-    ..usings = [ ]
+    ..forwardDecls = [
+      forwardDecl('Fill'),
+    ]
+    ..usings = [
+      'Fill_list_t = std::vector<Fill>',
+      'Price_list_t = std::vector<Price_t>',
+    ]
     ..includes = [
-      'sstream'
+      'sstream',
+      'map',
+      'vector',
+      'functional',
+      'fcs/utils/streamers/containers.hpp',
+      'fcs/utils/streamers/table.hpp',
+      'boost/range/adaptor/reversed.hpp',
     ]
     ..enums = [
       enum_('order_state')
@@ -99,26 +111,60 @@ final exch = lib('exch')
       ..members = [
         member('order_id')..type = 'Order_id_t',
         member('timestamp')..type = 'Timestamp_t',
-        member('side')..type = 'Side',
+        member('side')..type = 'Side'..serializeInt = true,
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
       ],
+
+      class_('managed_order')
+      ..customBlocks = [ clsPublic, clsPostDecl ]
+      ..streamable = true
+      ..memberCtors = [ memberCtor([ 'order' ]) ]
+      ..usingsPostDecl = [
+        'Managed_order_list_t = std::vector< Managed_order >'
+      ]
+      ..members = [
+        member('order')..type = 'Order'..noInit = true..isConst = true
+        ..cppAccess = public..byRef = true,
+        member('order_state')..type = 'Order_state'..init = 'Submitted_e'..cppAccess = public,
+        member('filled')..type = 'Quantity_t'..init = 0..cppAccess = private,
+      ],
+
       class_('fill')
       ..immutable = true
       ..streamable = true
-      ..serializers = [ cereal() ]
+      ..serializers = [ cereal(), dsv() ]
       ..customBlocks = [ clsPublic ]
+      ..defaultCtor.useDefault = true
       ..members = [
         member('fill_id')..type = 'Fill_id_t',
         member('timestamp')..type = 'Timestamp_t',
-        member('order_id')..type = 'Order_id_t',
-        member('side')..type = 'Side',
+        member('bid_id')..type = 'Order_id_t',
+        member('ask_id')..type = 'Order_id_t',
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
+      ],
+
+      class_('order_book')
+      ..customBlocks = [ clsPublic ]
+      ..usesStreamers = true
+      ..usings = [
+        'Bid_compare_t = std::greater< Price_t >',
+        'Bids_t = std::map< Price_t, Managed_order_list_t, Bid_compare_t >',
+        'Asks_t = std::map< Price_t, Managed_order_list_t >',
       ]
+      ..members = [
+        member('bids')..type = 'Bids_t',
+        member('asks')..type = 'Asks_t',
+        member('next_fill_id')..init = 0,
+      ],
+
     ],
     header('market_exch')
-    ..includes = [ 'exch/order_book.hpp' ]
+    ..includes = [
+      'exch/order_book.hpp',
+      'fcs/utils/streamers/containers.hpp',
+    ]
     ..enums = [
     ]
     ..classes = [
@@ -132,20 +178,10 @@ final exch = lib('exch')
         member('decimal_shift')..type = 'int',
         member('tick_size')..type = 'int',
       ],
-      class_('managed_order')
-      ..customBlocks = [ clsPublic ]
-      ..memberCtors = [ memberCtor([ 'order' ]) ]
-      ..members = [
-        member('order')..type = 'Order'..noInit = true..isConst = true
-        ..cppAccess = public..byRef = true,
-        member('order_state')..type = 'Order_state'..init = 'Submitted_e'..cppAccess = public,
-        member('filled')..type = 'Quantity_t'..init = 0..cppAccess = public,
-      ],
       class_('market_exchange')
       ..descr = 'Responsible for the exchange of a single market (e.g. one market id)'
       ..customBlocks = [ clsPublic ]
       ..usings = [
-        'Managed_order_list_t = std::vector< Managed_order >',
       ]
       ..memberCtors = [ memberCtor([ 'market_config', 'market_id' ] )]
       ..members = [
@@ -153,13 +189,16 @@ final exch = lib('exch')
         member('market_id')..type = 'Market_id_t'..isConst = true,
         member('next_order_id')..init = 0,
 
-        member('active_orders')..type = 'Managed_order_list_t',
+        member('order_book')..type = 'Order_book',
+        member('fills')..type = 'Fill_list_t'..init = 32,
+        member('prices_affected')..type = 'Price_list_t'..init = 32,
         member('dead_orders')..type = 'Managed_order_list_t',
         member('net_volume')..type = 'Quantity_t',
       ],
     ],
     header('requests')
     ..descr = 'Requests types available to clients of the exchange'
+    ..includes = [ 'fcs/timestamp/conversion.hpp', ]
     ..classes = [
       ////////////////////////////////////////////////////////////
       // Requests/Responses
@@ -167,7 +206,7 @@ final exch = lib('exch')
       class_('create_market_req')
       ..defaultCtor.useDefault = true
       ..streamable = true
-      ..serializers = [ cereal() ]
+      ..serializers = [ cereal(), dsv() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
@@ -185,6 +224,7 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
+        member('user_id')..type = 'User_id_t',
         member('market_id')..type = 'Market_id_t',
         member('result')..type = 'Create_market_result',
       ],
@@ -192,13 +232,13 @@ final exch = lib('exch')
       class_('submit_req')
       ..defaultCtor.useDefault = true
       ..streamable = true
-      ..serializers = [ cereal() ]
+      ..serializers = [ cereal(), dsv() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
-        member('side')..type = 'Side',
+        member('market_id')..type = 'Market_id_t',
+        member('side')..type = 'Side'..serializeInt = true,
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
       ],
@@ -209,8 +249,8 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
+        member('market_id')..type = 'Market_id_t',
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Submit_result',
       ],
@@ -218,12 +258,12 @@ final exch = lib('exch')
       class_('cancel_req')
       ..defaultCtor.useDefault = true
       ..streamable = true
-      ..serializers = [ cereal() ]
+      ..serializers = [ cereal(), dsv() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
+        member('market_id')..type = 'Market_id_t',
         member('order_id')..type = 'Order_id_t',
       ],
       class_('cancel_resp')
@@ -233,8 +273,8 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
+        member('market_id')..type = 'Market_id_t',
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Cancel_result',
       ],
@@ -242,13 +282,13 @@ final exch = lib('exch')
       class_('replace_req')
       ..defaultCtor.useDefault = true
       ..streamable = true
-      ..serializers = [ cereal() ]
+      ..serializers = [ cereal(), dsv() ]
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
-        member('existing_order_id')..type = 'Order_id_t',
+        member('market_id')..type = 'Market_id_t',
+        member('order_id')..type = 'Order_id_t',
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
       ],
@@ -259,13 +299,12 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
-        member('market_id')..type = 'Market_id_t',
         member('user_id')..type = 'User_id_t',
+        member('market_id')..type = 'Market_id_t',
         member('canceled_order_id')..type = 'Order_id_t',
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Replace_result',
       ],
-
     ],
     header('events')
     ..descr = 'Events published by the exchange'
@@ -294,7 +333,7 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
-        member('side')..type = 'Side',
+        member('side')..type = 'Side'..serializeInt = true,
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
         member('top_price')..type = 'Price_t',
@@ -305,7 +344,7 @@ final exch = lib('exch')
       ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
-        member('side')..type = 'Side',
+        member('side')..type = 'Side'..serializeInt = true,
         member('quantity')..type = 'Quantity_t',
         member('price')..type = 'Price_t',
         member('net_volume')..type = 'Quantity_t',
@@ -343,8 +382,10 @@ Includes abstract interfaces used by the exchange to decouple interface from imp
     ],
 
     header('exchange')
-    ..includes = [ 'exch/market_exch.hpp', 'exch/requests.hpp',
-      'exch/events.hpp', 'exch/interfaces.hpp' ]
+    ..includes = [
+      'exch/market_exch.hpp', 'exch/requests.hpp',
+      'exch/events.hpp', 'exch/interfaces.hpp',
+    ]
     ..classes = [
 
       class_('exchange')
@@ -361,7 +402,7 @@ implementation detail from the perspective of this class.'''
       ..customBlocks = [ clsPublic, clsPrivate ]
       ..memberCtors = [
         memberCtor([
-          'request_listener', 'request_persister', 'market_publisher',
+          'bootstrap_listener', 'request_listener', 'request_persister', 'market_publisher',
         ])..customLabel = 'from_args'
       ]
       ..usings = [
@@ -370,17 +411,30 @@ implementation detail from the perspective of this class.'''
         'Market_exchange_map_t = std::map< Market_id_t, Market_exchange_ptr >',
       ]
       ..members = [
+        member('bootstrap_listener')..type = 'Request_listener'..refType = ref,
         member('request_listener')..type = 'Request_listener'..refType = ref,
         member('request_persister')..type = 'Request_persister'..refType = ref,
         member('market_publisher')..type = 'Market_publisher'..refType = ref,
         member('market_exchanges')..type = 'Market_exchange_map_t',
+        member('is_live')
+        ..descr = 'Indicates bootstrapping is complete and new commands should be saved and responses published'
+        ..init = false,
         member('next_market_id')..init = 0,
       ],
     ],
 
     header('redis_support')
+    ..constExprs = [
+      constExpr('m_req_key', 'EX_REQ:M'),
+      constExpr('s_req_key', 'EX_REQ:S'),
+      constExpr('c_req_key', 'EX_REQ:C'),
+      constExpr('r_req_key', 'EX_REQ:R'),
+      constExpr('h_req_key', 'EX_REQ:H'),
+      constExpr('cmd_key', 'CMD'),
+    ]
     ..includes = [
-      'exch/order_book.hpp', 'exch/interfaces.hpp',
+      'exch/order_book.hpp',
+      'exch/interfaces.hpp',
       'sstream',
       'functional',
       'redisclient/redisclient.h',
@@ -403,15 +457,34 @@ Subscribes to client requests on redis pub/sub channels'''
       ..bases = [ base('Request_listener') ]
       ..members = [
         member('redis_client')..type = 'RedisClient'..refType = ref,
-        member('handle')..type = 'RedisClient::Handle'..initText = '0',
+        member('m_handle')..type = 'RedisClient::Handle'..initText = '0',
+        member('s_handle')..type = 'RedisClient::Handle'..initText = '0',
+        member('c_handle')..type = 'RedisClient::Handle'..initText = '0',
+        member('r_handle')..type = 'RedisClient::Handle'..initText = '0',
+        member('h_handle')..type = 'RedisClient::Handle'..initText = '0',
         member('create_market_handler')..type = 'Create_market_handler_t',
         member('submit_handler')..type = 'Submit_handler_t',
         member('cancel_handler')..type = 'Cancel_handler_t',
         member('replace_handler')..type = 'Replace_handler_t',
         member('halt_handler')..type = 'Halt_handler_t',
-        member('req_key')..init = 'EX_REQ:*'
-        ..type = 'char const*'..isStatic = true..isConstExpr = true,
+        // member('req_key')..init = 'EX_REQ:*'
+        // ..type = 'char const*'..isStatic = true..isConstExpr = true,
       ],
+
+      class_('redis_bootstrap_listener')
+      ..descr = '''
+Loads all saved commands from persistent storage at startup, effectively turning
+previously saved commands into a stream of commands for a subscriber (i.e. an
+exchange) to use at startup to process all messages to get to state just prior
+to last message before last shutdown.
+'''
+      ..customBlocks = [ clsPublic ]
+      ..memberCtors = [ memberCtor(['redis_client']) ]
+      ..bases = [ base('Request_listener') ]
+      ..members = [
+        member('redis_client')..type = 'RedisClient'..refType = ref,
+      ],
+
 
       class_('redis_persister')
       ..customBlocks = [ clsPublic, clsPrivate ]
@@ -419,9 +492,6 @@ Subscribes to client requests on redis pub/sub channels'''
       ..memberCtors = [ memberCtor(['redis_client']) ]
       ..members = [
         member('redis_client')..type = 'RedisClient'..refType = ref,
-        member('cmd_key')..init = 'CMD'
-        ..type = 'char const*'
-        ..isStatic = true..isConstExpr = true,
       ],
 
       class_('redis_publisher')

@@ -33,7 +33,7 @@ Map _parseArgs(List<String> args) {
 Display this help screen
 ''',
       abbr: 'h',
-      defaultsTo: null
+      defaultsTo: false
     );
 
     _parser.addOption('redis-host',
@@ -83,14 +83,18 @@ redis port used by pub/sub
       allowed: null
     );
     _parser.addOption('price',
-      help: '',
+      help: '''
+Price of an order
+''',
       defaultsTo: '10000',
       allowMultiple: false,
       abbr: 'p',
       allowed: null
     );
     _parser.addOption('quantity',
-      help: '',
+      help: '''
+Quantity of an order
+''',
       defaultsTo: '100',
       allowMultiple: false,
       abbr: 'q',
@@ -139,6 +143,21 @@ main(List<String> args) {
   List positionals = argResults['rest'];
 
   // custom <replace main>
+
+  final host = options['redis-host'];
+  final port = options['redis-port'];
+  RedisClient
+    .connect('$host:$port')
+    .then((RedisClient redisClient) {
+      final client = new ExchClient(redisClient);
+      final req= new ReplaceReq(
+        options['req-id'], options['user-id'],
+        options['market-id'], options['order-id'],
+        options['price'], options['quantity']);
+      client.replace(req);
+      redisClient.close();
+    });
+
   // end <replace main>
 
 }

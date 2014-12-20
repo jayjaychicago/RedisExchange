@@ -1,7 +1,8 @@
 #!/usr/bin/env dart
-/// Cancel an order from a market
+/// Creates a market, does sequence of other commands on that market
 
 import 'dart:io';
+import 'dart:math';
 import 'package:args/args.dart';
 import 'package:exch_client/exch_client.dart';
 import 'package:logging/logging.dart';
@@ -13,7 +14,7 @@ ArgParser _parser;
 //! The comment and usage associated with this script
 void _usage() {
   print('''
-Cancel an order from a market
+Creates a market, does sequence of other commands on that market
 ''');
   print(_parser.getUsage());
 }
@@ -75,13 +76,6 @@ redis port used by pub/sub
       abbr: 'm',
       allowed: null
     );
-    _parser.addOption('order-id',
-      help: '',
-      defaultsTo: '1',
-      allowMultiple: false,
-      abbr: 'o',
-      allowed: null
-    );
 
     /// Parse the command line options (excluding the script)
     argResults = _parser.parse(args);
@@ -98,8 +92,6 @@ redis port used by pub/sub
       int.parse(argResults['user-id']) : null;
     result['market-id'] = argResults['market-id'] != null?
       int.parse(argResults['market-id']) : null;
-    result['order-id'] = argResults['order-id'] != null?
-      int.parse(argResults['order-id']) : null;
     result['help'] = argResults['help'];
 
     return { 'options': result, 'rest': remaining };
@@ -110,7 +102,7 @@ redis port used by pub/sub
   }
 }
 
-final _logger = new Logger('cancel');
+final _logger = new Logger('bootstrapScenario1');
 
 main(List<String> args) {
   Logger.root.onRecord.listen((LogRecord r) =>
@@ -120,26 +112,53 @@ main(List<String> args) {
   Map options = argResults['options'];
   List positionals = argResults['rest'];
 
-  // custom <cancel main>
+  // custom <bootstrapScenario1 main>
 
   final host = options['redis-host'];
   final port = options['redis-port'];
+
+  int userId = 42;
+  int marketId = 1;
+  int basePrice = 12530;
+
+  final startTime = new DateTime.now();
+  final endTime = startTime.add(new Duration(days: 2));
+  //final random = new Random(42);
+  final random = new Random();
+
+  someDelta() => random.nextInt(10);
+  nextBid() => basePrice - someDelta();
+  nextAsk() => basePrice + 2*someDelta() - someDelta();
+  nextQty() => 50 + random.nextInt(100);
+
   RedisClient
     .connect('$host:$port')
     .then((RedisClient redisClient) {
       final client = new ExchClient(redisClient);
-      final req= new CancelReq(
-        options['req-id'], options['user-id'],
-        options['market-id'], options['order-id']);
-      client.cancel(req);
+      client.createMarket(createMarketReq(
+            reqId, userId, "bootstrap_1", startTime, endTime, 2, 500));
+
+      for(int i=0; i<30; i++) {
+        if(someDelta()%2 == 0) {
+          client.submit(new SubmitReq(
+                reqId, userId, marketId, Side.ASK_SIDE,
+                nextAsk(), nextQty()));
+        } else {
+          client.submit(new SubmitReq(
+                reqId, userId, marketId, Side.BID_SIDE,
+                nextBid(), nextQty()));
+        }
+      }
+
       redisClient.close();
     });
 
 
-  // end <cancel main>
+  // end <bootstrapScenario1 main>
 
 }
 
-// custom <cancel global>
-// end <cancel global>
-
+// custom <bootstrapScenario1 global>
+int _reqId = 0;
+get reqId => _reqId++;
+// end <bootstrapScenario1 global>

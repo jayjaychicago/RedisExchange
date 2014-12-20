@@ -36,6 +36,11 @@ class Side implements Comparable<Side> {
     }
   }
 
+  int toJson() => value;
+  static Side fromJson(int v) {
+    return v==null? null : values[v];
+  }
+
 }
 
 class CreateMarketReq {
@@ -44,9 +49,11 @@ class CreateMarketReq {
 
   final int reqId;
   final int userId;
-  final int name;
-  final String startTime;
-  final String endTime;
+  final String name;
+  /// seconds since epoch indicating start time
+  final int startTime;
+  /// seconds since epoch indicating end time
+  final int endTime;
   final int decimalShift;
   final int tickSize;
   // custom <class CreateMarketReq>
@@ -92,12 +99,12 @@ class CreateMarketReq {
 }
 
 class SubmitReq {
-  const SubmitReq(this.reqId, this.marketId, this.userId, this.side, this.price,
+  const SubmitReq(this.reqId, this.userId, this.marketId, this.side, this.price,
     this.quantity);
 
   final int reqId;
-  final int marketId;
   final int userId;
+  final int marketId;
   final Side side;
   final int price;
   final int quantity;
@@ -106,8 +113,8 @@ class SubmitReq {
 
   Map toJson() => {
       "req_id": ebisu_utils.toJson(reqId),
-      "market_id": ebisu_utils.toJson(marketId),
       "user_id": ebisu_utils.toJson(userId),
+      "market_id": ebisu_utils.toJson(marketId),
       "side": ebisu_utils.toJson(side),
       "price": ebisu_utils.toJson(price),
       "quantity": ebisu_utils.toJson(quantity),
@@ -124,16 +131,16 @@ class SubmitReq {
 
   SubmitReq._fromJsonMapImpl(Map jsonMap) :
     reqId = jsonMap["req_id"],
-    marketId = jsonMap["market_id"],
     userId = jsonMap["user_id"],
+    marketId = jsonMap["market_id"],
     side = Side.fromJson(jsonMap["side"]),
     price = jsonMap["price"],
     quantity = jsonMap["quantity"];
 
   SubmitReq._copy(SubmitReq other) :
     reqId = other.reqId,
-    marketId = other.marketId,
     userId = other.userId,
+    marketId = other.marketId,
     side = other.side == null? null : other.side.copy(),
     price = other.price,
     quantity = other.quantity;
@@ -141,19 +148,19 @@ class SubmitReq {
 }
 
 class CancelReq {
-  const CancelReq(this.reqId, this.marketId, this.userId, this.orderId);
+  const CancelReq(this.reqId, this.userId, this.marketId, this.orderId);
 
   final int reqId;
-  final int marketId;
   final int userId;
+  final int marketId;
   final int orderId;
   // custom <class CancelReq>
   // end <class CancelReq>
 
   Map toJson() => {
       "req_id": ebisu_utils.toJson(reqId),
-      "market_id": ebisu_utils.toJson(marketId),
       "user_id": ebisu_utils.toJson(userId),
+      "market_id": ebisu_utils.toJson(marketId),
       "order_id": ebisu_utils.toJson(orderId),
   };
 
@@ -168,26 +175,26 @@ class CancelReq {
 
   CancelReq._fromJsonMapImpl(Map jsonMap) :
     reqId = jsonMap["req_id"],
-    marketId = jsonMap["market_id"],
     userId = jsonMap["user_id"],
+    marketId = jsonMap["market_id"],
     orderId = jsonMap["order_id"];
 
   CancelReq._copy(CancelReq other) :
     reqId = other.reqId,
-    marketId = other.marketId,
     userId = other.userId,
+    marketId = other.marketId,
     orderId = other.orderId;
 
 }
 
 class ReplaceReq {
-  const ReplaceReq(this.reqId, this.marketId, this.userId, this.existingOrderId,
+  const ReplaceReq(this.reqId, this.userId, this.marketId, this.orderId,
     this.price, this.quantity);
 
   final int reqId;
-  final int marketId;
   final int userId;
-  final int existingOrderId;
+  final int marketId;
+  final int orderId;
   final int price;
   final int quantity;
   // custom <class ReplaceReq>
@@ -195,9 +202,9 @@ class ReplaceReq {
 
   Map toJson() => {
       "req_id": ebisu_utils.toJson(reqId),
-      "market_id": ebisu_utils.toJson(marketId),
       "user_id": ebisu_utils.toJson(userId),
-      "existing_order_id": ebisu_utils.toJson(existingOrderId),
+      "market_id": ebisu_utils.toJson(marketId),
+      "order_id": ebisu_utils.toJson(orderId),
       "price": ebisu_utils.toJson(price),
       "quantity": ebisu_utils.toJson(quantity),
   };
@@ -213,20 +220,29 @@ class ReplaceReq {
 
   ReplaceReq._fromJsonMapImpl(Map jsonMap) :
     reqId = jsonMap["req_id"],
-    marketId = jsonMap["market_id"],
     userId = jsonMap["user_id"],
-    existingOrderId = jsonMap["existing_order_id"],
+    marketId = jsonMap["market_id"],
+    orderId = jsonMap["order_id"],
     price = jsonMap["price"],
     quantity = jsonMap["quantity"];
 
   ReplaceReq._copy(ReplaceReq other) :
     reqId = other.reqId,
-    marketId = other.marketId,
     userId = other.userId,
-    existingOrderId = other.existingOrderId,
+    marketId = other.marketId,
+    orderId = other.orderId,
     price = other.price,
     quantity = other.quantity;
 
 }
 // custom <part requests>
+
+CreateMarketReq createMarketReq(int reqId, int userId,
+    String name, DateTime startTime, DateTime endTime,
+    int decimalShift, int tickSize) =>
+  new CreateMarketReq(reqId, userId, name,
+      startTime.millisecondsSinceEpoch ~/ 1000,
+      endTime.millisecondsSinceEpoch ~/ 1000,
+      decimalShift, tickSize);
+
 // end <part requests>

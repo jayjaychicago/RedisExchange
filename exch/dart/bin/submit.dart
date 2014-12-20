@@ -28,12 +28,19 @@ Map _parseArgs(List<String> args) {
   _parser = new ArgParser();
   try {
     /// Fill in expectations of the parser
+    _parser.addFlag('is-ask',
+      help: '''
+Is this a bid side (default) or ask side
+''',
+      abbr: 'a',
+      defaultsTo: false
+    );
     _parser.addFlag('help',
       help: '''
 Display this help screen
 ''',
       abbr: 'h',
-      defaultsTo: null
+      defaultsTo: false
     );
 
     _parser.addOption('redis-host',
@@ -76,14 +83,18 @@ redis port used by pub/sub
       allowed: null
     );
     _parser.addOption('price',
-      help: '',
+      help: '''
+Price of an order
+''',
       defaultsTo: '10000',
       allowMultiple: false,
       abbr: 'p',
       allowed: null
     );
     _parser.addOption('quantity',
-      help: '',
+      help: '''
+Quantity of an order
+''',
       defaultsTo: '100',
       allowMultiple: false,
       abbr: 'q',
@@ -105,6 +116,7 @@ redis port used by pub/sub
       int.parse(argResults['user-id']) : null;
     result['market-id'] = argResults['market-id'] != null?
       int.parse(argResults['market-id']) : null;
+    result['is-ask'] = argResults['is-ask'];
     result['price'] = argResults['price'] != null?
       int.parse(argResults['price']) : null;
     result['quantity'] = argResults['quantity'] != null?
@@ -130,6 +142,23 @@ main(List<String> args) {
   List positionals = argResults['rest'];
 
   // custom <submit main>
+
+  final host = options['redis-host'];
+  final port = options['redis-port'];
+  RedisClient
+    .connect('$host:$port')
+    .then((RedisClient redisClient) {
+      final client = new ExchClient(redisClient);
+      final req= new SubmitReq(
+        options['req-id'], options['user-id'],
+        options['market-id'],
+        options['is-ask']? Side.ASK_SIDE : Side.BID_SIDE,
+        options['price'],
+        options['quantity']);
+      client.submit(req);
+      redisClient.close();
+    });
+
   // end <submit main>
 
 }

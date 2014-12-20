@@ -6,8 +6,11 @@ import 'package:id/id.dart';
 
 String _getPath() {
   final script = Platform.script.path;
-  return script.substring(0, script.indexOf('exch/codegen')) + 'exch';
+  return script.substring(0, script.indexOf('exch/cpp_codegen')) + 'exch';
 }
 
-final installation = new Installation(new Id('exch'))
-  ..root = _getPath();
+final installation = () {
+  useClangFormatter = true;
+  return new Installation(new Id('exch'))
+    ..root = _getPath();
+}();
