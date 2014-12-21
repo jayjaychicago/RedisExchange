@@ -3,6 +3,7 @@
 
 #include "exch/events.hpp"
 #include "exch/exch.hpp"
+#include "exch/fill.hpp"
 #include "exch/requests.hpp"
 #include <boost/function.hpp>
 
@@ -45,6 +46,7 @@ class Request_persister {
   virtual void persist(Submit_req const& req) = 0;
   virtual void persist(Cancel_req const& req) = 0;
   virtual void persist(Replace_req const& req) = 0;
+  virtual void persist(Fill const& fill) = 0;
 
   // end <ClsPublic Request_persister>
 };

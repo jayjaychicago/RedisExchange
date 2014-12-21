@@ -117,6 +117,11 @@ class Exchange {
 
     if (is_live_) {
       request_persister_.persist(req);
+      auto const &fills = market->fills();
+      for (auto const &fill : fills) {
+        // todo: push multiple fills in one go
+        request_persister_.persist(fill);
+      }
       market_publisher_.publish(Submit_resp(
           req.req_id(), req.user_id(), req.market_id(), submitted_id, result));
     }

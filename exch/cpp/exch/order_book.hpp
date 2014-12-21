@@ -3,8 +3,8 @@
 
 #include "cereal/archives/json.hpp"
 #include "cereal/cereal.hpp"
-#include "cppformat/format.h"
 #include "exch/exch.hpp"
+#include "exch/fill.hpp"
 #include "fcs/timestamp/cereal.hpp"
 #include "fcs/utils/streamers/containers.hpp"
 #include "fcs/utils/streamers/table.hpp"
@@ -171,11 +171,11 @@ class Order {
   }
 
  private:
-  Order_id_t const order_id_;
-  Timestamp_t const timestamp_;
-  Side const side_;
-  Price_t const price_;
-  Quantity_t const quantity_;
+  Order_id_t order_id_{};
+  Timestamp_t timestamp_{};
+  Side side_{};
+  Price_t price_{};
+  Quantity_t quantity_{};
 };
 
 class Managed_order {
@@ -202,7 +202,7 @@ class Managed_order {
 
   // end <ClsPublic Managed_order>
 
-  Order const order;
+  Order order;
   Order_state order_state{Submitted_e};
 
   friend inline std::ostream& operator<<(std::ostream& out,
@@ -239,149 +239,6 @@ std::string orders_display_string(IT begin, IT end, size_t max_shows = 4) {
 
 // end <ClsPostDecl Managed_order>
 
-class Fill {
- public:
-  Fill(Fill_id_t fill_id, Timestamp_t timestamp, Order_id_t bid_id,
-       Order_id_t ask_id, Price_t price, Quantity_t quantity)
-      : fill_id_{fill_id},
-        timestamp_{timestamp},
-        bid_id_{bid_id},
-        ask_id_{ask_id},
-        price_{price},
-        quantity_{quantity} {}
-
-  Fill() = default;
-  // custom <ClsPublic Fill>
-
-  // end <ClsPublic Fill>
-
-  //! getter for fill_id_ (access is Ro)
-  Fill_id_t fill_id() const { return fill_id_; }
-
-  //! getter for timestamp_ (access is Ro)
-  Timestamp_t timestamp() const { return timestamp_; }
-
-  //! getter for bid_id_ (access is Ro)
-  Order_id_t bid_id() const { return bid_id_; }
-
-  //! getter for ask_id_ (access is Ro)
-  Order_id_t ask_id() const { return ask_id_; }
-
-  //! getter for price_ (access is Ro)
-  Price_t price() const { return price_; }
-
-  //! getter for quantity_ (access is Ro)
-  Quantity_t quantity() const { return quantity_; }
-  friend inline std::ostream& operator<<(std::ostream& out, Fill const& item) {
-    out << '\n' << "fill_id:" << item.fill_id_;
-    out << '\n' << "timestamp:" << item.timestamp_;
-    out << '\n' << "bid_id:" << item.bid_id_;
-    out << '\n' << "ask_id:" << item.ask_id_;
-    out << '\n' << "price:" << item.price_;
-    out << '\n' << "quantity:" << item.quantity_;
-    return out;
-  }
-
-  template <class Archive>
-  void serialize(Archive& ar__) {
-    ar__(cereal::make_nvp("fill_id", fill_id_));
-    ar__(cereal::make_nvp("timestamp", timestamp_));
-    ar__(cereal::make_nvp("bid_id", bid_id_));
-    ar__(cereal::make_nvp("ask_id", ask_id_));
-    ar__(cereal::make_nvp("price", price_));
-    ar__(cereal::make_nvp("quantity", quantity_));
-  }
-
-  void serialize_to_json(std::ostream& out__) const {
-    cereal::JSONOutputArchive ar__(out__);
-    const_cast<Fill*>(this)->serialize(ar__);
-  }
-
-  void serialize_from_json(std::istream& in__) {
-    cereal::JSONInputArchive ar__{in__};
-    serialize(ar__);
-  }
-
-  std::string serialize_to_dsv() const {
-    fmt::MemoryWriter w__;
-    w__ << fill_id_ << ':' << fcs::timestamp::ticks(timestamp_) << ':'
-        << bid_id_ << ':' << ask_id_ << ':' << price_ << ':' << quantity_;
-
-    return w__.str();
-  }
-
-  static Fill serialize_from_dsv(std::string const& tuple__) {
-    using namespace boost;
-    char_separator<char> const sep__{":"};
-    tokenizer<char_separator<char> > tokens__(tuple__, sep__);
-    tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
-
-    Fill_id_t fill_id_;
-    Timestamp_t timestamp_;
-    Order_id_t bid_id_;
-    Order_id_t ask_id_;
-    Price_t price_;
-    Quantity_t quantity_;
-
-    if (it__ != tokens__.end()) {
-      fill_id_ = lexical_cast<Fill_id_t>(*it__);
-      ++it__;
-    } else {
-      throw std::logic_error("Tokenize Fill failed: expected fill_id_");
-    }
-
-    if (it__ != tokens__.end()) {
-      if (!fcs::timestamp::convert_to_timestamp_from_ticks(*it__, timestamp_)) {
-        std::string msg{"Encountered invalid timestamp ticks:"};
-        msg += *it__;
-        throw std::logic_error(msg);
-      }
-
-      ++it__;
-    } else {
-      throw std::logic_error("Tokenize Fill failed: expected timestamp_");
-    }
-
-    if (it__ != tokens__.end()) {
-      bid_id_ = lexical_cast<Order_id_t>(*it__);
-      ++it__;
-    } else {
-      throw std::logic_error("Tokenize Fill failed: expected bid_id_");
-    }
-
-    if (it__ != tokens__.end()) {
-      ask_id_ = lexical_cast<Order_id_t>(*it__);
-      ++it__;
-    } else {
-      throw std::logic_error("Tokenize Fill failed: expected ask_id_");
-    }
-
-    if (it__ != tokens__.end()) {
-      price_ = lexical_cast<Price_t>(*it__);
-      ++it__;
-    } else {
-      throw std::logic_error("Tokenize Fill failed: expected price_");
-    }
-
-    if (it__ != tokens__.end()) {
-      quantity_ = lexical_cast<Quantity_t>(*it__);
-      ++it__;
-    } else {
-      throw std::logic_error("Tokenize Fill failed: expected quantity_");
-    }
-
-    return Fill(fill_id_, timestamp_, bid_id_, ask_id_, price_, quantity_);
-  }
-
- private:
-  Fill_id_t const fill_id_{};
-  Timestamp_t const timestamp_{};
-  Order_id_t const bid_id_{};
-  Order_id_t const ask_id_{};
-  Price_t const price_{};
-  Quantity_t const quantity_{};
-};
-
 class Order_book {
  public:
   using Bid_compare_t = std::greater<Price_t>;
@@ -392,12 +249,19 @@ class Order_book {
 
   void process_bid(Order const& bid, Fill_list_t& fills,
                    Price_list_t& affected) {
-    std::cout << "Processing bid " << bid << std::endl;
+    if (false) {
+      std::cout << "Processing bid " << bid << std::endl;
+    }
+
     Managed_order managed_bid{bid};
     auto const bid_price = managed_bid.price();
 
-    for (auto& ask_pair : asks_) {
-      Managed_order_list_t& ask_orders = ask_pair.second;
+    Asks_t::iterator it{asks_.begin()};
+    Asks_t::iterator end{asks_.end()};
+
+    for (; it != end;) {
+      Managed_order_list_t& ask_orders = it->second;
+      size_t delete_to{0};
       for (auto& ask : ask_orders) {
         auto const ask_price = ask.price();
         auto remaining = managed_bid.remaining_quantity();
@@ -409,10 +273,24 @@ class Order_book {
           Quantity_t matched = std::min(remaining, ask_quantity);
           ask.fill_quantity(matched);
           managed_bid.fill_quantity(matched);
+          if (ask.remaining_quantity() == 0) {
+            ++delete_to;
+            // TODO: set state to dead/fully filled
+          }
           fills.emplace_back(next_fill_id(), bid.timestamp(), bid.order_id(),
                              ask.order_id(), ask_price, matched);
         }
       }
+      if (delete_to != 0) {
+        if (delete_to == ask_orders.size()) {
+          asks_.erase(it++);
+          continue;
+        } else {
+          auto const begin = ask_orders.begin();
+          ask_orders.erase(begin, begin + delete_to);
+        }
+      }
+      ++it;
     }
 
     assert(managed_bid.remaining_quantity() >= 0);
@@ -432,12 +310,18 @@ class Order_book {
 
   void process_ask(Order const& ask, Fill_list_t& fills,
                    Price_list_t& affected) {
-    std::cout << "Processing ask " << ask << std::endl;
+    if (false) {
+      std::cout << "Processing ask " << ask << std::endl;
+    }
     Managed_order managed_ask{ask};
     auto const ask_price = managed_ask.price();
 
-    for (auto& bid_pair : bids_) {
-      Managed_order_list_t& bid_orders = bid_pair.second;
+    Bids_t::iterator it{bids_.begin()};
+    Bids_t::iterator end{bids_.end()};
+
+    for (; it != end;) {
+      Managed_order_list_t& bid_orders = it->second;
+      size_t delete_to{0};
       for (auto& bid : bid_orders) {
         auto remaining = managed_ask.remaining_quantity();
         auto const bid_price = bid.price();
@@ -451,8 +335,21 @@ class Order_book {
           managed_ask.fill_quantity(matched);
           fills.emplace_back(next_fill_id(), ask.timestamp(), bid.order_id(),
                              ask.order_id(), bid_price, matched);
+          if (bid.remaining_quantity() == 0) {
+            ++delete_to;
+          }
         }
       }
+      if (delete_to != 0) {
+        if (delete_to == bid_orders.size()) {
+          bids_.erase(it++);
+          continue;
+        } else {
+          auto const begin = bid_orders.begin();
+          bid_orders.erase(begin, begin + delete_to);
+        }
+      }
+      ++it;
     }
 
     assert(managed_ask.remaining_quantity() >= 0);

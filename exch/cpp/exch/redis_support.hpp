@@ -29,6 +29,7 @@ constexpr char const* C_req_key{"EX_REQ:C"};
 constexpr char const* R_req_key{"EX_REQ:R"};
 constexpr char const* H_req_key{"EX_REQ:H"};
 constexpr char const* Cmd_key{"CMD"};
+constexpr char const* Fills_key{"FILLS"};
 
 using Req_func_t = boost::function<void(const std::string& request)>;
 
@@ -226,6 +227,12 @@ class Redis_persister : public Request_persister {
   virtual void persist(Cancel_req const& req) override { _persist(req, 'C'); }
 
   virtual void persist(Replace_req const& req) override { _persist(req, 'R'); }
+
+  virtual void persist(Fill const& fill) override {
+    fmt::MemoryWriter w;
+    w << fill.serialize_to_dsv();
+    redis_client_.command("LPUSH", Fills_key, w.str());
+  }
 
   // end <ClsPublic Redis_persister>
 

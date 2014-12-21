@@ -70,10 +70,12 @@ class Market_exchange {
       order_book_.process_ask(order, fills_, prices_affected_);
     }
 
-    using fcs::utils::streamers::operator<<;
-    std::cout << "Book after submit:\n" << order_book_ << std::endl;
-    std::cout << "Fills:\n" << fills_ << std::endl;
-    std::cout << "Prices Affected:\n" << prices_affected_ << std::endl;
+    if (false) {
+      using fcs::utils::streamers::operator<<;
+      std::cout << "Book after submit:\n" << order_book_ << std::endl;
+      std::cout << "Fills:\n" << fills_ << std::endl;
+      std::cout << "Prices Affected:\n" << prices_affected_ << std::endl;
+    }
 
     return Submit_result();
   }
@@ -92,6 +94,9 @@ class Market_exchange {
   Order_id_t next_order_id() { return ++next_order_id_; }
 
   // end <ClsPublic Market_exchange>
+
+  //! getter for fills_ (access is Ro)
+  Fill_list_t const& fills() const { return fills_; }
 
  private:
   Market_config market_config_;
