@@ -236,11 +236,16 @@ final exch = lib('exch')
       ],
 
       class_('submit_req')
+      ..customBlocks = [ clsPublic ]
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
       ..immutable = true
       ..members = [
+        member('timestamp')..type = 'Timestamp_t'
+        ..initText = 'Timestamp_t::time_rep_type(0LL)'
+        ..cerealTransient = true
+        ..mutable = true,
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
         member('market_id')..type = 'Market_id_t',

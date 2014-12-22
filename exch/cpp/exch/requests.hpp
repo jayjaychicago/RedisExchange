@@ -240,9 +240,11 @@ class Create_market_resp {
 
 class Submit_req {
  public:
-  Submit_req(Req_id_t req_id, User_id_t user_id, Market_id_t market_id,
-             Side side, Price_t price, Quantity_t quantity)
-      : req_id_{req_id},
+  Submit_req(Timestamp_t timestamp, Req_id_t req_id, User_id_t user_id,
+             Market_id_t market_id, Side side, Price_t price,
+             Quantity_t quantity)
+      : timestamp_{timestamp},
+        req_id_{req_id},
         user_id_{user_id},
         market_id_{market_id},
         side_{side},
@@ -250,6 +252,15 @@ class Submit_req {
         quantity_{quantity} {}
 
   Submit_req() = default;
+  // custom <ClsPublic Submit_req>
+
+  void timestamp(Timestamp_t timestamp) const { timestamp_ = timestamp; }
+
+  // end <ClsPublic Submit_req>
+
+  //! getter for timestamp_ (access is Ro)
+  Timestamp_t timestamp() const { return timestamp_; }
+
   //! getter for req_id_ (access is Ro)
   Req_id_t req_id() const { return req_id_; }
 
@@ -269,6 +280,7 @@ class Submit_req {
   Quantity_t quantity() const { return quantity_; }
   friend inline std::ostream& operator<<(std::ostream& out,
                                          Submit_req const& item) {
+    out << '\n' << "timestamp:" << item.timestamp_;
     out << '\n' << "req_id:" << item.req_id_;
     out << '\n' << "user_id:" << item.user_id_;
     out << '\n' << "market_id:" << item.market_id_;
@@ -300,8 +312,9 @@ class Submit_req {
 
   std::string serialize_to_dsv() const {
     fmt::MemoryWriter w__;
-    w__ << req_id_ << ':' << user_id_ << ':' << market_id_ << ':' << side_
-        << ':' << price_ << ':' << quantity_;
+    w__ << fcs::timestamp::ticks(timestamp_) << ':' << req_id_ << ':'
+        << user_id_ << ':' << market_id_ << ':' << side_ << ':' << price_ << ':'
+        << quantity_;
 
     return w__.str();
   }
@@ -312,12 +325,25 @@ class Submit_req {
     tokenizer<char_separator<char> > tokens__(tuple__, sep__);
     tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
 
+    Timestamp_t timestamp_;
     Req_id_t req_id_;
     User_id_t user_id_;
     Market_id_t market_id_;
     Side side_;
     Price_t price_;
     Quantity_t quantity_;
+
+    if (it__ != tokens__.end()) {
+      if (!fcs::timestamp::convert_to_timestamp_from_ticks(*it__, timestamp_)) {
+        std::string msg{"Encountered invalid timestamp ticks:"};
+        msg += *it__;
+        throw std::logic_error(msg);
+      }
+
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Submit_req failed: expected timestamp_");
+    }
 
     if (it__ != tokens__.end()) {
       req_id_ = lexical_cast<Req_id_t>(*it__);
@@ -361,10 +387,12 @@ class Submit_req {
       throw std::logic_error("Tokenize Submit_req failed: expected quantity_");
     }
 
-    return Submit_req(req_id_, user_id_, market_id_, side_, price_, quantity_);
+    return Submit_req(timestamp_, req_id_, user_id_, market_id_, side_, price_,
+                      quantity_);
   }
 
  private:
+  mutable Timestamp_t timestamp_{Timestamp_t::time_rep_type(0LL)};
   Req_id_t const req_id_{};
   User_id_t const user_id_{};
   Market_id_t const market_id_{};

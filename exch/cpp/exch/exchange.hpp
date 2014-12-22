@@ -106,16 +106,19 @@ class Exchange {
     Submit_result result;
     Order_id_t submitted_id{};
 
+    auto timestamp = fcs::timestamp::current_time();
+
     if (market == nullptr) {
       result = Submit_invalid_market_e;
     } else {
       submitted_id = market->next_order_id();
-      Order order{submitted_id, fcs::timestamp::current_time(), req.side(),
-                  req.price(), req.quantity()};
+      Order order{submitted_id, timestamp, req.side(), req.price(),
+                  req.quantity()};
       result = market->submit(order);
     }
 
     if (is_live_) {
+      req.timestamp(timestamp);
       request_persister_.persist(req);
       auto const &fills = market->fills();
       for (auto const &fill : fills) {
