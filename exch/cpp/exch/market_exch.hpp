@@ -50,6 +50,29 @@ class Market_config {
   int const tick_size_;
 };
 
+class Market_stats {
+ public:
+  int active{0};
+  int submits{0};
+  int cancels{0};
+  int replaces{0};
+  int fills{0};
+
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Market_stats const& item) {
+    out << '\n' << "create_time:" << item.create_time_;
+    out << '\n' << "active:" << item.active;
+    out << '\n' << "submits:" << item.submits;
+    out << '\n' << "cancels:" << item.cancels;
+    out << '\n' << "replaces:" << item.replaces;
+    out << '\n' << "fills:" << item.fills;
+    return out;
+  }
+
+ private:
+  Timestamp_t create_time_{fcs::timestamp::current_time()};
+};
+
 /**
  Responsible for the exchange of a single market (e.g. one market id)
 */
@@ -63,12 +86,15 @@ class Market_exchange {
   Submit_result submit(Order const& order) {
     fills_.clear();
     prices_affected_.clear();
+    ++market_stats_.submits;
 
     if (order.is_bid()) {
       order_book_.process_bid(order, fills_, prices_affected_);
     } else {
       order_book_.process_ask(order, fills_, prices_affected_);
     }
+
+    market_stats_.fills += fills_.size();
 
     if (false) {
       using fcs::utils::streamers::operator<<;
@@ -82,18 +108,29 @@ class Market_exchange {
 
   Cancel_result cancel(Order_id_t const& order_id) {
     std::cout << "Cancel being processed:" << order_id << std::endl;
+    ++market_stats_.cancels;
     return Cancel_result();
   }
 
   Replace_result replace_order(Order_id_t original, Order const& order) {
     std::cout << "replace being processed:" << original << " replaced with "
               << order << std::endl;
+    ++market_stats_.replaces;
     return Replace_result();
   }
 
   Order_id_t next_order_id() { return ++next_order_id_; }
 
   // end <ClsPublic Market_exchange>
+
+  //! getter for market_config_ (access is Ro)
+  Market_config const& market_config() const { return market_config_; }
+
+  //! getter for market_stats_ (access is Ro)
+  Market_stats const& market_stats() const { return market_stats_; }
+
+  //! getter for order_book_ (access is Ro)
+  Order_book const& order_book() const { return order_book_; }
 
   //! getter for fills_ (access is Ro)
   Fill_list_t const& fills() const { return fills_; }
@@ -102,6 +139,7 @@ class Market_exchange {
   Market_config market_config_;
   Market_id_t const market_id_{};
   int next_order_id_{0};
+  Market_stats market_stats_;
   Order_book order_book_{};
   Fill_list_t fills_{32};
   Price_list_t prices_affected_{32};

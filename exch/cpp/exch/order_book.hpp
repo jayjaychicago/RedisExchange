@@ -371,6 +371,7 @@ class Order_book {
     if (order.is_bid()) {
     } else {
     }
+    return false;
   }
 
   Fill_id_t next_fill_id() { return ++next_fill_id_; }

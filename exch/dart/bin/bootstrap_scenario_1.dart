@@ -123,8 +123,8 @@ main(List<String> args) {
 
   final startTime = new DateTime.now();
   final endTime = startTime.add(new Duration(days: 2));
-  //final random = new Random(42);
-  final random = new Random();
+  //  final random = new Random();
+  final random = new Random(42);
 
   int maxAsk = 0;
   int minBid = 1<<30;
@@ -149,10 +149,15 @@ main(List<String> args) {
     .connect('$host:$port')
     .then((RedisClient redisClient) {
       final client = new ExchClient(redisClient);
-      client.createMarket(createMarketReq(
-            reqId, userId, "bootstrap_1", startTime, endTime, 2, 500));
 
-      for(int i=1; i<=200; i++) {
+      final creationReq = createMarketReq(
+        reqId, userId, "bootstrap_1", startTime, endTime, 2, 500);
+
+      print('Creation ${creationReq.toJson()}');
+
+      client.createMarket(creationReq);
+
+      for(int i=1; i<=100; i++) {
         final big = (i%11==0);
         final qty = nextQty();
 
@@ -171,6 +176,9 @@ main(List<String> args) {
                 big? qty*3 : qty));
         }
       }
+
+      client.log(new LogReq(LogType.LOG_BOOK, marketId));
+      client.halt();
 
       redisClient.close();
     });
