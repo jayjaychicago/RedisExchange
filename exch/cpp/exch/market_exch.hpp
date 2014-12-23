@@ -103,12 +103,14 @@ class Market_exchange {
       std::cout << "Prices Affected:\n" << prices_affected_ << std::endl;
     }
 
+    update_active();
     return Submit_result();
   }
 
-  Cancel_result cancel(Order_id_t const& order_id) {
-    std::cout << "Cancel being processed:" << order_id << std::endl;
+  Cancel_result cancel(Order_id_t order_id) {
     ++market_stats_.cancels;
+    order_book_.cancel(order_id);
+    update_active();
     return Cancel_result();
   }
 
@@ -116,8 +118,11 @@ class Market_exchange {
     std::cout << "replace being processed:" << original << " replaced with "
               << order << std::endl;
     ++market_stats_.replaces;
+    update_active();
     return Replace_result();
   }
+
+  void update_active() { market_stats_.active = order_book_.num_active(); }
 
   Order_id_t next_order_id() { return ++next_order_id_; }
 

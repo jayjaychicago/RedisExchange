@@ -157,9 +157,16 @@ main(List<String> args) {
 
       client.createMarket(creationReq);
 
-      for(int i=1; i<=100; i++) {
+      for(int i=1; i<=800; i++) {
         final big = (i%11==0);
         final qty = nextQty();
+
+        if(i == 100) {
+          client.cancel(new CancelReq(reqId, userId, marketId, 81));
+          client.cancel(new CancelReq(reqId, userId, marketId, 93));
+          client.cancel(new CancelReq(reqId, userId, marketId, 89));
+          client.cancel(new CancelReq(reqId, userId, marketId, 31));
+        }
 
         if(someDelta()%2 == 0) {
           final px = nextAsk();

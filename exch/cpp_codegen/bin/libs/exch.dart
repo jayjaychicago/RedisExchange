@@ -158,17 +158,19 @@ final exch = lib('exch')
       ],
 
       class_('order_book')
-      ..customBlocks = [ clsPublic ]
+      ..customBlocks = [ clsPublic, clsPrivate ]
       ..usesStreamers = true
       ..usings = [
         'Bid_compare_t = std::greater< Price_t >',
         'Bids_t = std::map< Price_t, Managed_order_list_t, Bid_compare_t >',
         'Asks_t = std::map< Price_t, Managed_order_list_t >',
+        'Active_map_t = std::map< Order_id_t, Price_t >',
       ]
       ..members = [
         member('bids')..type = 'Bids_t',
         member('asks')..type = 'Asks_t',
         member('next_fill_id')..init = 0,
+        member('active_map')..type = 'Active_map_t',
       ],
 
     ],
