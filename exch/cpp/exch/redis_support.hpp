@@ -27,8 +27,10 @@ constexpr char const* M_req_key{"EX_REQ:M"};
 constexpr char const* S_req_key{"EX_REQ:S"};
 constexpr char const* C_req_key{"EX_REQ:C"};
 constexpr char const* R_req_key{"EX_REQ:R"};
+constexpr char const* L_req_key{"EX_REQ:L"};
 constexpr char const* H_req_key{"EX_REQ:H"};
 constexpr char const* Cmd_key{"CMD"};
+constexpr char const* Fills_key{"FILLS"};
 
 using Req_func_t = boost::function<void(const std::string& request)>;
 
@@ -45,12 +47,14 @@ class Redis_listener : public Request_listener {
                          Submit_handler_t submit_handler,
                          Cancel_handler_t cancel_handler,
                          Replace_handler_t replace_handler,
+                         Log_handler_t log_handler,
                          Halt_handler_t halt_handler) {
 
     create_market_handler_ = create_market_handler;
     submit_handler_ = submit_handler;
     cancel_handler_ = cancel_handler;
     replace_handler_ = replace_handler;
+    log_handler_ = log_handler;
     halt_handler_ = halt_handler;
 
     m_handle_ = redis_client_.subscribe(
@@ -69,6 +73,10 @@ class Redis_listener : public Request_listener {
         R_req_key,
         std::bind(&Redis_listener::replace, this, std::placeholders::_1));
 
+    l_handle_ = redis_client_.subscribe(
+        L_req_key,
+        std::bind(&Redis_listener::log, this, std::placeholders::_1));
+
     h_handle_ = redis_client_.subscribe(H_req_key,
                                         std::bind(&Redis_listener::halt, this));
   }
@@ -85,6 +93,9 @@ class Redis_listener : public Request_listener {
     }
     if (r_handle_.id) {
       redis_client_.unsubscribe(r_handle_);
+    }
+    if (l_handle_.id) {
+      redis_client_.unsubscribe(l_handle_);
     }
     if (h_handle_.id) {
       redis_client_.unsubscribe(h_handle_);
@@ -119,6 +130,13 @@ class Redis_listener : public Request_listener {
     replace_handler_(req);
   }
 
+  void log(std::string const& command) {
+    Log_req req;
+    std::istringstream in{command};
+    req.serialize_from_json(in);
+    log_handler_(req);
+  }
+
   void halt() {
     std::cout << "halt req " << std::endl;
     halt_handler_();
@@ -134,11 +152,13 @@ class Redis_listener : public Request_listener {
   RedisClient::Handle s_handle_{0};
   RedisClient::Handle c_handle_{0};
   RedisClient::Handle r_handle_{0};
+  RedisClient::Handle l_handle_{0};
   RedisClient::Handle h_handle_{0};
   Create_market_handler_t create_market_handler_{};
   Submit_handler_t submit_handler_{};
   Cancel_handler_t cancel_handler_{};
   Replace_handler_t replace_handler_{};
+  Log_handler_t log_handler_{};
   Halt_handler_t halt_handler_{};
 };
 
@@ -161,6 +181,7 @@ class Redis_bootstrap_listener : public Request_listener {
                          Submit_handler_t submit_handler,
                          Cancel_handler_t cancel_handler,
                          Replace_handler_t replace_handler,
+                         Log_handler_t log_handler,
                          Halt_handler_t halt_handler) override {
 
     // The following needs revisiting, need a way to make the calls
@@ -226,6 +247,12 @@ class Redis_persister : public Request_persister {
   virtual void persist(Cancel_req const& req) override { _persist(req, 'C'); }
 
   virtual void persist(Replace_req const& req) override { _persist(req, 'R'); }
+
+  virtual void persist(Fill const& fill) override {
+    fmt::MemoryWriter w;
+    w << fill.serialize_to_dsv();
+    redis_client_.command("LPUSH", Fills_key, w.str());
+  }
 
   // end <ClsPublic Redis_persister>
 

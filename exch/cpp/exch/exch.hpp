@@ -45,6 +45,8 @@ enum Replace_result {
   Replace_invalid_order_details_e
 };
 
+enum Log_type { Log_book_e };
+
 // custom <FcbEndNamespace exch>
 
 constexpr size_t Market_id_strlen =

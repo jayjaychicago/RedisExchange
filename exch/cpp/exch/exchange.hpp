@@ -6,8 +6,24 @@
 #include "exch/interfaces.hpp"
 #include "exch/market_exch.hpp"
 #include "exch/requests.hpp"
+#include <iosfwd>
 
 namespace exch {
+class Exchange_config {
+ public:
+  Exchange_config(bool placeholder) : placeholder_{placeholder} {}
+
+  Exchange_config() = default;
+  friend inline std::ostream &operator<<(std::ostream &out,
+                                         Exchange_config const &item) {
+    out << '\n' << "placeholder:" << item.placeholder_;
+    return out;
+  }
+
+ private:
+  bool placeholder_{false};
+};
+
 /**
  Manages multiple markets. Requests come from the listener, to which
  this exchange subscribes. Those requests are persisted and turned into
@@ -24,14 +40,17 @@ class Exchange {
   using Market_exchange_ptr = std::unique_ptr<Market_exchange>;
   using Market_exchange_map_t = std::map<Market_id_t, Market_exchange_ptr>;
 
-  Exchange(Request_listener &bootstrap_listener,
+  Exchange(Exchange_config exchange_config,
+           Request_listener &bootstrap_listener,
            Request_listener &request_listener,
            Request_persister &request_persister,
-           Market_publisher &market_publisher)
-      : bootstrap_listener_{bootstrap_listener},
+           Market_publisher &market_publisher, Halt_handler_t halt_handler)
+      : exchange_config_{exchange_config},
+        bootstrap_listener_{bootstrap_listener},
         request_listener_{request_listener},
         request_persister_{request_persister},
-        market_publisher_{market_publisher} {
+        market_publisher_{market_publisher},
+        halt_handler_{halt_handler} {
     // custom <Exchange(from_args)>
 
     // bootstrap_listener_.subscribe(
@@ -48,6 +67,7 @@ class Exchange {
         std::bind(&Exchange::submit, this, std::placeholders::_1),
         std::bind(&Exchange::cancel, this, std::placeholders::_1),
         std::bind(&Exchange::replace, this, std::placeholders::_1),
+        std::bind(&Exchange::log, this, std::placeholders::_1),
         std::bind(&Exchange::halt_handler, this));
 
     // end <Exchange(from_args)>
@@ -60,7 +80,11 @@ class Exchange {
  private:
   // custom <ClsPrivate Exchange>
 
-  void halt_handler() { request_listener_.unsubscribe(); }
+  void halt_handler() {
+    std::cout << "Per request shutting down..." << std::endl;
+    request_listener_.unsubscribe();
+    halt_handler_();
+  }
 
   Market_exchange_naked_ptr get_market(Market_id_t market) {
     Market_exchange_map_t::iterator found{market_exchanges_.find(market)};
@@ -106,17 +130,28 @@ class Exchange {
     Submit_result result;
     Order_id_t submitted_id{};
 
+    auto timestamp = fcs::timestamp::current_time();
+
     if (market == nullptr) {
       result = Submit_invalid_market_e;
     } else {
       submitted_id = market->next_order_id();
-      Order order{submitted_id, fcs::timestamp::current_time(), req.side(),
-                  req.price(), req.quantity()};
+      Order order{submitted_id, timestamp, req.side(), req.price(),
+                  req.quantity()};
       result = market->submit(order);
     }
 
     if (is_live_) {
+      req.timestamp(timestamp);
+
       request_persister_.persist(req);
+
+      auto const &fills = market->fills();
+      for (auto const &fill : fills) {
+        // todo: push multiple fills in one go
+        request_persister_.persist(fill);
+      }
+
       market_publisher_.publish(Submit_resp(
           req.req_id(), req.user_id(), req.market_id(), submitted_id, result));
     }
@@ -162,20 +197,30 @@ class Exchange {
     }
   }
 
-  void shutdown() {}
+  void log(Log_req const &req) {
+    Market_exchange_naked_ptr market{get_market(req.market_id())};
+    if (market != nullptr) {
+      using fcs::utils::streamers::operator<<;
+      std::cout << "LOGGING MARKET " << fcs::timestamp::current_time() << '\n'
+                //<< market->market_config() << '\n'
+                << market->order_book() << market->market_stats() << std::endl;
+    }
+  }
 
   // end <ClsPrivate Exchange>
 
+  Exchange_config exchange_config_{};
   Request_listener &bootstrap_listener_;
   Request_listener &request_listener_;
   Request_persister &request_persister_;
   Market_publisher &market_publisher_;
+  Halt_handler_t halt_handler_{};
   Market_exchange_map_t market_exchanges_{};
   /**
    Indicates bootstrapping is complete and new commands should be saved and
    responses published
   */
-  int is_live_{false};
+  bool is_live_{false};
   int next_market_id_{0};
 };
 

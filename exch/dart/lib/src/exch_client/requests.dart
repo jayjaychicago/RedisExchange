@@ -43,6 +43,45 @@ class Side implements Comparable<Side> {
 
 }
 
+class LogType implements Comparable<LogType> {
+  static const LOG_BOOK = const LogType._(0);
+
+  static get values => [
+    LOG_BOOK
+  ];
+
+  final int value;
+
+  int get hashCode => value;
+
+  const LogType._(this.value);
+
+  copy() => this;
+
+  int compareTo(LogType other) => value.compareTo(other.value);
+
+  String toString() {
+    switch(this) {
+      case LOG_BOOK: return "LogBook";
+    }
+    return null;
+  }
+
+  static LogType fromString(String s) {
+    if(s == null) return null;
+    switch(s) {
+      case "LogBook": return LOG_BOOK;
+      default: return null;
+    }
+  }
+
+  int toJson() => value;
+  static LogType fromJson(int v) {
+    return v==null? null : values[v];
+  }
+
+}
+
 class CreateMarketReq {
   const CreateMarketReq(this.reqId, this.userId, this.name, this.startTime,
     this.endTime, this.decimalShift, this.tickSize);
@@ -235,14 +274,46 @@ class ReplaceReq {
     quantity = other.quantity;
 
 }
+
+class LogReq {
+  const LogReq(this.logType, this.marketId);
+
+  final LogType logType;
+  final int marketId;
+  // custom <class LogReq>
+  // end <class LogReq>
+
+  Map toJson() => {
+      "log_type": ebisu_utils.toJson(logType),
+      "market_id": ebisu_utils.toJson(marketId),
+  };
+
+  static LogReq fromJson(Object json) {
+    if(json == null) return null;
+    if(json is String) {
+      json = convert.JSON.decode(json);
+    }
+    assert(json is Map);
+    return new LogReq._fromJsonMapImpl(json);
+  }
+
+  LogReq._fromJsonMapImpl(Map jsonMap) :
+    logType = LogType.fromJson(jsonMap["log_type"]),
+    marketId = jsonMap["market_id"];
+
+  LogReq._copy(LogReq other) :
+    logType = other.logType == null? null : other.logType.copy(),
+    marketId = other.marketId;
+
+}
 // custom <part requests>
 
 CreateMarketReq createMarketReq(int reqId, int userId,
     String name, DateTime startTime, DateTime endTime,
     int decimalShift, int tickSize) =>
   new CreateMarketReq(reqId, userId, name,
-      startTime.millisecondsSinceEpoch ~/ 1000,
-      endTime.millisecondsSinceEpoch ~/ 1000,
+      210866803200000000 + startTime.millisecondsSinceEpoch * 1000,
+      210866803200000000 + endTime.millisecondsSinceEpoch * 1000,
       decimalShift, tickSize);
 
 // end <part requests>

@@ -240,9 +240,11 @@ class Create_market_resp {
 
 class Submit_req {
  public:
-  Submit_req(Req_id_t req_id, User_id_t user_id, Market_id_t market_id,
-             Side side, Price_t price, Quantity_t quantity)
-      : req_id_{req_id},
+  Submit_req(Timestamp_t timestamp, Req_id_t req_id, User_id_t user_id,
+             Market_id_t market_id, Side side, Price_t price,
+             Quantity_t quantity)
+      : timestamp_{timestamp},
+        req_id_{req_id},
         user_id_{user_id},
         market_id_{market_id},
         side_{side},
@@ -250,6 +252,15 @@ class Submit_req {
         quantity_{quantity} {}
 
   Submit_req() = default;
+  // custom <ClsPublic Submit_req>
+
+  void timestamp(Timestamp_t timestamp) const { timestamp_ = timestamp; }
+
+  // end <ClsPublic Submit_req>
+
+  //! getter for timestamp_ (access is Ro)
+  Timestamp_t timestamp() const { return timestamp_; }
+
   //! getter for req_id_ (access is Ro)
   Req_id_t req_id() const { return req_id_; }
 
@@ -269,6 +280,7 @@ class Submit_req {
   Quantity_t quantity() const { return quantity_; }
   friend inline std::ostream& operator<<(std::ostream& out,
                                          Submit_req const& item) {
+    out << '\n' << "timestamp:" << item.timestamp_;
     out << '\n' << "req_id:" << item.req_id_;
     out << '\n' << "user_id:" << item.user_id_;
     out << '\n' << "market_id:" << item.market_id_;
@@ -300,8 +312,9 @@ class Submit_req {
 
   std::string serialize_to_dsv() const {
     fmt::MemoryWriter w__;
-    w__ << req_id_ << ':' << user_id_ << ':' << market_id_ << ':' << side_
-        << ':' << price_ << ':' << quantity_;
+    w__ << fcs::timestamp::ticks(timestamp_) << ':' << req_id_ << ':'
+        << user_id_ << ':' << market_id_ << ':' << side_ << ':' << price_ << ':'
+        << quantity_;
 
     return w__.str();
   }
@@ -312,12 +325,25 @@ class Submit_req {
     tokenizer<char_separator<char> > tokens__(tuple__, sep__);
     tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
 
+    Timestamp_t timestamp_;
     Req_id_t req_id_;
     User_id_t user_id_;
     Market_id_t market_id_;
     Side side_;
     Price_t price_;
     Quantity_t quantity_;
+
+    if (it__ != tokens__.end()) {
+      if (!fcs::timestamp::convert_to_timestamp_from_ticks(*it__, timestamp_)) {
+        std::string msg{"Encountered invalid timestamp ticks:"};
+        msg += *it__;
+        throw std::logic_error(msg);
+      }
+
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Submit_req failed: expected timestamp_");
+    }
 
     if (it__ != tokens__.end()) {
       req_id_ = lexical_cast<Req_id_t>(*it__);
@@ -361,10 +387,12 @@ class Submit_req {
       throw std::logic_error("Tokenize Submit_req failed: expected quantity_");
     }
 
-    return Submit_req(req_id_, user_id_, market_id_, side_, price_, quantity_);
+    return Submit_req(timestamp_, req_id_, user_id_, market_id_, side_, price_,
+                      quantity_);
   }
 
  private:
+  mutable Timestamp_t timestamp_{Timestamp_t::time_rep_type(0LL)};
   Req_id_t const req_id_{};
   User_id_t const user_id_{};
   Market_id_t const market_id_{};
@@ -806,6 +834,78 @@ class Replace_resp {
   Order_id_t const canceled_order_id_{};
   Order_id_t const order_id_{};
   Replace_result const result_{};
+};
+
+class Log_req {
+ public:
+  Log_req(Log_type log_type, Market_id_t market_id)
+      : log_type_{log_type}, market_id_{market_id} {}
+
+  Log_req() = default;
+  //! getter for log_type_ (access is Ro)
+  Log_type log_type() const { return log_type_; }
+
+  //! getter for market_id_ (access is Ro)
+  Market_id_t market_id() const { return market_id_; }
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Log_req const& item) {
+    out << '\n' << "log_type:" << item.log_type_;
+    out << '\n' << "market_id:" << item.market_id_;
+    return out;
+  }
+
+  template <class Archive>
+  void serialize(Archive& ar__) {
+    ar__(cereal::make_nvp("log_type", log_type_));
+    ar__(cereal::make_nvp("market_id", market_id_));
+  }
+
+  void serialize_to_json(std::ostream& out__) const {
+    cereal::JSONOutputArchive ar__(out__);
+    const_cast<Log_req*>(this)->serialize(ar__);
+  }
+
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
+    serialize(ar__);
+  }
+
+  std::string serialize_to_dsv() const {
+    fmt::MemoryWriter w__;
+    w__ << log_type_ << ':' << market_id_;
+
+    return w__.str();
+  }
+
+  static Log_req serialize_from_dsv(std::string const& tuple__) {
+    using namespace boost;
+    char_separator<char> const sep__{":"};
+    tokenizer<char_separator<char> > tokens__(tuple__, sep__);
+    tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
+
+    Log_type log_type_;
+    Market_id_t market_id_;
+
+    if (it__ != tokens__.end()) {
+      log_type_ = Log_type(lexical_cast<int>(*it__));
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Log_req failed: expected log_type_");
+    }
+
+    if (it__ != tokens__.end()) {
+      market_id_ = lexical_cast<Market_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Log_req failed: expected market_id_");
+    }
+
+    return Log_req(log_type_, market_id_);
+  }
+
+ private:
+  Log_type const log_type_{};
+  Market_id_t const market_id_{};
 };
 
 }  // namespace exch

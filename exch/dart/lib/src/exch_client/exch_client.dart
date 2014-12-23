@@ -12,6 +12,7 @@ class ExchClient {
   submit(SubmitReq req) =>
     _redisClient.publish("EX_REQ:S",
         convert.JSON.encode(req.toJson()));
+  //    .then((_) => print('For ${req.reqId} Got $_'));
 
   cancel(CancelReq req) =>
     _redisClient.publish("EX_REQ:C",
@@ -20,6 +21,13 @@ class ExchClient {
   replace(ReplaceReq req) =>
     _redisClient.publish("EX_REQ:R",
         convert.JSON.encode(req.toJson()));
+
+  log(LogReq req) =>
+    _redisClient.publish("EX_REQ:L",
+        convert.JSON.encode(req.toJson()));
+
+  halt() => _redisClient.publish("EX_REQ:H", "Halt");
+
 
   // end <class ExchClient>
   final RedisClient _redisClient;

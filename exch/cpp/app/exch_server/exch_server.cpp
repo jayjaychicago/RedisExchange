@@ -101,15 +101,18 @@ int main(int argc, char** argv) {
       return -1;
     }
 
-    Redis_bootstrap_listener bootstrap_redis_listener{ redis_client_listener };
-    Redis_listener redis_listener{ redis_client_listener };
-    Redis_persister redis_persister{ redis_client_publisher };
-    Redis_publisher redis_publisher{ redis_client_publisher };
+    Redis_bootstrap_listener bootstrap_redis_listener{redis_client_listener};
+    Redis_listener redis_listener{redis_client_listener};
+    Redis_persister redis_persister{redis_client_publisher};
+    Redis_publisher redis_publisher{redis_client_publisher};
+    auto config = Exchange_config{};
 
-    Exchange exchange{ bootstrap_redis_listener, redis_listener,
-                       redis_persister, redis_publisher, };
+    Exchange exchange{config, bootstrap_redis_listener, redis_listener,
+                      redis_persister, redis_publisher,
+                      [&]() { io_service.stop(); }};
 
-    std::cout << "Exchange server waiting for requests" << std::endl;
+    std::cout << "Running with: " << config
+              << "\nExchange server waiting for requests" << std::endl;
     io_service.run();
 
     // end <main>

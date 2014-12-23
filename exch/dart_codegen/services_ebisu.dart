@@ -111,7 +111,10 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
         ..enums = [
           enum_('side')
           ..jsonSupport = true
-          ..values = [ id('bid_side'), id('ask_side') ]
+          ..values = [ id('bid_side'), id('ask_side') ],
+          enum_('log_type')
+          ..jsonSupport = true
+          ..values = [ id('log_book') ],
         ]
         ..classes = [
           class_('create_market_req')
@@ -160,6 +163,13 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
             member('order_id')..type = 'int',
             member('price')..type = 'int',
             member('quantity')..type = 'int',
+          ],
+          class_('log_req')
+          ..jsonKeyFormat = snake
+          ..immutable = true
+          ..members = [
+            member('log_type')..type = 'LogType',
+            member('market_id')..type = 'int',
           ],
         ],
         part('events'),
