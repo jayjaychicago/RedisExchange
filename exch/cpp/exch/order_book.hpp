@@ -195,6 +195,8 @@ class Managed_order {
 
   Order_id_t order_id() const { return order.order_id(); }
 
+  Side side() const { return order.side(); }
+
   void fill_quantity(Quantity_t qty) {
     assert(qty <= remaining_quantity());
     filled_ += qty;
@@ -244,6 +246,7 @@ class Order_book {
   using Bid_compare_t = std::greater<Price_t>;
   using Bids_t = std::map<Price_t, Managed_order_list_t, Bid_compare_t>;
   using Asks_t = std::map<Price_t, Managed_order_list_t>;
+  using Active_map_t = std::map<Order_id_t, Price_t>;
 
   // custom <ClsPublic Order_book>
 
@@ -274,6 +277,7 @@ class Order_book {
           ask.fill_quantity(matched);
           managed_bid.fill_quantity(matched);
           if (ask.remaining_quantity() == 0) {
+            remove_active_order(ask);
             ++delete_to;
             // TODO: set state to dead/fully filled
           }
@@ -281,6 +285,7 @@ class Order_book {
                              ask.order_id(), ask_price, matched);
         }
       }
+
       if (delete_to != 0) {
         if (delete_to == ask_orders.size()) {
           asks_.erase(it++);
@@ -300,12 +305,14 @@ class Order_book {
           bids_.insert(Bids_t::value_type(bid_price, Managed_order_list_t()))};
 
       Managed_order_list_t& orders{insert_result.first->second};
+      add_order(managed_bid);
       orders.push_back(managed_bid);
 
       if (affected.empty() || affected.back() != bid_price) {
         affected.emplace_back(bid_price);
       }
     }
+    assert(active_order_invariant());
   }
 
   void process_ask(Order const& ask, Fill_list_t& fills,
@@ -336,10 +343,12 @@ class Order_book {
           fills.emplace_back(next_fill_id(), ask.timestamp(), bid.order_id(),
                              ask.order_id(), bid_price, matched);
           if (bid.remaining_quantity() == 0) {
+            remove_active_order(bid);
             ++delete_to;
           }
         }
       }
+
       if (delete_to != 0) {
         if (delete_to == bid_orders.size()) {
           bids_.erase(it++);
@@ -359,22 +368,64 @@ class Order_book {
           asks_.insert(Asks_t::value_type(ask_price, Managed_order_list_t()))};
 
       Managed_order_list_t& orders = {insert_result.first->second};
+      add_order(managed_ask);
       orders.push_back(managed_ask);
 
       if (affected.empty() || affected.back() != ask_price) {
         affected.emplace_back(ask_price);
       }
     }
+
+    assert(active_order_invariant());
   }
 
-  bool cancel_order(Order const& order, Managed_order& dead) {
-    if (order.is_bid()) {
-    } else {
+  bool cancel(Order_id_t order_id) {
+    bool result{false};
+    Active_map_t::iterator found = active_map_.find(order_id);
+    if (found != active_map_.end()) {
+      Price_t price = found->second;
+      std::cout << "Cancelling " << order_id << " at px " << price << std::endl;
+      if (price < 0) {
+        result = remove_order_from_book(asks_, -price, order_id);
+      } else {
+        result = remove_order_from_book(bids_, price, order_id);
+      }
     }
-    return false;
+    return result;
+  }
+
+  template <typename MAP>
+  bool remove_order_from_book(MAP& map, Price_t price, Order_id_t order_id) {
+    bool result{false};
+    auto orders_at_price = map.find(price);
+    if (orders_at_price != map.end()) {
+      Managed_order_list_t& orders{orders_at_price->second};
+      result = remove_order_from_list(orders, order_id);
+      if (result && orders.empty()) {
+        map.erase(price);
+      }
+    }
+    return result;
+  }
+
+  bool remove_order_from_list(Managed_order_list_t& orders,
+                              Order_id_t order_id) {
+    bool result{false};
+    auto found_order = std::find_if(orders.begin(), orders.end(),
+                                    [=](Managed_order const& order)->bool {
+      return order.order_id() == order_id;
+    });
+
+    if (found_order != orders.end()) {
+      orders.erase(found_order);
+      result = true;
+    }
+    return result;
   }
 
   Fill_id_t next_fill_id() { return ++next_fill_id_; }
+
+  size_t num_active() const { return active_map_.size(); }
 
   friend inline std::ostream& operator<<(std::ostream& out,
                                          Order_book const& item) {
@@ -412,9 +463,40 @@ class Order_book {
   // end <ClsPublic Order_book>
 
  private:
+  // custom <ClsPrivate Order_book>
+
+  void add_order(Managed_order const& order) {
+    assert(active_map_.find(order.order_id()) == active_map_.end());
+    active_map_.insert(Active_map_t::value_type(
+        order.order_id(),
+        order.side() == Bid_side_e ? order.price() : -order.price()));
+  }
+
+  void remove_active_order(Managed_order const& order) {
+    assert(active_map_.find(order.order_id()) != active_map_.end());
+    active_map_.erase(order.order_id());
+  }
+
+  bool active_order_invariant() const {
+    return active_map_.size() == count_orders(bids_) + count_orders(asks_);
+  }
+
+  template <typename MAP>
+  size_t count_orders(MAP const& map) const {
+    size_t result{0};
+    for (auto const& pair : map) {
+      Managed_order_list_t const& orders{pair.second};
+      result += orders.size();
+    }
+    return result;
+  }
+
+  // end <ClsPrivate Order_book>
+
   Bids_t bids_{};
   Asks_t asks_{};
   int next_fill_id_{0};
+  Active_map_t active_map_{};
 };
 
 }  // namespace exch
