@@ -380,12 +380,12 @@ class Order_book {
   }
 
   bool cancel(Order_id_t order_id) {
-    bool result { false };
+    bool result{false};
     Active_map_t::iterator found = active_map_.find(order_id);
-    if(found != active_map_.end()) {
+    if (found != active_map_.end()) {
       Price_t price = found->second;
       std::cout << "Cancelling " << order_id << " at px " << price << std::endl;
-      if(price < 0) {
+      if (price < 0) {
         result = remove_order_from_book(asks_, -price, order_id);
       } else {
         result = remove_order_from_book(bids_, price, order_id);
@@ -394,28 +394,27 @@ class Order_book {
     return result;
   }
 
-  template<typename MAP>
-  bool remove_order_from_book(MAP & map,
-                              Price_t price, Order_id_t order_id) {
-    bool result { false };
+  template <typename MAP>
+  bool remove_order_from_book(MAP& map, Price_t price, Order_id_t order_id) {
+    bool result{false};
     auto orders_at_price = map.find(price);
-    if(orders_at_price != map.end()) {
-      Managed_order_list_t &orders { orders_at_price->second };
+    if (orders_at_price != map.end()) {
+      Managed_order_list_t& orders{orders_at_price->second};
       result = remove_order_from_list(orders, order_id);
-      if(result && orders.empty()) {
+      if (result && orders.empty()) {
         map.erase(price);
       }
     }
     return result;
   }
 
-  bool remove_order_from_list(Managed_order_list_t &orders,
+  bool remove_order_from_list(Managed_order_list_t& orders,
                               Order_id_t order_id) {
-    bool result { false };
+    bool result{false};
     auto found_order = std::find_if(orders.begin(), orders.end(),
-                                    [=](Managed_order const &order) -> bool {
-        return order.order_id() == order_id;
-      });
+                                    [=](Managed_order const& order)->bool {
+      return order.order_id() == order_id;
+    });
 
     if (found_order != orders.end()) {
       orders.erase(found_order);
@@ -482,10 +481,11 @@ class Order_book {
     return active_map_.size() == count_orders(bids_) + count_orders(asks_);
   }
 
-  template<typename MAP> size_t count_orders(MAP const& map) const {
-    size_t result {0};
-    for( auto const& pair : map ) {
-      Managed_order_list_t const& orders { pair.second };
+  template <typename MAP>
+  size_t count_orders(MAP const& map) const {
+    size_t result{0};
+    for (auto const& pair : map) {
+      Managed_order_list_t const& orders{pair.second};
       result += orders.size();
     }
     return result;
