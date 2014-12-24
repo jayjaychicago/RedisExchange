@@ -1,0 +1,14 @@
+name: cpp_codegen
+version: 0.0.1
+author: Daniel Davidson <dbdavidson@yahoo.com>
+dependencies:
+  ebisu:
+    git: git://github.com/patefacio/ebisu
+
+  ebisu_cpp:
+    git: git://github.com/patefacio/ebisu_cpp
+
+transformers:
+
+# custom <exch_client transformers>
+# end <exch_client transformers>
