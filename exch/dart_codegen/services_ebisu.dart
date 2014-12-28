@@ -46,6 +46,14 @@ void main() {
     ..testLibraries = [
     ]
     ..scripts = [
+      script('build_server')
+      ..imports = [ 'io', 'async' ]
+      ..args = [
+        scriptArg('release')
+        ..doc = 'If set builds release, otherwise builds debug'
+        ..isFlag = true
+        ..abbr = 'r'
+      ],
       script('create')
       ..imports = commonImports
       ..args = (commonArgs

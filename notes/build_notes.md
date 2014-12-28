@@ -58,6 +58,7 @@ These two variables are used by code generation. Currently the build scripts are
 * cereal: Just get the latest from github. It is nice since it is header only
 * redisclient: Just get the latest from github: https://github.com/nekipelov/redisclient (also header only)
 * fcs: This is my own codebase (https://github.com/patefacio/fcs). We are using timestamp from it as well as some other stuff. It is header only for now
+* cppformat: https://github.com/cppformat/cppformat - this is used for fast formatting of strings
 
 Unfortunately there is one more ugliness in this setup, similar to *site-config.jam*. Another file that is generated is the *RedisExhcange/exch/cpp/Jamfile* which has to refer to the includes and libs of these prereqs (for those that have libs). This is another file I've checked in and will need to figure out a way for one script to satisfy multiple users' environments. This does not work that way yet - but should not be too hard to address. Just go ahead and hand edit the sections in the *// custom begin // custom end * code blocks to point to the appropriate paths. We can pretty it up later. I'm referring to: [includes](https://github.com/patefacio/RedisExchange/blob/master/exch/cpp/Jamfile#L29-L34) and [libs](https://github.com/patefacio/RedisExchange/blob/master/exch/cpp/Jamfile#L45-L47).
 
