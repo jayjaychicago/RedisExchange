@@ -3,7 +3,7 @@ library bin.random_command_repository;
 import 'package:ebisu_cpp/cpp.dart';
 import '../../lib/installation.dart';
 
-final repo = app('exch_server')
+final server = app('exch_server')
   ..descr = '''
 Server supporting dynamic creation of markets exchanges
 '''
@@ -13,6 +13,7 @@ Server supporting dynamic creation of markets exchanges
     'boost/asio/ip/address.hpp',
     'redisclient/redisclient.h',
   ]
+  ..requiredLibs = [ 'format', 'boost_system', 'boost_thread' ]
   ..args = [
 
     arg('redis_address')
@@ -25,10 +26,10 @@ Server supporting dynamic creation of markets exchanges
     ..shortName = 'p'
     ..defaultValue = 6379,
 
+  ]
+  ..builders = [ cmakeAppBuilder() ];
 
-  ];
-
-addItems() => installation.addApp(repo);
+addItems() => installation.addApp(server);
 
 main() {
   addItems();

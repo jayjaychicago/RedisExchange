@@ -1,5 +1,6 @@
 import 'libs.dart' as libs;
 import '../lib/installation.dart';
+import 'apps/exch_server.dart' as exchange_server;
 import 'package:ebisu_cpp/cpp.dart';
 import 'package:logging/logging.dart';
 
@@ -10,5 +11,8 @@ main() {
         print("${r.loggerName} [${r.level}]:\t${r.message}"))
     ..level = Level.WARNING;
   libs.addItems();
-  installation.generate(true);
+  exchange_server.addItems();
+  installation
+    ..builders = [ cmakeInstallationBuilder() ]
+    ..generate(true);
 }
