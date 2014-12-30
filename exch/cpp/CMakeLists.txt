@@ -2,47 +2,71 @@ cmake_minimum_required (VERSION 3.0)
 
 include(CheckCXXCompilerFlag)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-# custom <definitions>
 
+######################################################################
+# Find boost and include desired components
+######################################################################
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost 1.56.0 COMPONENTS program_options system thread)
-include_directories(${Boost_INCLUDE_DIRS})
+find_package(Boost 1.56.0 COMPONENTS program_options system thread
+# custom <boost lib components>
+# end <boost lib components>
+)
 
+# custom <definitions>
 # end <definitions>
 
-# custom <link paths>
-link_directories(~/install/lib)
-# end <link paths>
+
+######################################################################
+# Add additional link directories
+######################################################################
+link_directories(
+# custom <link directories>
+  ~/install/lib
+# end <link directories>
+
+)
 
 enable_testing()
 
+######################################################################
+# Add additional include directories
+######################################################################
 include_directories(
   ${CMAKE_CURRENT_LIST_DIR}
+  ${Boost_INCLUDE_DIRS}
+# custom <include directories>
+
   ~/dev/open_source/cereal/include
   ~/dev/open_source/fcs/cpp
   ~/dev/open_source/redisclient/src
   ~/install/include
-# custom <additional includes>
-# end <additional includes>
+
+# end <include directories>
 
 )
 
+######################################################################
+# Application build directives
+######################################################################
 add_executable(exch_server
   app/exch_server/exch_server.cpp
 )
 
 target_link_libraries(exch_server
 # custom <exch_server libs>
+  format
+# end <exch_server libs>
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${Boost_SYSTEM_LIBRARY}
   ${Boost_THREAD_LIBRARY}
-  format
-# end <exch_server libs>
 )
 
 
+######################################################################
+# Test directives
+######################################################################
 # test for test_exchange
 add_executable(test_exchange
   tests/exch/test_exchange.cpp
