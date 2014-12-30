@@ -14,8 +14,8 @@ find_package(Boost 1.56.0 COMPONENTS program_options system thread
 # end <boost lib components>
 )
 
-# custom <definitions>
-# end <definitions>
+# custom <misc section>
+# end <misc section>
 
 
 ######################################################################
@@ -95,3 +95,6 @@ target_link_libraries(test_redis_support
 )
 
 add_test(test_redis_support test_redis_support)
+
+
+
