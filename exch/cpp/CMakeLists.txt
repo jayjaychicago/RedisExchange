@@ -12,7 +12,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 set(BOOST_INCLUDEDIR /usr/local/include/boost)
 set(BOOST_LIBRARYDIR /usr/local/lib)
 
-find_package(Boost 1.57.0 COMPONENTS program_options system thread
+find_package(Boost 1.56.0 COMPONENTS program_options system thread
 # custom <boost lib components>
   date_time
   regex
@@ -102,6 +102,3 @@ target_link_libraries(test_redis_support
 )
 
 add_test(test_redis_support test_redis_support)
-
-
-

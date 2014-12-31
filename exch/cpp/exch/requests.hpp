@@ -25,6 +25,19 @@ class Create_market_req {
         tick_size_{tick_size} {}
 
   Create_market_req() = default;
+
+  bool operator==(Create_market_req const& rhs) const {
+    return this == &rhs ||
+           (req_id_ == rhs.req_id_ && user_id_ == rhs.user_id_ &&
+            name_ == rhs.name_ && start_time_ == rhs.start_time_ &&
+            end_time_ == rhs.end_time_ &&
+            decimal_shift_ == rhs.decimal_shift_ &&
+            tick_size_ == rhs.tick_size_);
+  }
+
+  bool operator!=(Create_market_req const& rhs) const {
+    return !(*this == rhs);
+  }
   //! getter for req_id_ (access is Ro)
   Req_id_t req_id() const { return req_id_; }
 
@@ -193,6 +206,16 @@ class Create_market_resp {
         result_{result} {}
 
   Create_market_resp() = default;
+
+  bool operator==(Create_market_resp const& rhs) const {
+    return this == &rhs ||
+           (req_id_ == rhs.req_id_ && user_id_ == rhs.user_id_ &&
+            market_id_ == rhs.market_id_ && result_ == rhs.result_);
+  }
+
+  bool operator!=(Create_market_resp const& rhs) const {
+    return !(*this == rhs);
+  }
   //! getter for req_id_ (access is Ro)
   Req_id_t req_id() const { return req_id_; }
 
@@ -252,6 +275,16 @@ class Submit_req {
         quantity_{quantity} {}
 
   Submit_req() = default;
+
+  bool operator==(Submit_req const& rhs) const {
+    return this == &rhs ||
+           (timestamp_ == rhs.timestamp_ && req_id_ == rhs.req_id_ &&
+            user_id_ == rhs.user_id_ && market_id_ == rhs.market_id_ &&
+            side_ == rhs.side_ && price_ == rhs.price_ &&
+            quantity_ == rhs.quantity_);
+  }
+
+  bool operator!=(Submit_req const& rhs) const { return !(*this == rhs); }
   // custom <ClsPublic Submit_req>
 
   void timestamp(Timestamp_t timestamp) const { timestamp_ = timestamp; }
@@ -412,6 +445,15 @@ class Submit_resp {
         result_{result} {}
 
   Submit_resp() = default;
+
+  bool operator==(Submit_resp const& rhs) const {
+    return this == &rhs ||
+           (req_id_ == rhs.req_id_ && user_id_ == rhs.user_id_ &&
+            market_id_ == rhs.market_id_ && order_id_ == rhs.order_id_ &&
+            result_ == rhs.result_);
+  }
+
+  bool operator!=(Submit_resp const& rhs) const { return !(*this == rhs); }
   //! getter for req_id_ (access is Ro)
   Req_id_t req_id() const { return req_id_; }
 
@@ -473,6 +515,14 @@ class Cancel_req {
         order_id_{order_id} {}
 
   Cancel_req() = default;
+
+  bool operator==(Cancel_req const& rhs) const {
+    return this == &rhs ||
+           (req_id_ == rhs.req_id_ && user_id_ == rhs.user_id_ &&
+            market_id_ == rhs.market_id_ && order_id_ == rhs.order_id_);
+  }
+
+  bool operator!=(Cancel_req const& rhs) const { return !(*this == rhs); }
   //! getter for req_id_ (access is Ro)
   Req_id_t req_id() const { return req_id_; }
 
@@ -578,6 +628,15 @@ class Cancel_resp {
         result_{result} {}
 
   Cancel_resp() = default;
+
+  bool operator==(Cancel_resp const& rhs) const {
+    return this == &rhs ||
+           (req_id_ == rhs.req_id_ && user_id_ == rhs.user_id_ &&
+            market_id_ == rhs.market_id_ && order_id_ == rhs.order_id_ &&
+            result_ == rhs.result_);
+  }
+
+  bool operator!=(Cancel_resp const& rhs) const { return !(*this == rhs); }
   //! getter for req_id_ (access is Ro)
   Req_id_t req_id() const { return req_id_; }
 
@@ -641,6 +700,15 @@ class Replace_req {
         quantity_{quantity} {}
 
   Replace_req() = default;
+
+  bool operator==(Replace_req const& rhs) const {
+    return this == &rhs ||
+           (req_id_ == rhs.req_id_ && user_id_ == rhs.user_id_ &&
+            market_id_ == rhs.market_id_ && order_id_ == rhs.order_id_ &&
+            price_ == rhs.price_ && quantity_ == rhs.quantity_);
+  }
+
+  bool operator!=(Replace_req const& rhs) const { return !(*this == rhs); }
   //! getter for req_id_ (access is Ro)
   Req_id_t req_id() const { return req_id_; }
 
@@ -779,6 +847,16 @@ class Replace_resp {
         result_{result} {}
 
   Replace_resp() = default;
+
+  bool operator==(Replace_resp const& rhs) const {
+    return this == &rhs ||
+           (req_id_ == rhs.req_id_ && user_id_ == rhs.user_id_ &&
+            market_id_ == rhs.market_id_ &&
+            canceled_order_id_ == rhs.canceled_order_id_ &&
+            order_id_ == rhs.order_id_ && result_ == rhs.result_);
+  }
+
+  bool operator!=(Replace_resp const& rhs) const { return !(*this == rhs); }
   //! getter for req_id_ (access is Ro)
   Req_id_t req_id() const { return req_id_; }
 
@@ -842,6 +920,13 @@ class Log_req {
       : log_type_{log_type}, market_id_{market_id} {}
 
   Log_req() = default;
+
+  bool operator==(Log_req const& rhs) const {
+    return this == &rhs ||
+           (log_type_ == rhs.log_type_ && market_id_ == rhs.market_id_);
+  }
+
+  bool operator!=(Log_req const& rhs) const { return !(*this == rhs); }
   //! getter for log_type_ (access is Ro)
   Log_type log_type() const { return log_type_; }
 

@@ -231,6 +231,7 @@ final exch = lib('exch')
       // Requests/Responses
       ////////////////////////////////////////////////////////////
       class_('create_market_req')
+      ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
@@ -245,6 +246,7 @@ final exch = lib('exch')
         member('tick_size')..type = 'int',
       ],
       class_('create_market_resp')
+      ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal() ]
@@ -257,6 +259,7 @@ final exch = lib('exch')
       ],
 
       class_('submit_req')
+      ..opEqual
       ..customBlocks = [ clsPublic ]
       ..defaultCtor.useDefault = true
       ..streamable = true
@@ -275,6 +278,7 @@ final exch = lib('exch')
         member('quantity')..type = 'Quantity_t',
       ],
       class_('submit_resp')
+      ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal() ]
@@ -288,6 +292,7 @@ final exch = lib('exch')
       ],
 
       class_('cancel_req')
+      ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
@@ -299,6 +304,7 @@ final exch = lib('exch')
         member('order_id')..type = 'Order_id_t',
       ],
       class_('cancel_resp')
+      ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal() ]
@@ -312,6 +318,7 @@ final exch = lib('exch')
       ],
 
       class_('replace_req')
+      ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
@@ -325,6 +332,7 @@ final exch = lib('exch')
         member('quantity')..type = 'Quantity_t',
       ],
       class_('replace_resp')
+      ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal() ]
@@ -339,6 +347,7 @@ final exch = lib('exch')
       ],
 
       class_('log_req')
+      ..opEqual
       ..defaultCtor.useDefault = true
       ..immutable = true
       ..streamable = true
