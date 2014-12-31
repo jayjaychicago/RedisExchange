@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 2.8)
 
 include(CheckCXXCompilerFlag)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -9,8 +9,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost 1.56.0 COMPONENTS program_options system thread
+set(BOOST_INCLUDEDIR /usr/local/include/boost)
+set(BOOST_LIBRARYDIR /usr/local/lib)
+
+find_package(Boost 1.57.0 COMPONENTS program_options system thread
 # custom <boost lib components>
+  date_time
+  regex
 # end <boost lib components>
 )
 
@@ -57,6 +62,7 @@ add_executable(exch_server
 target_link_libraries(exch_server
 # custom <exch_server libs>
   format
+  ${Boost_REGEX_LIBRARY}
 # end <exch_server libs>
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${Boost_SYSTEM_LIBRARY}
@@ -75,6 +81,7 @@ add_executable(test_exchange
 target_link_libraries(test_exchange
 # custom <test_exchange link requirements>
   format
+  ${Boost_REGEX_LIBRARY}
 # end <test_exchange link requirements>
   ${Boost_SYSTEM_LIBRARY}
   ${Boost_THREAD_LIBRARY}
