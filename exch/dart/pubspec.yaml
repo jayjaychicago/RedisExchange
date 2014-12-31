@@ -5,9 +5,11 @@ dependencies:
 
 # custom <exch_client dependencies>
 
-  redis_client: "any"
+  redis_client:
+    git: https://github.com/dartist/redis_client
+
   ebisu:
-    path: /Users/dbdavidson/dev/open_source/ebisu
+    git: https://github.com/patefacio/ebisu
 
 # end <exch_client dependencies>
 
@@ -24,4 +26,3 @@ transformers:
 
 # custom <exch_client transformers>
 # end <exch_client transformers>
-
