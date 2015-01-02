@@ -26,8 +26,7 @@ Server supporting dynamic creation of markets exchanges
     ..shortName = 'p'
     ..defaultValue = 6379,
 
-  ]
-  ..builders = [ cmakeAppBuilder() ];
+  ];
 
 addItems() => installation.addApp(server);
 

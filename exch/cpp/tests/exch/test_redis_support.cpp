@@ -4,6 +4,22 @@
 namespace exch {
 void test_redis_listener() {
   // custom <redis_listener>
+
+  Create_market_req req{
+      1,                              2,
+      "some-market",                  fcs::timestamp::current_time(),
+      fcs::timestamp::current_time(), 2,
+      5};
+
+  std::ostringstream out;
+  req.serialize_to_json(out);
+  std::istringstream in{out.str()};
+
+  Create_market_req req2;
+  req2.serialize_from_json(in);
+
+  BOOST_REQUIRE(req2 == req);
+
   // end <redis_listener>
 }
 

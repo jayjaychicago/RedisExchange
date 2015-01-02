@@ -3,6 +3,7 @@
 #include "redisclient/redisclient.h"
 #include <boost/asio/ip/address.hpp>
 #include <boost/program_options.hpp>
+#include <iostream>
 #include <string>
 
 namespace fcs {

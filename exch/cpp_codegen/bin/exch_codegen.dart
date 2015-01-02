@@ -14,5 +14,5 @@ main() {
   exchange_server.addItems();
   installation
     ..builders = [ cmakeInstallationBuilder() ]
-    ..generate(true);
+    ..generate();
 }

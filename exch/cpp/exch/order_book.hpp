@@ -390,6 +390,7 @@ class Order_book {
       } else {
         result = remove_order_from_book(bids_, price, order_id);
       }
+      active_map_.erase(found);
     }
     return result;
   }
@@ -457,6 +458,11 @@ class Order_book {
     }
     Table_streamer<> table_streamer{table, header};
     table_streamer.print_string_table(out);
+
+    out << "\nAll Orders\n";
+    for (auto const& pair : item.active_map_) {
+      out << pair.first << ", ";
+    }
     return out;
   }
 
