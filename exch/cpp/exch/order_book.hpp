@@ -384,7 +384,6 @@ class Order_book {
     Active_map_t::iterator found = active_map_.find(order_id);
     if (found != active_map_.end()) {
       Price_t price = found->second;
-      std::cout << "Cancelling " << order_id << " at px " << price << std::endl;
       if (price < 0) {
         result = remove_order_from_book(asks_, -price, order_id);
       } else {

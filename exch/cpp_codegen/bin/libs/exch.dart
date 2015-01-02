@@ -495,21 +495,13 @@ implementation detail from the perspective of this class.'''
 
     header('redis_support')
     ..constExprs = [
-      constExpr('m_req_key', 'EX_REQ:M'),
-      constExpr('s_req_key', 'EX_REQ:S'),
-      constExpr('c_req_key', 'EX_REQ:C'),
-      constExpr('r_req_key', 'EX_REQ:R'),
-      constExpr('l_req_key', 'EX_REQ:L'),
-      constExpr('h_req_key', 'EX_REQ:H'),
-      constExpr('cmd_key', 'CMD'),
-      constExpr('fills_key', 'FILLS'),
     ]
     ..includes = [
       'exch/order_book.hpp',
       'exch/interfaces.hpp',
       'sstream',
       'functional',
-      'redisclient/redisclient.h',
+      'hiredis/async.h',
     ]
     ..usings = [
       'Req_func_t = boost::function< void(const std::string & request) >',
@@ -525,16 +517,10 @@ Market_exchange and publish responses destined for clients.'''
       ..descr = '''
 Subscribes to client requests on redis pub/sub channels'''
       ..customBlocks = [ clsPublic ]
-      ..memberCtors = [ memberCtor(['redis_client']) ]
+      ..memberCtors = [ memberCtor(['context']) ]
       ..bases = [ base('Request_listener') ]
       ..members = [
-        member('redis_client')..type = 'RedisClient'..refType = ref,
-        member('m_handle')..type = 'RedisClient::Handle'..initText = '0',
-        member('s_handle')..type = 'RedisClient::Handle'..initText = '0',
-        member('c_handle')..type = 'RedisClient::Handle'..initText = '0',
-        member('r_handle')..type = 'RedisClient::Handle'..initText = '0',
-        member('l_handle')..type = 'RedisClient::Handle'..initText = '0',
-        member('h_handle')..type = 'RedisClient::Handle'..initText = '0',
+        member('context')..type = 'redisAsyncContext'..refType = ref,
         member('create_market_handler')..type = 'Create_market_handler_t',
         member('submit_handler')..type = 'Submit_handler_t',
         member('cancel_handler')..type = 'Cancel_handler_t',
@@ -551,30 +537,30 @@ exchange) to use at startup to process all messages to get to state just prior
 to last message before last shutdown.
 '''
       ..customBlocks = [ clsPublic ]
-      ..memberCtors = [ memberCtor(['redis_client']) ]
+      ..memberCtors = [ memberCtor(['context']) ]
       ..bases = [ base('Request_listener') ]
       ..members = [
-        member('redis_client')..type = 'RedisClient'..refType = ref,
+        member('context')..type = 'redisContext'..refType = ref,
       ],
 
 
       class_('redis_persister')
       ..customBlocks = [ clsPublic, clsPrivate ]
       ..bases = [ base('Request_persister') ]
-      ..memberCtors = [ memberCtor(['redis_client']) ]
+      ..memberCtors = [ memberCtor(['context']) ]
       ..members = [
-        member('redis_client')..type = 'RedisClient'..refType = ref,
+        member('context')..type = 'redisAsyncContext'..refType = ref,
       ],
 
       class_('redis_publisher')
       ..descr = '''
 Implements the Market_publisher interface using redis as pub/sub
 middleware'''
-      ..memberCtors = [ memberCtor(['redis_client']) ]
+      ..memberCtors = [ memberCtor(['context']) ]
       ..customBlocks = [ clsPublic, clsPrivate ]
       ..bases = [ base('Market_publisher') ]
       ..members = [
-        member('redis_client')..type = 'RedisClient'..refType = ref,
+        member('context')..type = 'redisAsyncContext'..refType = ref,
         member('resp_key')..init = 'EX_RESP'..type = 'char const*'..isStatic = true..isConstExpr = true,
         member('event_key')..init = 'EX_EVENT'..type = 'char const*'..isStatic = true..isConstExpr = true,
       ],
