@@ -53,12 +53,13 @@ class Exchange {
         halt_handler_{halt_handler} {
     // custom <Exchange(from_args)>
 
-    // bootstrap_listener_.subscribe(
-    //     std::bind(&Exchange::create_market, this, std::placeholders::_1),
-    //     std::bind(&Exchange::submit, this, std::placeholders::_1),
-    //     std::bind(&Exchange::cancel, this, std::placeholders::_1),
-    //     std::bind(&Exchange::replace, this, std::placeholders::_1),
-    //     std::bind(&Exchange::halt_handler, this));
+    bootstrap_listener_.subscribe(
+        std::bind(&Exchange::create_market, this, std::placeholders::_1),
+        std::bind(&Exchange::submit, this, std::placeholders::_1),
+        std::bind(&Exchange::cancel, this, std::placeholders::_1),
+        std::bind(&Exchange::replace, this, std::placeholders::_1),
+        std::bind(&Exchange::log, this, std::placeholders::_1),
+        std::bind(&Exchange::halt_handler, this));
 
     is_live_ = true;
 

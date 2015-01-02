@@ -118,8 +118,8 @@ main(List<String> args) {
   RedisClient
     .connect('$host:$port')
     .then((RedisClient redisClient) {
-      final client = new ExchClient(redisClient, options['market-id']);
-      final req = new LogReq(LogType.LOG_BOOK);
+      final client = new ExchClient(redisClient);
+      final req = new LogReq(LogType.LOG_BOOK, options['market-id']);
       client.log(req);
       redisClient.close();
     });

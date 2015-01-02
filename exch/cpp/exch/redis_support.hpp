@@ -5,6 +5,7 @@
 #include "exch/interfaces.hpp"
 #include "exch/order_book.hpp"
 #include "hiredis/async.h"
+#include <chrono>
 #include <functional>
 #include <sstream>
 
@@ -36,8 +37,8 @@ class Redis_listener : public Request_listener {
 
   static void dispatch(redisAsyncContext* context, void* r, void* priv) {
     if (r == NULL) return;
-    redisReply* reply = {reinterpret_cast<redisReply*>(r)};
-    Redis_listener* listener{reinterpret_cast<Redis_listener*>(priv)};
+    redisReply* reply = {static_cast<redisReply*>(r)};
+    Redis_listener* listener{static_cast<Redis_listener*>(priv)};
     if (strcmp(reply->element[0]->str, "psubscribe") != 0) {
       listener->dispatcher(reply->element[2]->str, reply->element[3]->str);
     }
@@ -168,44 +169,44 @@ class Redis_bootstrap_listener : public Request_listener {
                          Log_handler_t log_handler,
                          Halt_handler_t halt_handler) override {
 
-    // The following needs revisiting, need a way to make the calls
-    // synchronous here.
-    //
-    // std::cout << "Reading " << Cmd_key << " 0 -1 " << std::endl;
-    // redis_client_.command("LRANGE", Cmd_key, "0", "-1",
-    //                       [&](const RedisValue &redisValue) {
-    //   std::cout << "Got a return!!! " << std::endl;
-    //   assert(redisValue.isArray());
-    //   auto array = redisValue.toArray();
-    //   std::cout << "Got an array " << std::endl;
-    //   for (auto const& cmd : array) {
-    //     assert(cmd.isString());
-    //     auto cmdStr = cmd.toString();
-    //     std::cout << "Got first cmd: " << cmdStr << std::endl;
-    //     assert(cmdStr.size() > 0);
-    //     switch (cmdStr[0]) {
-    //     case 'M':
-    //       create_market_handler(
-    //           Create_market_req::serialize_from_dsv(cmdStr.substr(2)));
-    //       break;
-    //     case 'S':
-    //       submit_handler(Submit_req::serialize_from_dsv(cmdStr.substr(2)));
-    //       break;
-    //     case 'C':
-    //       cancel_handler(Cancel_req::serialize_from_dsv(cmdStr.substr(2)));
-    //       break;
-    //     case 'R':
-    //       replace_handler(Replace_req::serialize_from_dsv(cmdStr.substr(2)));
-    //       break;
-    //     default: {
-    //       std::ostringstream msg;
-    //       msg << "Can not bootstrap: Invalid command found " << cmdStr;
-    //       throw std::logic_error(msg.str());
-    //     }
-    //     }
-    //   }
-    // });
-    // std::cout << "OOOPS" << std::endl;
+    redisReply* reply{
+        static_cast<redisReply*>(redisCommand(&context_, "LRANGE CMD 0 -1"))};
+
+    if (reply != nullptr) {
+      using namespace std::chrono;
+      auto start = system_clock::now();
+
+      for (int i = 0; i < reply->elements; ++i) {
+        std::string cmdStr{reply->element[i]->str};
+
+        switch (cmdStr[0]) {
+          case 'M':
+            create_market_handler(
+                Create_market_req::serialize_from_dsv(cmdStr.substr(2)));
+            break;
+          case 'S':
+            submit_handler(Submit_req::serialize_from_dsv(cmdStr.substr(2)));
+            break;
+          case 'C':
+            cancel_handler(Cancel_req::serialize_from_dsv(cmdStr.substr(2)));
+            break;
+          case 'R':
+            replace_handler(Replace_req::serialize_from_dsv(cmdStr.substr(2)));
+            break;
+          default:
+            std::ostringstream msg;
+            msg << "Can not bootstrap: Invalid command found " << cmdStr;
+            throw std::logic_error(msg.str());
+        }
+      }
+
+      auto duration = duration_cast<milliseconds>(
+        std::chrono::system_clock::now() - start);
+
+      std::cout << "Processed " << reply->elements
+                << " existing commands in:"
+                << duration.count() << " ms\n";
+    }
   }
 
   virtual void unsubscribe() override {}

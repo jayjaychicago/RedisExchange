@@ -499,6 +499,7 @@ implementation detail from the perspective of this class.'''
     ..includes = [
       'exch/order_book.hpp',
       'exch/interfaces.hpp',
+      'chrono',
       'sstream',
       'functional',
       'hiredis/async.h',
