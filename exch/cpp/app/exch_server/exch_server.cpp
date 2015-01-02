@@ -1,5 +1,6 @@
 #include "exch/exchange.hpp"
 #include "exch/redis_support.hpp"
+#include "hiredis/adapters/libuv.h"
 #include "redisclient/redisclient.h"
 #include <boost/asio/ip/address.hpp>
 #include <boost/program_options.hpp>
@@ -87,34 +88,33 @@ int main(int argc, char** argv) {
     // custom <main>
 
     using namespace exch;
-    using namespace boost::asio;
+    uv_loop_t* loop = uv_default_loop();
 
-    io_service io_service;
-    int port{options.redis_port()};
-    RedisClient redis_client_listener{io_service};
-    RedisClient redis_client_publisher{io_service};
-    ip::address address{ip::address::from_string(options.redis_address())};
+    redisAsyncContext* listenContext = redisAsyncConnect(
+        options.redis_address().c_str(), options.redis_port());
+    redisLibuvAttach(listenContext, loop);
 
-    if (!redis_client_listener.connect(address, port) ||
-        !redis_client_publisher.connect(address, port)) {
-      std::cerr << "Unable to connect to redis server:\n" << options
-                << std::endl;
-      return -1;
-    }
+    redisContext* bootstrapContext =
+        redisConnect(options.redis_address().c_str(), options.redis_port());
 
-    Redis_bootstrap_listener bootstrap_redis_listener{redis_client_listener};
-    Redis_listener redis_listener{redis_client_listener};
-    Redis_persister redis_persister{redis_client_publisher};
-    Redis_publisher redis_publisher{redis_client_publisher};
+    redisAsyncContext* writeContext = redisAsyncConnect(
+        options.redis_address().c_str(), options.redis_port());
+    redisLibuvAttach(writeContext, loop);
+
+    Redis_bootstrap_listener bootstrap_redis_listener{*bootstrapContext};
+    Redis_listener redis_listener{*listenContext};
+    Redis_persister redis_persister{*writeContext};
+    Redis_publisher redis_publisher{*writeContext};
     auto config = Exchange_config{};
 
     Exchange exchange{config, bootstrap_redis_listener, redis_listener,
-                      redis_persister, redis_publisher,
-                      [&]() { io_service.stop(); }};
+        redis_persister, redis_publisher,
+        [&]() { uv_stop(loop); }};
 
     std::cout << "Running with: " << config
               << "\nExchange server waiting for requests" << std::endl;
-    io_service.run();
+
+    uv_run(loop, UV_RUN_DEFAULT);
 
     // end <main>
   }

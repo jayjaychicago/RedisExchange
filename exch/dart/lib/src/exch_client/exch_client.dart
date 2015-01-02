@@ -12,7 +12,6 @@ class ExchClient {
   submit(SubmitReq req) =>
     _redisClient.publish("EX_REQ:S",
         convert.JSON.encode(req.toJson()));
-  //    .then((_) => print('For ${req.reqId} Got $_'));
 
   cancel(CancelReq req) =>
     _redisClient.publish("EX_REQ:C",

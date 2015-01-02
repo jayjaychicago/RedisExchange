@@ -53,12 +53,13 @@ class Exchange {
         halt_handler_{halt_handler} {
     // custom <Exchange(from_args)>
 
-    // bootstrap_listener_.subscribe(
-    //     std::bind(&Exchange::create_market, this, std::placeholders::_1),
-    //     std::bind(&Exchange::submit, this, std::placeholders::_1),
-    //     std::bind(&Exchange::cancel, this, std::placeholders::_1),
-    //     std::bind(&Exchange::replace, this, std::placeholders::_1),
-    //     std::bind(&Exchange::halt_handler, this));
+    bootstrap_listener_.subscribe(
+        std::bind(&Exchange::create_market, this, std::placeholders::_1),
+        std::bind(&Exchange::submit, this, std::placeholders::_1),
+        std::bind(&Exchange::cancel, this, std::placeholders::_1),
+        std::bind(&Exchange::replace, this, std::placeholders::_1),
+        std::bind(&Exchange::log, this, std::placeholders::_1),
+        std::bind(&Exchange::halt_handler, this));
 
     is_live_ = true;
 
@@ -96,7 +97,6 @@ class Exchange {
   }
 
   void create_market(Create_market_req const &req) {
-
     Create_market_result result;
     Market_id_t market_id{++next_market_id_};
 
@@ -161,13 +161,8 @@ class Exchange {
     Market_exchange_naked_ptr market{get_market(req.market_id())};
     Cancel_result result;
 
-    std::cout << "Trying to cancel\n" << req << '\n' << market->order_book()
-              << std::endl;
-
     result = (market == nullptr) ? Cancel_invalid_market_e
                                  : market->cancel(req.order_id());
-
-    std::cout << "post cancel\n" << market->order_book() << std::endl;
 
     if (is_live_) {
       request_persister_.persist(req);

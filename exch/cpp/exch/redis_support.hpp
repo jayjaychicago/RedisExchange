@@ -4,7 +4,8 @@
 #include "exch/exch.hpp"
 #include "exch/interfaces.hpp"
 #include "exch/order_book.hpp"
-#include "redisclient/redisclient.h"
+#include "hiredis/async.h"
+#include <chrono>
 #include <functional>
 #include <sstream>
 
@@ -23,15 +24,6 @@ std::string redis_key(std::string const& market_id, Order const& order) {
 
 // end <FcbBeginNamespace redis_support>
 
-constexpr char const* M_req_key{"EX_REQ:M"};
-constexpr char const* S_req_key{"EX_REQ:S"};
-constexpr char const* C_req_key{"EX_REQ:C"};
-constexpr char const* R_req_key{"EX_REQ:R"};
-constexpr char const* L_req_key{"EX_REQ:L"};
-constexpr char const* H_req_key{"EX_REQ:H"};
-constexpr char const* Cmd_key{"CMD"};
-constexpr char const* Fills_key{"FILLS"};
-
 using Req_func_t = boost::function<void(const std::string& request)>;
 
 /**
@@ -39,9 +31,18 @@ using Req_func_t = boost::function<void(const std::string& request)>;
 */
 class Redis_listener : public Request_listener {
  public:
-  Redis_listener(RedisClient& redis_client) : redis_client_{redis_client} {}
+  Redis_listener(redisAsyncContext& context) : context_{context} {}
 
   // custom <ClsPublic Redis_listener>
+
+  static void dispatch(redisAsyncContext* context, void* r, void* priv) {
+    if (r == NULL) return;
+    redisReply* reply = {static_cast<redisReply*>(r)};
+    Redis_listener* listener{static_cast<Redis_listener*>(priv)};
+    if (strcmp(reply->element[0]->str, "psubscribe") != 0) {
+      listener->dispatcher(reply->element[2]->str, reply->element[3]->str);
+    }
+  }
 
   virtual void subscribe(Create_market_handler_t create_market_handler,
                          Submit_handler_t submit_handler,
@@ -57,49 +58,40 @@ class Redis_listener : public Request_listener {
     log_handler_ = log_handler;
     halt_handler_ = halt_handler;
 
-    m_handle_ = redis_client_.subscribe(
-        M_req_key,
-        std::bind(&Redis_listener::create_market, this, std::placeholders::_1));
+    redisAsyncCommand(&context_, dispatch, this, "PSUBSCRIBE EX_REQ:*");
+  }
 
-    s_handle_ = redis_client_.subscribe(
-        S_req_key,
-        std::bind(&Redis_listener::submit, this, std::placeholders::_1));
-
-    c_handle_ = redis_client_.subscribe(
-        C_req_key,
-        std::bind(&Redis_listener::cancel, this, std::placeholders::_1));
-
-    r_handle_ = redis_client_.subscribe(
-        R_req_key,
-        std::bind(&Redis_listener::replace, this, std::placeholders::_1));
-
-    l_handle_ = redis_client_.subscribe(
-        L_req_key,
-        std::bind(&Redis_listener::log, this, std::placeholders::_1));
-
-    h_handle_ = redis_client_.subscribe(H_req_key,
-                                        std::bind(&Redis_listener::halt, this));
+  void dispatcher(char const* channel, char const* message) {
+    // Switch on character
+    // EX_REQ:*
+    // 01234567
+    switch (channel[7]) {
+      case 'M':
+        create_market(message);
+        break;
+      case 'S':
+        submit(message);
+        break;
+      case 'C':
+        cancel(message);
+        break;
+      case 'R':
+        replace(message);
+        break;
+      case 'L':
+        log(message);
+        break;
+      case 'H':
+        halt();
+        break;
+      default:
+        throw std::logic_error(std::string("unexpected message type: ") +
+                               message);
+    }
   }
 
   virtual void unsubscribe() {
-    if (m_handle_.id) {
-      redis_client_.unsubscribe(m_handle_);
-    }
-    if (s_handle_.id) {
-      redis_client_.unsubscribe(s_handle_);
-    }
-    if (c_handle_.id) {
-      redis_client_.unsubscribe(c_handle_);
-    }
-    if (r_handle_.id) {
-      redis_client_.unsubscribe(r_handle_);
-    }
-    if (l_handle_.id) {
-      redis_client_.unsubscribe(l_handle_);
-    }
-    if (h_handle_.id) {
-      redis_client_.unsubscribe(h_handle_);
-    }
+    // TODO:
   }
 
   void create_market(std::string const& command) {
@@ -147,13 +139,7 @@ class Redis_listener : public Request_listener {
   // end <ClsPublic Redis_listener>
 
  private:
-  RedisClient& redis_client_;
-  RedisClient::Handle m_handle_{0};
-  RedisClient::Handle s_handle_{0};
-  RedisClient::Handle c_handle_{0};
-  RedisClient::Handle r_handle_{0};
-  RedisClient::Handle l_handle_{0};
-  RedisClient::Handle h_handle_{0};
+  redisAsyncContext& context_;
   Create_market_handler_t create_market_handler_{};
   Submit_handler_t submit_handler_{};
   Cancel_handler_t cancel_handler_{};
@@ -172,8 +158,7 @@ class Redis_listener : public Request_listener {
 */
 class Redis_bootstrap_listener : public Request_listener {
  public:
-  Redis_bootstrap_listener(RedisClient& redis_client)
-      : redis_client_{redis_client} {}
+  Redis_bootstrap_listener(redisContext& context) : context_{context} {}
 
   // custom <ClsPublic Redis_bootstrap_listener>
 
@@ -184,44 +169,44 @@ class Redis_bootstrap_listener : public Request_listener {
                          Log_handler_t log_handler,
                          Halt_handler_t halt_handler) override {
 
-    // The following needs revisiting, need a way to make the calls
-    // synchronous here.
-    //
-    // std::cout << "Reading " << Cmd_key << " 0 -1 " << std::endl;
-    // redis_client_.command("LRANGE", Cmd_key, "0", "-1",
-    //                       [&](const RedisValue &redisValue) {
-    //   std::cout << "Got a return!!! " << std::endl;
-    //   assert(redisValue.isArray());
-    //   auto array = redisValue.toArray();
-    //   std::cout << "Got an array " << std::endl;
-    //   for (auto const& cmd : array) {
-    //     assert(cmd.isString());
-    //     auto cmdStr = cmd.toString();
-    //     std::cout << "Got first cmd: " << cmdStr << std::endl;
-    //     assert(cmdStr.size() > 0);
-    //     switch (cmdStr[0]) {
-    //     case 'M':
-    //       create_market_handler(
-    //           Create_market_req::serialize_from_dsv(cmdStr.substr(2)));
-    //       break;
-    //     case 'S':
-    //       submit_handler(Submit_req::serialize_from_dsv(cmdStr.substr(2)));
-    //       break;
-    //     case 'C':
-    //       cancel_handler(Cancel_req::serialize_from_dsv(cmdStr.substr(2)));
-    //       break;
-    //     case 'R':
-    //       replace_handler(Replace_req::serialize_from_dsv(cmdStr.substr(2)));
-    //       break;
-    //     default: {
-    //       std::ostringstream msg;
-    //       msg << "Can not bootstrap: Invalid command found " << cmdStr;
-    //       throw std::logic_error(msg.str());
-    //     }
-    //     }
-    //   }
-    // });
-    // std::cout << "OOOPS" << std::endl;
+    redisReply* reply{
+        static_cast<redisReply*>(redisCommand(&context_, "LRANGE CMD 0 -1"))};
+
+    if (reply != nullptr) {
+      using namespace std::chrono;
+      auto start = system_clock::now();
+
+      for (int i = 0; i < reply->elements; ++i) {
+        std::string cmdStr{reply->element[i]->str};
+
+        switch (cmdStr[0]) {
+          case 'M':
+            create_market_handler(
+                Create_market_req::serialize_from_dsv(cmdStr.substr(2)));
+            break;
+          case 'S':
+            submit_handler(Submit_req::serialize_from_dsv(cmdStr.substr(2)));
+            break;
+          case 'C':
+            cancel_handler(Cancel_req::serialize_from_dsv(cmdStr.substr(2)));
+            break;
+          case 'R':
+            replace_handler(Replace_req::serialize_from_dsv(cmdStr.substr(2)));
+            break;
+          default:
+            std::ostringstream msg;
+            msg << "Can not bootstrap: Invalid command found " << cmdStr;
+            throw std::logic_error(msg.str());
+        }
+      }
+
+      auto duration = duration_cast<milliseconds>(
+        std::chrono::system_clock::now() - start);
+
+      std::cout << "Processed " << reply->elements
+                << " existing commands in:"
+                << duration.count() << " ms\n";
+    }
   }
 
   virtual void unsubscribe() override {}
@@ -229,12 +214,12 @@ class Redis_bootstrap_listener : public Request_listener {
   // end <ClsPublic Redis_bootstrap_listener>
 
  private:
-  RedisClient& redis_client_;
+  redisContext& context_;
 };
 
 class Redis_persister : public Request_persister {
  public:
-  Redis_persister(RedisClient& redis_client) : redis_client_{redis_client} {}
+  Redis_persister(redisAsyncContext& context) : context_{context} {}
 
   // custom <ClsPublic Redis_persister>
 
@@ -251,7 +236,9 @@ class Redis_persister : public Request_persister {
   virtual void persist(Fill const& fill) override {
     fmt::MemoryWriter w;
     w << fill.serialize_to_dsv();
-    redis_client_.command("LPUSH", Fills_key, w.str());
+    redisAsyncCommand(&context_, nullptr, nullptr, "LPUSH FILLS %s",
+                      w.str().c_str());
+    // TODO: implement strategy on failed push
   }
 
   // end <ClsPublic Redis_persister>
@@ -263,12 +250,14 @@ class Redis_persister : public Request_persister {
   void _persist(T const& item, char cmd) {
     fmt::MemoryWriter w;
     w << cmd << ':' << item.serialize_to_dsv();
-    redis_client_.command("LPUSH", Cmd_key, w.str());
+    redisAsyncCommand(&context_, nullptr, nullptr, "LPUSH CMD %s",
+                      w.str().c_str());
+    // TODO: implement strategy on failed push
   }
 
   // end <ClsPrivate Redis_persister>
 
-  RedisClient& redis_client_;
+  redisAsyncContext& context_;
 };
 
 /**
@@ -277,7 +266,7 @@ class Redis_persister : public Request_persister {
 */
 class Redis_publisher : public Market_publisher {
  public:
-  Redis_publisher(RedisClient& redis_client) : redis_client_{redis_client} {}
+  Redis_publisher(redisAsyncContext& context) : context_{context} {}
 
   // custom <ClsPublic Redis_publisher>
 
@@ -310,12 +299,12 @@ class Redis_publisher : public Market_publisher {
   void _publish(T const& item) {
     std::ostringstream out;
     item.serialize_to_json(out);
-    redis_client_.publish(RESP_KEY, out.str());
+    // redis_client_.publish(RESP_KEY, out.str());
   }
 
   // end <ClsPrivate Redis_publisher>
 
-  RedisClient& redis_client_;
+  redisAsyncContext& context_;
   static constexpr char const* RESP_KEY{"EX_RESP"};
   static constexpr char const* EVENT_KEY{"EX_EVENT"};
 };

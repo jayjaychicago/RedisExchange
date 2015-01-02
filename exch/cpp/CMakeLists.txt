@@ -29,6 +29,7 @@ find_package(Boost 1.56.0 COMPONENTS program_options system thread
 link_directories(
 # custom <link directories>
   ~/install/lib
+  /usr/local/lib
 # end <link directories>
 
 )
@@ -62,6 +63,8 @@ add_executable(exch_server
 target_link_libraries(exch_server
 # custom <exch_server libs>
   format
+  libuv.dylib
+  hiredis.dylib
   ${Boost_REGEX_LIBRARY}
 # end <exch_server libs>
   ${Boost_PROGRAM_OPTIONS_LIBRARY}

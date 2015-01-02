@@ -94,6 +94,13 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
             marketIdArg, orderIdArg,
           ]))
       ..doc = 'Cancel an order from a market',
+      script('log')
+      ..imports = commonImports
+      ..args = (commonArgs
+          ..addAll([
+            marketIdArg,
+          ]))
+      ..doc = 'Log current state of a market',
       script('replace')
       ..imports = commonImports
       ..args = (commonArgs
