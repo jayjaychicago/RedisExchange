@@ -200,6 +200,8 @@ class Redis_bootstrap_listener : public Request_listener {
         }
       }
 
+      freeReplyObject(reply);
+
       auto duration = duration_cast<milliseconds>(
         std::chrono::system_clock::now() - start);
 
