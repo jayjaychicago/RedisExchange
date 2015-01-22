@@ -304,7 +304,7 @@ class Order_book {
       Insert_result_t insert_result{
           bids_.insert(Bids_t::value_type(bid_price, Managed_order_list_t()))};
 
-      Managed_order_list_t& orders{insert_result.first->second};
+      Managed_order_list_t& orders = insert_result.first->second;
       add_order(managed_bid);
       orders.push_back(managed_bid);
 
@@ -367,7 +367,7 @@ class Order_book {
       Insert_result_t insert_result{
           asks_.insert(Asks_t::value_type(ask_price, Managed_order_list_t()))};
 
-      Managed_order_list_t& orders = {insert_result.first->second};
+      Managed_order_list_t& orders = insert_result.first->second;
       add_order(managed_ask);
       orders.push_back(managed_ask);
 
@@ -399,7 +399,7 @@ class Order_book {
     bool result{false};
     auto orders_at_price = map.find(price);
     if (orders_at_price != map.end()) {
-      Managed_order_list_t& orders{orders_at_price->second};
+      Managed_order_list_t& orders = orders_at_price->second;
       result = remove_order_from_list(orders, order_id);
       if (result && orders.empty()) {
         map.erase(price);

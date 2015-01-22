@@ -9,7 +9,8 @@ void test_exchange() {
   Fill f{123, fcs::timestamp::current_time(), 1, Ask_side_e, 2321, 4123};
 
   std::cout << f.serialize_to_dsv() << std::endl;
-  std::cout << f.serialize_from_dsv(f.serialize_to_dsv()) << std::endl;
+  f.serialize_from_dsv(f.serialize_to_dsv());
+  std::cout << f << std::endl;
 
   std::cout << Market_id_strlen << std::endl;
 

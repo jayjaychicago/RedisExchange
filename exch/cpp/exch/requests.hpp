@@ -101,19 +101,11 @@ class Create_market_req {
     return w__.str();
   }
 
-  static Create_market_req serialize_from_dsv(std::string const& tuple__) {
+  void serialize_from_dsv(std::string const& tuple__) {
     using namespace boost;
     char_separator<char> const sep__{":"};
     tokenizer<char_separator<char> > tokens__(tuple__, sep__);
     tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
-
-    Req_id_t req_id_;
-    User_id_t user_id_;
-    std::string name_;
-    Timestamp_t start_time_;
-    Timestamp_t end_time_;
-    int decimal_shift_;
-    int tick_size_;
 
     if (it__ != tokens__.end()) {
       req_id_ = lexical_cast<Req_id_t>(*it__);
@@ -181,19 +173,16 @@ class Create_market_req {
       throw std::logic_error(
           "Tokenize Create_market_req failed: expected tick_size_");
     }
-
-    return Create_market_req(req_id_, user_id_, name_, start_time_, end_time_,
-                             decimal_shift_, tick_size_);
   }
 
  private:
-  Req_id_t const req_id_{};
-  User_id_t const user_id_{};
-  std::string const name_{};
-  Timestamp_t const start_time_{};
-  Timestamp_t const end_time_{};
-  int const decimal_shift_{};
-  int const tick_size_{};
+  Req_id_t req_id_{};
+  User_id_t user_id_{};
+  std::string name_{};
+  Timestamp_t start_time_{};
+  Timestamp_t end_time_{};
+  int decimal_shift_{};
+  int tick_size_{};
 };
 
 class Create_market_resp {
@@ -205,7 +194,7 @@ class Create_market_resp {
         market_id_{market_id},
         result_{result} {}
 
-  Create_market_resp() = default;
+  Create_market_resp() {}
 
   bool operator==(Create_market_resp const& rhs) const {
     return this == &rhs ||
@@ -255,10 +244,10 @@ class Create_market_resp {
   }
 
  private:
-  Req_id_t const req_id_{};
-  User_id_t const user_id_{};
-  Market_id_t const market_id_{};
-  Create_market_result const result_{};
+  Req_id_t req_id_{};
+  User_id_t user_id_{};
+  Market_id_t market_id_{};
+  Create_market_result result_{};
 };
 
 class Submit_req {
@@ -352,19 +341,11 @@ class Submit_req {
     return w__.str();
   }
 
-  static Submit_req serialize_from_dsv(std::string const& tuple__) {
+  void serialize_from_dsv(std::string const& tuple__) {
     using namespace boost;
     char_separator<char> const sep__{":"};
     tokenizer<char_separator<char> > tokens__(tuple__, sep__);
     tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
-
-    Timestamp_t timestamp_;
-    Req_id_t req_id_;
-    User_id_t user_id_;
-    Market_id_t market_id_;
-    Side side_;
-    Price_t price_;
-    Quantity_t quantity_;
 
     if (it__ != tokens__.end()) {
       if (!fcs::timestamp::convert_to_timestamp_from_ticks(*it__, timestamp_)) {
@@ -419,19 +400,16 @@ class Submit_req {
     } else {
       throw std::logic_error("Tokenize Submit_req failed: expected quantity_");
     }
-
-    return Submit_req(timestamp_, req_id_, user_id_, market_id_, side_, price_,
-                      quantity_);
   }
 
  private:
   mutable Timestamp_t timestamp_{Timestamp_t::time_rep_type(0LL)};
-  Req_id_t const req_id_{};
-  User_id_t const user_id_{};
-  Market_id_t const market_id_{};
-  Side const side_{};
-  Price_t const price_{};
-  Quantity_t const quantity_{};
+  Req_id_t req_id_{};
+  User_id_t user_id_{};
+  Market_id_t market_id_{};
+  Side side_{};
+  Price_t price_{};
+  Quantity_t quantity_{};
 };
 
 class Submit_resp {
@@ -498,11 +476,11 @@ class Submit_resp {
   }
 
  private:
-  Req_id_t const req_id_{};
-  User_id_t const user_id_{};
-  Market_id_t const market_id_{};
-  Order_id_t const order_id_{};
-  Submit_result const result_{};
+  Req_id_t req_id_{};
+  User_id_t user_id_{};
+  Market_id_t market_id_{};
+  Order_id_t order_id_{};
+  Submit_result result_{};
 };
 
 class Cancel_req {
@@ -568,16 +546,11 @@ class Cancel_req {
     return w__.str();
   }
 
-  static Cancel_req serialize_from_dsv(std::string const& tuple__) {
+  void serialize_from_dsv(std::string const& tuple__) {
     using namespace boost;
     char_separator<char> const sep__{":"};
     tokenizer<char_separator<char> > tokens__(tuple__, sep__);
     tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
-
-    Req_id_t req_id_;
-    User_id_t user_id_;
-    Market_id_t market_id_;
-    Order_id_t order_id_;
 
     if (it__ != tokens__.end()) {
       req_id_ = lexical_cast<Req_id_t>(*it__);
@@ -606,15 +579,13 @@ class Cancel_req {
     } else {
       throw std::logic_error("Tokenize Cancel_req failed: expected order_id_");
     }
-
-    return Cancel_req(req_id_, user_id_, market_id_, order_id_);
   }
 
  private:
-  Req_id_t const req_id_{};
-  User_id_t const user_id_{};
-  Market_id_t const market_id_{};
-  Order_id_t const order_id_{};
+  Req_id_t req_id_{};
+  User_id_t user_id_{};
+  Market_id_t market_id_{};
+  Order_id_t order_id_{};
 };
 
 class Cancel_resp {
@@ -681,11 +652,11 @@ class Cancel_resp {
   }
 
  private:
-  Req_id_t const req_id_{};
-  User_id_t const user_id_{};
-  Market_id_t const market_id_{};
-  Order_id_t const order_id_{};
-  Cancel_result const result_{};
+  Req_id_t req_id_{};
+  User_id_t user_id_{};
+  Market_id_t market_id_{};
+  Order_id_t order_id_{};
+  Cancel_result result_{};
 };
 
 class Replace_req {
@@ -765,18 +736,11 @@ class Replace_req {
     return w__.str();
   }
 
-  static Replace_req serialize_from_dsv(std::string const& tuple__) {
+  void serialize_from_dsv(std::string const& tuple__) {
     using namespace boost;
     char_separator<char> const sep__{":"};
     tokenizer<char_separator<char> > tokens__(tuple__, sep__);
     tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
-
-    Req_id_t req_id_;
-    User_id_t user_id_;
-    Market_id_t market_id_;
-    Order_id_t order_id_;
-    Price_t price_;
-    Quantity_t quantity_;
 
     if (it__ != tokens__.end()) {
       req_id_ = lexical_cast<Req_id_t>(*it__);
@@ -820,18 +784,15 @@ class Replace_req {
     } else {
       throw std::logic_error("Tokenize Replace_req failed: expected quantity_");
     }
-
-    return Replace_req(req_id_, user_id_, market_id_, order_id_, price_,
-                       quantity_);
   }
 
  private:
-  Req_id_t const req_id_{};
-  User_id_t const user_id_{};
-  Market_id_t const market_id_{};
-  Order_id_t const order_id_{};
-  Price_t const price_{};
-  Quantity_t const quantity_{};
+  Req_id_t req_id_{};
+  User_id_t user_id_{};
+  Market_id_t market_id_{};
+  Order_id_t order_id_{};
+  Price_t price_{};
+  Quantity_t quantity_{};
 };
 
 class Replace_resp {
@@ -906,12 +867,12 @@ class Replace_resp {
   }
 
  private:
-  Req_id_t const req_id_{};
-  User_id_t const user_id_{};
-  Market_id_t const market_id_{};
-  Order_id_t const canceled_order_id_{};
-  Order_id_t const order_id_{};
-  Replace_result const result_{};
+  Req_id_t req_id_{};
+  User_id_t user_id_{};
+  Market_id_t market_id_{};
+  Order_id_t canceled_order_id_{};
+  Order_id_t order_id_{};
+  Replace_result result_{};
 };
 
 class Log_req {
@@ -962,14 +923,11 @@ class Log_req {
     return w__.str();
   }
 
-  static Log_req serialize_from_dsv(std::string const& tuple__) {
+  void serialize_from_dsv(std::string const& tuple__) {
     using namespace boost;
     char_separator<char> const sep__{":"};
     tokenizer<char_separator<char> > tokens__(tuple__, sep__);
     tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
-
-    Log_type log_type_;
-    Market_id_t market_id_;
 
     if (it__ != tokens__.end()) {
       log_type_ = Log_type(lexical_cast<int>(*it__));
@@ -984,13 +942,11 @@ class Log_req {
     } else {
       throw std::logic_error("Tokenize Log_req failed: expected market_id_");
     }
-
-    return Log_req(log_type_, market_id_);
   }
 
  private:
-  Log_type const log_type_{};
-  Market_id_t const market_id_{};
+  Log_type log_type_{};
+  Market_id_t market_id_{};
 };
 
 }  // namespace exch

@@ -123,7 +123,7 @@ class Exchange {
       market_publisher_.publish(
           Create_market_resp(req.req_id(), req.user_id(), market_id, result));
     }
-  };
+  }
 
   void submit(Submit_req const &req) {
     Market_exchange_naked_ptr market{get_market(req.market_id())};

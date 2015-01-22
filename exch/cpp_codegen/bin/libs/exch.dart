@@ -70,7 +70,7 @@ final exch = lib('exch')
     ..includes = [ 'fcs/timestamp/conversion.hpp', ]
     ..classes = [
       class_('fill')
-      ..immutable = true
+      ..defaultCtor
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
       ..customBlocks = [ clsPublic ]
@@ -82,7 +82,9 @@ final exch = lib('exch')
         member('ask_id')..type = 'Order_id_t',
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
-      ],
+      ]
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
     ],
 
     header('order_book')
@@ -235,7 +237,6 @@ final exch = lib('exch')
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
@@ -244,19 +245,24 @@ final exch = lib('exch')
         member('end_time')..type = 'Timestamp_t',
         member('decimal_shift')..type = 'int',
         member('tick_size')..type = 'int',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+      
       class_('create_market_resp')
       ..opEqual
-      ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
         member('market_id')..type = 'Market_id_t',
         member('result')..type = 'Create_market_result',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
 
       class_('submit_req')
       ..opEqual
@@ -264,7 +270,6 @@ final exch = lib('exch')
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
-      ..immutable = true
       ..members = [
         member('timestamp')..type = 'Timestamp_t'
         ..initText = 'Timestamp_t::time_rep_type(0LL)'
@@ -276,53 +281,63 @@ final exch = lib('exch')
         member('side')..type = 'Side'..serializeInt = true,
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+
       class_('submit_resp')
       ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
         member('market_id')..type = 'Market_id_t',
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Submit_result',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
 
       class_('cancel_req')
       ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
         member('market_id')..type = 'Market_id_t',
         member('order_id')..type = 'Order_id_t',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+      
       class_('cancel_resp')
       ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
         member('market_id')..type = 'Market_id_t',
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Cancel_result',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
 
       class_('replace_req')
       ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
@@ -330,13 +345,16 @@ final exch = lib('exch')
         member('order_id')..type = 'Order_id_t',
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+      
       class_('replace_resp')
       ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
@@ -344,19 +362,23 @@ final exch = lib('exch')
         member('canceled_order_id')..type = 'Order_id_t',
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Replace_result',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
 
       class_('log_req')
       ..opEqual
       ..defaultCtor.useDefault = true
-      ..immutable = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
       ..members = [
         member('log_type')..type = 'Log_type'..serializeInt = true,
         member('market_id')..type = 'Market_id_t',
-      ],
-
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
     ],
     header('events')
     ..descr = 'Events published by the exchange'
@@ -367,40 +389,51 @@ final exch = lib('exch')
       class_('market_created_evt')
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),      
 
       class_('top_of_book_evt')
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+
       class_('book_update_evt')
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
         member('side')..type = 'Side'..serializeInt = true,
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
         member('top_price')..type = 'Price_t',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+      
       class_('trade_evt')
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
         member('side')..type = 'Side'..serializeInt = true,
         member('quantity')..type = 'Quantity_t',
         member('price')..type = 'Price_t',
         member('net_volume')..type = 'Quantity_t',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+      
     ],
 
     header('interfaces')

@@ -80,18 +80,11 @@ class Fill {
     return w__.str();
   }
 
-  static Fill serialize_from_dsv(std::string const& tuple__) {
+  void serialize_from_dsv(std::string const& tuple__) {
     using namespace boost;
     char_separator<char> const sep__{":"};
     tokenizer<char_separator<char> > tokens__(tuple__, sep__);
     tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
-
-    Fill_id_t fill_id_;
-    Timestamp_t timestamp_;
-    Order_id_t bid_id_;
-    Order_id_t ask_id_;
-    Price_t price_;
-    Quantity_t quantity_;
 
     if (it__ != tokens__.end()) {
       fill_id_ = lexical_cast<Fill_id_t>(*it__);
@@ -139,17 +132,15 @@ class Fill {
     } else {
       throw std::logic_error("Tokenize Fill failed: expected quantity_");
     }
-
-    return Fill(fill_id_, timestamp_, bid_id_, ask_id_, price_, quantity_);
   }
 
  private:
-  Fill_id_t const fill_id_{};
-  Timestamp_t const timestamp_{};
-  Order_id_t const bid_id_{};
-  Order_id_t const ask_id_{};
-  Price_t const price_{};
-  Quantity_t const quantity_{};
+  Fill_id_t fill_id_{};
+  Timestamp_t timestamp_{};
+  Order_id_t bid_id_{};
+  Order_id_t ask_id_{};
+  Price_t price_{};
+  Quantity_t quantity_{};
 };
 
 }  // namespace exch

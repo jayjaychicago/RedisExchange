@@ -180,19 +180,26 @@ class Redis_bootstrap_listener : public Request_listener {
         std::string cmdStr{reply->element[i]->str};
 
         switch (cmdStr[0]) {
-          case 'M':
-            create_market_handler(
-                Create_market_req::serialize_from_dsv(cmdStr.substr(2)));
-            break;
-          case 'S':
-            submit_handler(Submit_req::serialize_from_dsv(cmdStr.substr(2)));
-            break;
-          case 'C':
-            cancel_handler(Cancel_req::serialize_from_dsv(cmdStr.substr(2)));
-            break;
-          case 'R':
-            replace_handler(Replace_req::serialize_from_dsv(cmdStr.substr(2)));
-            break;
+          case 'M': {
+            Create_market_req req;
+            req.serialize_from_dsv(cmdStr.substr(2));
+            create_market_handler(req);
+          } break;
+          case 'S': {
+            Submit_req req;
+            req.serialize_from_dsv(cmdStr.substr(2));
+            submit_handler(req);
+          } break;
+          case 'C': {
+            Cancel_req req;
+            req.serialize_from_dsv(cmdStr.substr(2));
+            cancel_handler(req);
+          } break;
+          case 'R': {
+            Replace_req req;
+            req.serialize_from_dsv(cmdStr.substr(2));
+            replace_handler(req);
+          } break;
           default:
             std::ostringstream msg;
             msg << "Can not bootstrap: Invalid command found " << cmdStr;
@@ -202,12 +209,11 @@ class Redis_bootstrap_listener : public Request_listener {
 
       freeReplyObject(reply);
 
-      auto duration = duration_cast<milliseconds>(
-        std::chrono::system_clock::now() - start);
+      auto duration =
+          duration_cast<milliseconds>(std::chrono::system_clock::now() - start);
 
       std::cout << "Processed " << reply->elements
-                << " existing commands in:"
-                << duration.count() << " ms\n";
+                << " existing commands in:" << duration.count() << " ms\n";
     }
   }
 
@@ -238,7 +244,7 @@ class Redis_persister : public Request_persister {
   virtual void persist(Fill const& fill) override {
     fmt::MemoryWriter w;
     w << fill.serialize_to_dsv();
-    redisAsyncCommand(&context_, nullptr, nullptr, "LPUSH FILLS %s",
+    redisAsyncCommand(&context_, nullptr, nullptr, "RPUSH FILLS %s",
                       w.str().c_str());
     // TODO: implement strategy on failed push
   }
@@ -252,7 +258,7 @@ class Redis_persister : public Request_persister {
   void _persist(T const& item, char cmd) {
     fmt::MemoryWriter w;
     w << cmd << ':' << item.serialize_to_dsv();
-    redisAsyncCommand(&context_, nullptr, nullptr, "LPUSH CMD %s",
+    redisAsyncCommand(&context_, nullptr, nullptr, "RPUSH CMD %s",
                       w.str().c_str());
     // TODO: implement strategy on failed push
   }
