@@ -48,6 +48,7 @@ class Redis_listener : public Request_listener {
                          Submit_handler_t submit_handler,
                          Cancel_handler_t cancel_handler,
                          Replace_handler_t replace_handler,
+                         Market_details_handler_t market_details_handler,
                          Log_handler_t log_handler,
                          Halt_handler_t halt_handler) {
 
@@ -55,6 +56,7 @@ class Redis_listener : public Request_listener {
     submit_handler_ = submit_handler;
     cancel_handler_ = cancel_handler;
     replace_handler_ = replace_handler;
+    market_details_handler_ = market_details_handler;
     log_handler_ = log_handler;
     halt_handler_ = halt_handler;
 
@@ -80,6 +82,9 @@ class Redis_listener : public Request_listener {
         break;
       case 'L':
         log(message);
+        break;
+      case 'D':
+        market_details(message);
         break;
       case 'H':
         halt();
@@ -122,6 +127,13 @@ class Redis_listener : public Request_listener {
     replace_handler_(req);
   }
 
+  void market_details(std::string const& command) {
+    Market_details_req req;
+    std::istringstream in{command};
+    req.serialize_from_json(in);
+    market_details_handler_(req);
+  }
+
   void log(std::string const& command) {
     Log_req req;
     std::istringstream in{command};
@@ -145,6 +157,7 @@ class Redis_listener : public Request_listener {
   Cancel_handler_t cancel_handler_{};
   Replace_handler_t replace_handler_{};
   Log_handler_t log_handler_{};
+  Market_details_handler_t market_details_handler_{};
   Halt_handler_t halt_handler_{};
 };
 
@@ -166,6 +179,7 @@ class Redis_bootstrap_listener : public Request_listener {
                          Submit_handler_t submit_handler,
                          Cancel_handler_t cancel_handler,
                          Replace_handler_t replace_handler,
+                         Market_details_handler_t market_details_handler,
                          Log_handler_t log_handler,
                          Halt_handler_t halt_handler) override {
 
@@ -294,6 +308,10 @@ class Redis_publisher : public Market_publisher {
     _publish(REPLACE_RESP_KEY, resp);
   }
 
+  virtual void publish(Market_details_resp const& resp) override {
+    _publish(MARKET_DETAILS_RESP_KEY, resp);
+  }
+
   virtual void publish(Market_created_evt const& evt) override {
     _publish(MARKET_CREATED_EVENT_KEY, evt);
   }
@@ -319,8 +337,8 @@ class Redis_publisher : public Market_publisher {
   void _publish(char const* key, T const& item) {
     std::ostringstream out;
     item.serialize_to_json(out);
-    redisAsyncCommand(&context_, nullptr, nullptr, "PUBLISH %s %s",
-                      key, out.str().c_str());
+    redisAsyncCommand(&context_, nullptr, nullptr, "PUBLISH %s %s", key,
+                      out.str().c_str());
   }
 
   // end <ClsPrivate Redis_publisher>
@@ -330,6 +348,7 @@ class Redis_publisher : public Market_publisher {
   static constexpr char const* SUBMIT_RESP_KEY{"EX_RESP:S"};
   static constexpr char const* CANCEL_RESP_KEY{"EX_RESP:C"};
   static constexpr char const* REPLACE_RESP_KEY{"EX_RESP:R"};
+  static constexpr char const* MARKET_DETAILS_RESP_KEY{"EX_RESP:D"};
   static constexpr char const* MARKET_CREATED_EVENT_KEY{"EX_EVT:M"};
   static constexpr char const* TOP_EVENT_KEY{"EX_EVT:T"};
   static constexpr char const* BOOK_EVENT_KEY{"EX_EVT:B"};

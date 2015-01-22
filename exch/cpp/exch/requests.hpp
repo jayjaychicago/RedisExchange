@@ -3,10 +3,12 @@
 
 #include "cereal/archives/json.hpp"
 #include "cereal/cereal.hpp"
+#include "cereal/types/vector.hpp"
 #include "cppformat/format.h"
 #include "exch/exch.hpp"
 #include "fcs/timestamp/cereal.hpp"
 #include "fcs/timestamp/conversion.hpp"
+#include "fcs/utils/streamers/vector.hpp"
 #include <iosfwd>
 #include <string>
 
@@ -415,6 +417,12 @@ class Submit_req {
 class Submit_resp {
  public:
   Submit_resp(Req_id_t req_id, User_id_t user_id, Market_id_t market_id,
+              Submit_result result)
+      : req_id_{req_id},
+        user_id_{user_id},
+        market_id_{market_id},
+        result_{result} {}
+  Submit_resp(Req_id_t req_id, User_id_t user_id, Market_id_t market_id,
               Order_id_t order_id, Submit_result result)
       : req_id_{req_id},
         user_id_{user_id},
@@ -798,6 +806,12 @@ class Replace_req {
 class Replace_resp {
  public:
   Replace_resp(Req_id_t req_id, User_id_t user_id, Market_id_t market_id,
+               Replace_result result)
+      : req_id_{req_id},
+        user_id_{user_id},
+        market_id_{market_id},
+        result_{result} {}
+  Replace_resp(Req_id_t req_id, User_id_t user_id, Market_id_t market_id,
                Order_id_t canceled_order_id, Order_id_t order_id,
                Replace_result result)
       : req_id_{req_id},
@@ -873,6 +887,227 @@ class Replace_resp {
   Order_id_t canceled_order_id_{};
   Order_id_t order_id_{};
   Replace_result result_{};
+};
+
+class Market_details_req {
+ public:
+  Market_details_req(Req_id_t req_id, Market_id_t market_id,
+                     bool include_active, bool include_dead, bool include_fills)
+      : req_id_{req_id},
+        market_id_{market_id},
+        include_active_{include_active},
+        include_dead_{include_dead},
+        include_fills_{include_fills} {}
+
+  Market_details_req() = default;
+
+  bool operator==(Market_details_req const& rhs) const {
+    return this == &rhs ||
+           (req_id_ == rhs.req_id_ && market_id_ == rhs.market_id_ &&
+            include_active_ == rhs.include_active_ &&
+            include_dead_ == rhs.include_dead_ &&
+            include_fills_ == rhs.include_fills_);
+  }
+
+  bool operator!=(Market_details_req const& rhs) const {
+    return !(*this == rhs);
+  }
+  //! getter for req_id_ (access is Ro)
+  Req_id_t req_id() const { return req_id_; }
+
+  //! getter for market_id_ (access is Ro)
+  Market_id_t market_id() const { return market_id_; }
+
+  //! getter for include_active_ (access is Ro)
+  bool include_active() const { return include_active_; }
+
+  //! getter for include_dead_ (access is Ro)
+  bool include_dead() const { return include_dead_; }
+
+  //! getter for include_fills_ (access is Ro)
+  bool include_fills() const { return include_fills_; }
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Market_details_req const& item) {
+    out << '\n' << "req_id:" << item.req_id_;
+    out << '\n' << "market_id:" << item.market_id_;
+    out << '\n' << "include_active:" << item.include_active_;
+    out << '\n' << "include_dead:" << item.include_dead_;
+    out << '\n' << "include_fills:" << item.include_fills_;
+    return out;
+  }
+
+  template <class Archive>
+  void serialize(Archive& ar__) {
+    ar__(cereal::make_nvp("req_id", req_id_));
+    ar__(cereal::make_nvp("market_id", market_id_));
+    ar__(cereal::make_nvp("include_active", include_active_));
+    ar__(cereal::make_nvp("include_dead", include_dead_));
+    ar__(cereal::make_nvp("include_fills", include_fills_));
+  }
+
+  void serialize_to_json(std::ostream& out__) const {
+    cereal::JSONOutputArchive ar__(out__);
+    const_cast<Market_details_req*>(this)->serialize(ar__);
+  }
+
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
+    serialize(ar__);
+  }
+
+  std::string serialize_to_dsv() const {
+    fmt::MemoryWriter w__;
+    w__ << req_id_ << ':' << market_id_ << ':' << include_active_ << ':'
+        << include_dead_ << ':' << include_fills_;
+
+    return w__.str();
+  }
+
+  void serialize_from_dsv(std::string const& tuple__) {
+    using namespace boost;
+    char_separator<char> const sep__{":"};
+    tokenizer<char_separator<char> > tokens__(tuple__, sep__);
+    tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
+
+    if (it__ != tokens__.end()) {
+      req_id_ = lexical_cast<Req_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Market_details_req failed: expected req_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      market_id_ = lexical_cast<Market_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Market_details_req failed: expected market_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      include_active_ = lexical_cast<bool>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Market_details_req failed: expected include_active_");
+    }
+
+    if (it__ != tokens__.end()) {
+      include_dead_ = lexical_cast<bool>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Market_details_req failed: expected include_dead_");
+    }
+
+    if (it__ != tokens__.end()) {
+      include_fills_ = lexical_cast<bool>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Market_details_req failed: expected include_fills_");
+    }
+  }
+
+ private:
+  Req_id_t req_id_{};
+  Market_id_t market_id_{};
+  bool include_active_{};
+  bool include_dead_{};
+  bool include_fills_{};
+};
+
+class Market_details_resp {
+ public:
+  Market_details_resp(Req_id_t req_id, Market_id_t market_id,
+                      Market_details_result result)
+      : req_id_{req_id}, market_id_{market_id}, result_{result} {}
+  Market_details_resp(Req_id_t req_id, Market_id_t market_id, Order_list_t bids,
+                      Order_list_t asks, Order_list_t dead, Fill_list_t fills,
+                      Market_details_result result)
+      : req_id_{req_id},
+        market_id_{market_id},
+        bids_{bids},
+        asks_{asks},
+        dead_{dead},
+        fills_{fills},
+        result_{result} {}
+
+  Market_details_resp() = default;
+
+  bool operator==(Market_details_resp const& rhs) const {
+    return this == &rhs ||
+           (req_id_ == rhs.req_id_ && market_id_ == rhs.market_id_ &&
+            bids_ == rhs.bids_ && asks_ == rhs.asks_ && dead_ == rhs.dead_ &&
+            fills_ == rhs.fills_ && result_ == rhs.result_);
+  }
+
+  bool operator!=(Market_details_resp const& rhs) const {
+    return !(*this == rhs);
+  }
+  //! getter for req_id_ (access is Ro)
+  Req_id_t req_id() const { return req_id_; }
+
+  //! getter for market_id_ (access is Ro)
+  Market_id_t market_id() const { return market_id_; }
+
+  //! getter for bids_ (access is Ro)
+  Order_list_t bids() const { return bids_; }
+
+  //! getter for asks_ (access is Ro)
+  Order_list_t asks() const { return asks_; }
+
+  //! getter for dead_ (access is Ro)
+  Order_list_t dead() const { return dead_; }
+
+  //! getter for fills_ (access is Ro)
+  Fill_list_t fills() const { return fills_; }
+
+  //! getter for result_ (access is Ro)
+  Market_details_result result() const { return result_; }
+  friend inline std::ostream& operator<<(std::ostream& out,
+                                         Market_details_resp const& item) {
+    using fcs::utils::streamers::operator<<;
+    out << '\n' << "req_id:" << item.req_id_;
+    out << '\n' << "market_id:" << item.market_id_;
+    out << '\n' << "bids:" << item.bids_;
+    out << '\n' << "asks:" << item.asks_;
+    out << '\n' << "dead:" << item.dead_;
+    out << '\n' << "fills:" << item.fills_;
+    out << '\n' << "result:" << item.result_;
+    return out;
+  }
+
+  template <class Archive>
+  void serialize(Archive& ar__) {
+    ar__(cereal::make_nvp("req_id", req_id_));
+    ar__(cereal::make_nvp("market_id", market_id_));
+    ar__(cereal::make_nvp("bids", bids_));
+    ar__(cereal::make_nvp("asks", asks_));
+    ar__(cereal::make_nvp("dead", dead_));
+    ar__(cereal::make_nvp("fills", fills_));
+    ar__(cereal::make_nvp("result", result_));
+  }
+
+  void serialize_to_json(std::ostream& out__) const {
+    cereal::JSONOutputArchive ar__(out__);
+    const_cast<Market_details_resp*>(this)->serialize(ar__);
+  }
+
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
+    serialize(ar__);
+  }
+
+ private:
+  Req_id_t req_id_{};
+  Market_id_t market_id_{};
+  Order_list_t bids_{};
+  Order_list_t asks_{};
+  Order_list_t dead_{};
+  Fill_list_t fills_{};
+  Market_details_result result_{};
 };
 
 class Log_req {

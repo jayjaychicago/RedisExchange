@@ -26,6 +26,27 @@ Map _parseArgs(List<String> args) {
   _parser = new ArgParser();
   try {
     /// Fill in expectations of the parser
+    _parser.addFlag('include-active',
+      help: '''
+Include active orders in response
+''',
+      abbr: null,
+      defaultsTo: true
+    );
+    _parser.addFlag('include-dead',
+      help: '''
+Include dead orders in response
+''',
+      abbr: null,
+      defaultsTo: true
+    );
+    _parser.addFlag('include-fills',
+      help: '''
+Include fills in response
+''',
+      abbr: null,
+      defaultsTo: true
+    );
     _parser.addFlag('help',
       help: '''
 Display this help screen
@@ -52,6 +73,20 @@ redis port used by pub/sub
       abbr: 'P',
       allowed: null
     );
+    _parser.addOption('req-id',
+      help: '',
+      defaultsTo: '1',
+      allowMultiple: false,
+      abbr: 'r',
+      allowed: null
+    );
+    _parser.addOption('market-id',
+      help: '',
+      defaultsTo: '1',
+      allowMultiple: false,
+      abbr: 'm',
+      allowed: null
+    );
 
     /// Parse the command line options (excluding the script)
     argResults = _parser.parse(args);
@@ -62,6 +97,13 @@ redis port used by pub/sub
     result['redis-host'] = argResults['redis-host'];
     result['redis-port'] = argResults['redis-port'] != null?
       int.parse(argResults['redis-port']) : null;
+    result['req-id'] = argResults['req-id'] != null?
+      int.parse(argResults['req-id']) : null;
+    result['market-id'] = argResults['market-id'] != null?
+      int.parse(argResults['market-id']) : null;
+    result['include-active'] = argResults['include-active'];
+    result['include-dead'] = argResults['include-dead'];
+    result['include-fills'] = argResults['include-fills'];
     result['help'] = argResults['help'];
 
     return { 'options': result, 'rest': remaining };
@@ -72,7 +114,7 @@ redis port used by pub/sub
   }
 }
 
-final _logger = new Logger('deleteAllRedis');
+final _logger = new Logger('marketDetails');
 
 main(List<String> args) {
   Logger.root.onRecord.listen((LogRecord r) =>
@@ -82,37 +124,29 @@ main(List<String> args) {
   Map options = argResults['options'];
   List positionals = argResults['rest'];
 
-  // custom <deleteAllRedis main>
+  // custom <marketDetails main>
 
   final host = options['redis-host'];
   final port = options['redis-port'];
-
-  stdout.write('Are you sure you want to delete all redis keys? [y/n]: ');
-  String input = stdin.readLineSync();
-
+  print('Options are $options');
   RedisClient
     .connect('$host:$port')
     .then((RedisClient redisClient) {
-
-      if(new RegExp(r'^(?:y|yes)$', caseSensitive:false).hasMatch(input)) {
-        final keys = [ 'CMD', 'FILLS' ];
-        print('Deleting redis keys $keys');
-        return redisClient
-          .mdel(keys)
-          .then((int deleted) {
-            print('Deleted $deleted keys');
-            redisClient.close();
-          });
-      } else {
-        print('Pheww - saved you there');
-      }
-
+      final client = new ExchClient(redisClient);
+      final req= new MarketDetailsReq(
+        options['req-id'],
+        options['market-id'],
+        options['include-active'],
+        options['include-dead'],
+        options['include-fills']);
+      client.marketDetails(req);
+      redisClient.close();
     });
 
-  // end <deleteAllRedis main>
+  // end <marketDetails main>
 
 }
 
-// custom <deleteAllRedis global>
-// end <deleteAllRedis global>
+// custom <marketDetails global>
+// end <marketDetails global>
 

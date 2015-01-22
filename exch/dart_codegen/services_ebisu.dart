@@ -51,6 +51,18 @@ void main() {
       ..imports = commonImports
       ..args = [redisHostArg, redisPort],
 
+      script('market_details')
+      ..imports = commonImports
+      ..args = [
+        redisHostArg, redisPort, reqIdArg, marketIdArg,
+        scriptArg('include_active')..doc = 'Include active orders in response'
+        ..isFlag = true..defaultsTo = true,
+        scriptArg('include_dead')..doc = 'Include dead orders in response'
+        ..isFlag = true..defaultsTo = true,
+        scriptArg('include_fills')..doc = 'Include fills in response'
+        ..isFlag = true..defaultsTo = true,
+      ],
+
       script('create')
       ..imports = commonImports
       ..args = (commonArgs
@@ -175,6 +187,16 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
             member('order_id')..type = 'int',
             member('price')..type = 'int',
             member('quantity')..type = 'int',
+          ],
+          class_('market_details_req')
+          ..jsonKeyFormat = snake
+          ..immutable = true
+          ..members = [
+            member('req_id')..type = 'int',
+            member('market_id')..type = 'int',
+            member('include_active')..type = 'bool',
+            member('include_dead')..type = 'bool',
+            member('include_fills')..type = 'bool',
           ],
           class_('log_req')
           ..jsonKeyFormat = snake

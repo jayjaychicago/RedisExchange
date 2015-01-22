@@ -1,8 +1,12 @@
 #ifndef __EXCH_ORDER_BOOK_HPP__
 #define __EXCH_ORDER_BOOK_HPP__
 
+#include "cereal/archives/json.hpp"
+#include "cereal/cereal.hpp"
+#include "cppformat/format.h"
 #include "exch/exch.hpp"
 #include "exch/fill.hpp"
+#include "fcs/timestamp/cereal.hpp"
 #include "fcs/utils/streamers/containers.hpp"
 #include "fcs/utils/streamers/table.hpp"
 #include <boost/range/adaptor/reversed.hpp>
@@ -37,7 +41,6 @@ inline void invalid_order(std::string const& order) {
 // end <FcbBeginNamespace order_book>
 
 class Fill;
-using Fill_list_t = std::vector<Fill>;
 using Price_list_t = std::vector<Price_t>;
 
 enum Order_state { Submitted_e, Active_e, Canceled_e, Filled_e };
@@ -84,6 +87,16 @@ class Order {
         price_{price},
         quantity_{quantity} {}
 
+  Order() {}
+
+  bool operator==(Order const& rhs) const {
+    return this == &rhs ||
+           (user_id_ == rhs.user_id_ && order_id_ == rhs.order_id_ &&
+            timestamp_ == rhs.timestamp_ && side_ == rhs.side_ &&
+            price_ == rhs.price_ && quantity_ == rhs.quantity_);
+  }
+
+  bool operator!=(Order const& rhs) const { return !(*this == rhs); }
   // custom <ClsPublic Order>
 
   bool is_bid() const { return side_ == Bid_side_e; }
@@ -115,6 +128,89 @@ class Order {
     out << '\n' << "price:" << item.price_;
     out << '\n' << "quantity:" << item.quantity_;
     return out;
+  }
+
+  template <class Archive>
+  void serialize(Archive& ar__) {
+    ar__(cereal::make_nvp("user_id", user_id_));
+    ar__(cereal::make_nvp("order_id", order_id_));
+    ar__(cereal::make_nvp("timestamp", timestamp_));
+    ar__(cereal::make_nvp("side", side_));
+    ar__(cereal::make_nvp("price", price_));
+    ar__(cereal::make_nvp("quantity", quantity_));
+  }
+
+  void serialize_to_json(std::ostream& out__) const {
+    cereal::JSONOutputArchive ar__(out__);
+    const_cast<Order*>(this)->serialize(ar__);
+  }
+
+  void serialize_from_json(std::istream& in__) {
+    cereal::JSONInputArchive ar__{in__};
+    serialize(ar__);
+  }
+
+  std::string serialize_to_dsv() const {
+    fmt::MemoryWriter w__;
+    w__ << user_id_ << ':' << order_id_ << ':'
+        << fcs::timestamp::ticks(timestamp_) << ':' << side_ << ':' << price_
+        << ':' << quantity_;
+
+    return w__.str();
+  }
+
+  void serialize_from_dsv(std::string const& tuple__) {
+    using namespace boost;
+    char_separator<char> const sep__{":"};
+    tokenizer<char_separator<char> > tokens__(tuple__, sep__);
+    tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
+
+    if (it__ != tokens__.end()) {
+      user_id_ = lexical_cast<User_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Order failed: expected user_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      order_id_ = lexical_cast<Order_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Order failed: expected order_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      if (!fcs::timestamp::convert_to_timestamp_from_ticks(*it__, timestamp_)) {
+        std::string msg{"Encountered invalid timestamp ticks:"};
+        msg += *it__;
+        throw std::logic_error(msg);
+      }
+
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Order failed: expected timestamp_");
+    }
+
+    if (it__ != tokens__.end()) {
+      side_ = Side(lexical_cast<int>(*it__));
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Order failed: expected side_");
+    }
+
+    if (it__ != tokens__.end()) {
+      price_ = lexical_cast<Price_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Order failed: expected price_");
+    }
+
+    if (it__ != tokens__.end()) {
+      quantity_ = lexical_cast<Quantity_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Order failed: expected quantity_");
+    }
   }
 
  private:
@@ -229,11 +325,9 @@ class Order_book {
             ++delete_to;
             // TODO: set state to dead/fully filled
           }
-          fills.emplace_back(next_fill_id(), bid.timestamp(),
-                             bid.user_id(),
-                             bid.order_id(),
-                             ask.user_id(),
-                             ask.order_id(), ask_price, matched);
+          fills.emplace_back(next_fill_id(), bid.timestamp(), bid.user_id(),
+                             bid.order_id(), ask.user_id(), ask.order_id(),
+                             ask_price, matched);
         }
       }
 
@@ -418,6 +512,12 @@ class Order_book {
   }
 
   // end <ClsPublic Order_book>
+
+  //! getter for bids_ (access is Ro)
+  Bids_t const& bids() const { return bids_; }
+
+  //! getter for asks_ (access is Ro)
+  Asks_t const& asks() const { return asks_; }
 
  private:
   // custom <ClsPrivate Order_book>

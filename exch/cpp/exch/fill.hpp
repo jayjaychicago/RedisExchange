@@ -7,6 +7,7 @@
 #include "exch/exch.hpp"
 #include "fcs/timestamp/cereal.hpp"
 #include "fcs/timestamp/conversion.hpp"
+#include "fcs/utils/streamers/streamers.hpp"
 #include <iosfwd>
 
 namespace exch {
@@ -25,6 +26,16 @@ class Fill {
         quantity_{quantity} {}
 
   Fill() = default;
+
+  bool operator==(Fill const& rhs) const {
+    return this == &rhs ||
+           (fill_id_ == rhs.fill_id_ && timestamp_ == rhs.timestamp_ &&
+            buyer_id_ == rhs.buyer_id_ && bid_id_ == rhs.bid_id_ &&
+            seller_id_ == rhs.seller_id_ && ask_id_ == rhs.ask_id_ &&
+            price_ == rhs.price_ && quantity_ == rhs.quantity_);
+  }
+
+  bool operator!=(Fill const& rhs) const { return !(*this == rhs); }
   // custom <ClsPublic Fill>
   // end <ClsPublic Fill>
 
@@ -52,6 +63,7 @@ class Fill {
   //! getter for quantity_ (access is Ro)
   Quantity_t quantity() const { return quantity_; }
   friend inline std::ostream& operator<<(std::ostream& out, Fill const& item) {
+    using fcs::utils::streamers::operator<<;
     out << '\n' << "fill_id:" << item.fill_id_;
     out << '\n' << "timestamp:" << item.timestamp_;
     out << '\n' << "buyer_id:" << item.buyer_id_;

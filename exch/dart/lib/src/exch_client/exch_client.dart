@@ -21,6 +21,10 @@ class ExchClient {
     _redisClient.publish("EX_REQ:R",
         convert.JSON.encode(req.toJson()));
 
+  marketDetails(MarketDetailsReq req) =>
+    _redisClient.publish("EX_REQ:D",
+        convert.JSON.encode(req.toJson()));
+
   log(LogReq req) =>
     _redisClient.publish("EX_REQ:L",
         convert.JSON.encode(req.toJson()));

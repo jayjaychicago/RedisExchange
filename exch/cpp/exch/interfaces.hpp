@@ -13,6 +13,8 @@ using Create_market_handler_t =
 using Submit_handler_t = boost::function<void(const Submit_req& req)>;
 using Cancel_handler_t = boost::function<void(const Cancel_req& req)>;
 using Replace_handler_t = boost::function<void(const Replace_req& req)>;
+using Market_details_handler_t =
+    boost::function<void(const Market_details_req& req)>;
 using Log_handler_t = boost::function<void(const Log_req& req)>;
 using Halt_handler_t = boost::function<void()>;
 
@@ -28,6 +30,7 @@ class Request_listener {
                          Submit_handler_t submit_handler,
                          Cancel_handler_t cancel_handler,
                          Replace_handler_t replace_handler,
+                         Market_details_handler_t market_details_handler,
                          Log_handler_t log_handler,
                          Halt_handler_t halt_handler) = 0;
 
@@ -65,6 +68,7 @@ class Market_publisher {
   virtual void publish(Submit_resp const& resp) = 0;
   virtual void publish(Cancel_resp const& resp) = 0;
   virtual void publish(Replace_resp const& resp) = 0;
+  virtual void publish(Market_details_resp const& resp) = 0;
 
   virtual void publish(Market_created_evt const& evt) = 0;
   virtual void publish(Top_of_book_evt const& evt) = 0;

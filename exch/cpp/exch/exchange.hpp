@@ -58,6 +58,7 @@ class Exchange {
         std::bind(&Exchange::submit, this, std::placeholders::_1),
         std::bind(&Exchange::cancel, this, std::placeholders::_1),
         std::bind(&Exchange::replace, this, std::placeholders::_1),
+        std::bind(&Exchange::market_details, this, std::placeholders::_1),
         std::bind(&Exchange::log, this, std::placeholders::_1),
         std::bind(&Exchange::halt_handler, this));
 
@@ -68,6 +69,7 @@ class Exchange {
         std::bind(&Exchange::submit, this, std::placeholders::_1),
         std::bind(&Exchange::cancel, this, std::placeholders::_1),
         std::bind(&Exchange::replace, this, std::placeholders::_1),
+        std::bind(&Exchange::market_details, this, std::placeholders::_1),
         std::bind(&Exchange::log, this, std::placeholders::_1),
         std::bind(&Exchange::halt_handler, this));
 
@@ -145,7 +147,9 @@ class Exchange {
     req.timestamp(timestamp);
 
     if (market == nullptr) {
-      result = Submit_invalid_market_e;
+      market_publisher_.publish(
+          Submit_resp(req.req_id(), req.user_id(), req.market_id(), result));
+      return;
     } else {
       submitted_id = market->next_order_id();
       Order order{req.user_id(), submitted_id, timestamp,
@@ -183,7 +187,9 @@ class Exchange {
     Order_id_t revised_order_id{};
 
     if (market == nullptr) {
-      result = Replace_invalid_market_e;
+      market_publisher_.publish(Replace_resp(req.req_id(), req.user_id(),
+                                             req.market_id(),
+                                             Replace_invalid_market_e));
     } else {
       revised_order_id = market->next_order_id();
       Order revised_order{
@@ -199,6 +205,41 @@ class Exchange {
       market_publisher_.publish(Replace_resp(req.req_id(), req.user_id(),
                                              req.market_id(), req.order_id(),
                                              revised_order_id, result));
+    }
+  }
+
+  void market_details(Market_details_req const &req) {
+    Market_exchange_naked_ptr market{get_market(req.market_id())};
+    Market_details_result result;
+
+    if (market == nullptr) {
+      market_publisher_.publish(Market_details_resp{
+          req.req_id(), req.market_id(), Market_details_invalid_market_e});
+    } else {
+      if (is_live_) {
+        Order_list_t bids;
+        Order_list_t asks;
+        Fill_list_t const noFills;
+
+        if (req.include_active()) {
+          Order_book const &book{market->order_book()};
+          for (auto const &managed_order_key : book.bids()) {
+            for(auto const& managed_order : managed_order_key.second) {
+              bids.push_back(managed_order.order);
+            }
+          }
+          for (auto const &managed_order_key : book.asks()) {
+            for(auto const& managed_order : managed_order_key.second) {
+              asks.push_back(managed_order.order);
+            }
+          }
+        }
+
+        market_publisher_.publish(
+            Market_details_resp(req.req_id(), req.market_id(), bids, asks,
+                                Order_list_t(),  // dead TBD
+                                noFills, Market_details_succeeded_e));
+      }
     }
   }
 

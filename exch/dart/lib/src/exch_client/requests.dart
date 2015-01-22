@@ -275,6 +275,51 @@ class ReplaceReq {
 
 }
 
+class MarketDetailsReq {
+  const MarketDetailsReq(this.reqId, this.marketId, this.includeActive,
+    this.includeDead, this.includeFills);
+
+  final int reqId;
+  final int marketId;
+  final bool includeActive;
+  final bool includeDead;
+  final bool includeFills;
+  // custom <class MarketDetailsReq>
+  // end <class MarketDetailsReq>
+
+  Map toJson() => {
+      "req_id": ebisu_utils.toJson(reqId),
+      "market_id": ebisu_utils.toJson(marketId),
+      "include_active": ebisu_utils.toJson(includeActive),
+      "include_dead": ebisu_utils.toJson(includeDead),
+      "include_fills": ebisu_utils.toJson(includeFills),
+  };
+
+  static MarketDetailsReq fromJson(Object json) {
+    if(json == null) return null;
+    if(json is String) {
+      json = convert.JSON.decode(json);
+    }
+    assert(json is Map);
+    return new MarketDetailsReq._fromJsonMapImpl(json);
+  }
+
+  MarketDetailsReq._fromJsonMapImpl(Map jsonMap) :
+    reqId = jsonMap["req_id"],
+    marketId = jsonMap["market_id"],
+    includeActive = jsonMap["include_active"],
+    includeDead = jsonMap["include_dead"],
+    includeFills = jsonMap["include_fills"];
+
+  MarketDetailsReq._copy(MarketDetailsReq other) :
+    reqId = other.reqId,
+    marketId = other.marketId,
+    includeActive = other.includeActive,
+    includeDead = other.includeDead,
+    includeFills = other.includeFills;
+
+}
+
 class LogReq {
   const LogReq(this.logType, this.marketId);
 
