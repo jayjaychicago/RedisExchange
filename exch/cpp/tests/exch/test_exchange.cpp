@@ -4,9 +4,9 @@
 namespace exch {
 void test_exchange() {
   // custom <exchange>
-  Order o{1, fcs::timestamp::current_time(), Bid_side_e, 200, 300};
+  Order o{1, 1, fcs::timestamp::current_time(), Bid_side_e, 200, 300};
 
-  Fill f{123, fcs::timestamp::current_time(), 1, Ask_side_e, 2321, 4123};
+  Fill f{123, fcs::timestamp::current_time(), 1, 2, 3, 4, 2321, 4123};
 
   std::cout << f.serialize_to_dsv() << std::endl;
   f.serialize_from_dsv(f.serialize_to_dsv());

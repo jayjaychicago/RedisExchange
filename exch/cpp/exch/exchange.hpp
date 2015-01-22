@@ -125,32 +125,37 @@ class Exchange {
     }
   }
 
+  void process_fills(Market_exchange_naked_ptr market) {
+    if (market) {
+      auto const &fills = market->fills();
+      for (auto const &fill : fills) {
+        // todo: push multiple fills in one go
+        request_persister_.persist(fill);
+        market_publisher_.publish(fill);
+      }
+    }
+  }
+
   void submit(Submit_req const &req) {
     Market_exchange_naked_ptr market{get_market(req.market_id())};
     Submit_result result;
     Order_id_t submitted_id{};
 
     auto timestamp = fcs::timestamp::current_time();
+    req.timestamp(timestamp);
 
     if (market == nullptr) {
       result = Submit_invalid_market_e;
     } else {
       submitted_id = market->next_order_id();
-      Order order{submitted_id, timestamp, req.side(), req.price(),
-                  req.quantity()};
+      Order order{req.user_id(), submitted_id, timestamp,
+                  req.side(),    req.price(),  req.quantity()};
       result = market->submit(order);
     }
 
     if (is_live_) {
-      req.timestamp(timestamp);
-
       request_persister_.persist(req);
-
-      auto const &fills = market->fills();
-      for (auto const &fill : fills) {
-        // todo: push multiple fills in one go
-        request_persister_.persist(fill);
-      }
+      process_fills(market);
 
       market_publisher_.publish(Submit_resp(
           req.req_id(), req.user_id(), req.market_id(), submitted_id, result));
@@ -182,7 +187,7 @@ class Exchange {
     } else {
       revised_order_id = market->next_order_id();
       Order revised_order{
-          revised_order_id, fcs::timestamp::current_time(),
+          req.user_id(),  revised_order_id, fcs::timestamp::current_time(),
           Bid_side_e,  // Not used: Side in book pulled from resting order
           req.quantity(), req.price()};
 

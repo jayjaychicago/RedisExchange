@@ -14,15 +14,20 @@ dependencies:
 # end <exch_client dependencies>
 
 dev_dependencies:
-  unittest: ">=0.11.0"
+  unittest: ">=0.11.0 < 0.12.0"
   browser: "any"
-  hop: ">=0.31.0"
-  hop_docgen: ">=0.1.0 <0.2.0"
+  hop: "any"
+  hop_docgen: "any"
 
 # custom <exch_client dev dependencies>
 # end <exch_client dev dependencies>
+
+dependency_overrides:
+# custom <exch_client dependency overrides>
+# end <exch_client dependency overrides>
 
 transformers:
 
 # custom <exch_client transformers>
 # end <exch_client transformers>
+

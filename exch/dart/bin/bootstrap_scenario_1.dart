@@ -199,3 +199,4 @@ main(List<String> args) {
 int _reqId = 0;
 get reqId => _reqId++;
 // end <bootstrapScenario1 global>
+

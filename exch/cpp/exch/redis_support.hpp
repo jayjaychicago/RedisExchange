@@ -279,24 +279,36 @@ class Redis_publisher : public Market_publisher {
   // custom <ClsPublic Redis_publisher>
 
   virtual void publish(Create_market_resp const& resp) override {
-    _publish(resp);
+    _publish(CREATE_RESP_KEY, resp);
   }
 
-  virtual void publish(Submit_resp const& resp) override { _publish(resp); }
+  virtual void publish(Submit_resp const& resp) override {
+    _publish(SUBMIT_RESP_KEY, resp);
+  }
 
-  virtual void publish(Cancel_resp const& resp) override { _publish(resp); }
+  virtual void publish(Cancel_resp const& resp) override {
+    _publish(CANCEL_RESP_KEY, resp);
+  }
 
-  virtual void publish(Replace_resp const& resp) override { _publish(resp); }
+  virtual void publish(Replace_resp const& resp) override {
+    _publish(REPLACE_RESP_KEY, resp);
+  }
 
   virtual void publish(Market_created_evt const& evt) override {
-    _publish(evt);
+    _publish(MARKET_CREATED_EVENT_KEY, evt);
   }
 
-  virtual void publish(Top_of_book_evt const& evt) override { _publish(evt); }
+  virtual void publish(Top_of_book_evt const& evt) override {
+    _publish(TOP_EVENT_KEY, evt);
+  }
 
-  virtual void publish(Book_update_evt const& evt) override { _publish(evt); }
+  virtual void publish(Book_update_evt const& evt) override {
+    _publish(BOOK_EVENT_KEY, evt);
+  }
 
-  virtual void publish(Trade_evt const& evt) override { _publish(evt); }
+  virtual void publish(Fill const& fill) override {
+    _publish(FILL_EVENT_KEY, fill);
+  }
 
   // end <ClsPublic Redis_publisher>
 
@@ -304,17 +316,24 @@ class Redis_publisher : public Market_publisher {
   // custom <ClsPrivate Redis_publisher>
 
   template <typename T>
-  void _publish(T const& item) {
+  void _publish(char const* key, T const& item) {
     std::ostringstream out;
     item.serialize_to_json(out);
-    // redis_client_.publish(RESP_KEY, out.str());
+    redisAsyncCommand(&context_, nullptr, nullptr, "PUBLISH %s %s",
+                      key, out.str().c_str());
   }
 
   // end <ClsPrivate Redis_publisher>
 
   redisAsyncContext& context_;
-  static constexpr char const* RESP_KEY{"EX_RESP"};
-  static constexpr char const* EVENT_KEY{"EX_EVENT"};
+  static constexpr char const* CREATE_RESP_KEY{"EX_RESP:M"};
+  static constexpr char const* SUBMIT_RESP_KEY{"EX_RESP:S"};
+  static constexpr char const* CANCEL_RESP_KEY{"EX_RESP:C"};
+  static constexpr char const* REPLACE_RESP_KEY{"EX_RESP:R"};
+  static constexpr char const* MARKET_CREATED_EVENT_KEY{"EX_EVT:M"};
+  static constexpr char const* TOP_EVENT_KEY{"EX_EVT:T"};
+  static constexpr char const* BOOK_EVENT_KEY{"EX_EVT:B"};
+  static constexpr char const* FILL_EVENT_KEY{"EX_EVT:F"};
 };
 
 }  // namespace exch

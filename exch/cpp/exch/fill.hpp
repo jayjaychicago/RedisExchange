@@ -12,11 +12,14 @@
 namespace exch {
 class Fill {
  public:
-  Fill(Fill_id_t fill_id, Timestamp_t timestamp, Order_id_t bid_id,
-       Order_id_t ask_id, Price_t price, Quantity_t quantity)
+  Fill(Fill_id_t fill_id, Timestamp_t timestamp, User_id_t buyer_id,
+       Order_id_t bid_id, User_id_t seller_id, Order_id_t ask_id, Price_t price,
+       Quantity_t quantity)
       : fill_id_{fill_id},
         timestamp_{timestamp},
+        buyer_id_{buyer_id},
         bid_id_{bid_id},
+        seller_id_{seller_id},
         ask_id_{ask_id},
         price_{price},
         quantity_{quantity} {}
@@ -31,8 +34,14 @@ class Fill {
   //! getter for timestamp_ (access is Ro)
   Timestamp_t timestamp() const { return timestamp_; }
 
+  //! getter for buyer_id_ (access is Ro)
+  User_id_t buyer_id() const { return buyer_id_; }
+
   //! getter for bid_id_ (access is Ro)
   Order_id_t bid_id() const { return bid_id_; }
+
+  //! getter for seller_id_ (access is Ro)
+  User_id_t seller_id() const { return seller_id_; }
 
   //! getter for ask_id_ (access is Ro)
   Order_id_t ask_id() const { return ask_id_; }
@@ -45,7 +54,9 @@ class Fill {
   friend inline std::ostream& operator<<(std::ostream& out, Fill const& item) {
     out << '\n' << "fill_id:" << item.fill_id_;
     out << '\n' << "timestamp:" << item.timestamp_;
+    out << '\n' << "buyer_id:" << item.buyer_id_;
     out << '\n' << "bid_id:" << item.bid_id_;
+    out << '\n' << "seller_id:" << item.seller_id_;
     out << '\n' << "ask_id:" << item.ask_id_;
     out << '\n' << "price:" << item.price_;
     out << '\n' << "quantity:" << item.quantity_;
@@ -56,7 +67,9 @@ class Fill {
   void serialize(Archive& ar__) {
     ar__(cereal::make_nvp("fill_id", fill_id_));
     ar__(cereal::make_nvp("timestamp", timestamp_));
+    ar__(cereal::make_nvp("buyer_id", buyer_id_));
     ar__(cereal::make_nvp("bid_id", bid_id_));
+    ar__(cereal::make_nvp("seller_id", seller_id_));
     ar__(cereal::make_nvp("ask_id", ask_id_));
     ar__(cereal::make_nvp("price", price_));
     ar__(cereal::make_nvp("quantity", quantity_));
@@ -75,7 +88,8 @@ class Fill {
   std::string serialize_to_dsv() const {
     fmt::MemoryWriter w__;
     w__ << fill_id_ << ':' << fcs::timestamp::ticks(timestamp_) << ':'
-        << bid_id_ << ':' << ask_id_ << ':' << price_ << ':' << quantity_;
+        << buyer_id_ << ':' << bid_id_ << ':' << seller_id_ << ':' << ask_id_
+        << ':' << price_ << ':' << quantity_;
 
     return w__.str();
   }
@@ -106,10 +120,24 @@ class Fill {
     }
 
     if (it__ != tokens__.end()) {
+      buyer_id_ = lexical_cast<User_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Fill failed: expected buyer_id_");
+    }
+
+    if (it__ != tokens__.end()) {
       bid_id_ = lexical_cast<Order_id_t>(*it__);
       ++it__;
     } else {
       throw std::logic_error("Tokenize Fill failed: expected bid_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      seller_id_ = lexical_cast<User_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Fill failed: expected seller_id_");
     }
 
     if (it__ != tokens__.end()) {
@@ -137,7 +165,9 @@ class Fill {
  private:
   Fill_id_t fill_id_{};
   Timestamp_t timestamp_{};
+  User_id_t buyer_id_{};
   Order_id_t bid_id_{};
+  User_id_t seller_id_{};
   Order_id_t ask_id_{};
   Price_t price_{};
   Quantity_t quantity_{};

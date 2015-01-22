@@ -69,7 +69,7 @@ class Market_publisher {
   virtual void publish(Market_created_evt const& evt) = 0;
   virtual void publish(Top_of_book_evt const& evt) = 0;
   virtual void publish(Book_update_evt const& evt) = 0;
-  virtual void publish(Trade_evt const& evt) = 0;
+  virtual void publish(Fill const& fill) = 0;
 
   // end <ClsPublic Market_publisher>
 };

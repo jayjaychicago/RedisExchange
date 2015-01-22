@@ -78,7 +78,9 @@ final exch = lib('exch')
       ..members = [
         member('fill_id')..type = 'Fill_id_t',
         member('timestamp')..type = 'Timestamp_t',
+        member('buyer_id')..type = 'User_id_t',
         member('bid_id')..type = 'Order_id_t',
+        member('seller_id')..type = 'User_id_t',
         member('ask_id')..type = 'Order_id_t',
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
@@ -134,10 +136,10 @@ final exch = lib('exch')
 
       class_('order')
       ..streamable = true
-      ..serializers = [ cereal() ]
       ..customBlocks = [ clsPublic ]
       ..memberCtors = [ memberCtor()..allMembers = true ]
       ..members = [
+        member('user_id')..type = 'User_id_t'..access = ro,
         member('order_id')..type = 'Order_id_t'..access = ro,
         member('timestamp')..type = 'Timestamp_t'..access = ro,
         member('side')..type = 'Side'..serializeInt = true..access = ro,
@@ -249,7 +251,7 @@ final exch = lib('exch')
       ..defaultCtor
       ..members.forEach((m) => m.access = ro)
       ..addFullMemberCtor(),
-      
+
       class_('create_market_resp')
       ..opEqual
       ..streamable = true
@@ -316,7 +318,7 @@ final exch = lib('exch')
       ..defaultCtor
       ..members.forEach((m) => m.access = ro)
       ..addFullMemberCtor(),
-      
+
       class_('cancel_resp')
       ..opEqual
       ..defaultCtor.useDefault = true
@@ -349,7 +351,7 @@ final exch = lib('exch')
       ..defaultCtor
       ..members.forEach((m) => m.access = ro)
       ..addFullMemberCtor(),
-      
+
       class_('replace_resp')
       ..opEqual
       ..defaultCtor.useDefault = true
@@ -394,7 +396,7 @@ final exch = lib('exch')
       ]
       ..defaultCtor
       ..members.forEach((m) => m.access = ro)
-      ..addFullMemberCtor(),      
+      ..addFullMemberCtor(),
 
       class_('top_of_book_evt')
       ..streamable = true
@@ -419,21 +421,7 @@ final exch = lib('exch')
       ..defaultCtor
       ..members.forEach((m) => m.access = ro)
       ..addFullMemberCtor(),
-      
-      class_('trade_evt')
-      ..streamable = true
-      ..serializers = [ cereal() ]
-      ..members = [
-        member('market_id')..type = 'Market_id_t',
-        member('side')..type = 'Side'..serializeInt = true,
-        member('quantity')..type = 'Quantity_t',
-        member('price')..type = 'Price_t',
-        member('net_volume')..type = 'Quantity_t',
-      ]
-      ..defaultCtor
-      ..members.forEach((m) => m.access = ro)
-      ..addFullMemberCtor(),
-      
+
     ],
 
     header('interfaces')
@@ -595,8 +583,15 @@ middleware'''
       ..bases = [ base('Market_publisher') ]
       ..members = [
         member('context')..type = 'redisAsyncContext'..refType = ref,
-        member('resp_key')..init = 'EX_RESP'..type = 'char const*'..isStatic = true..isConstExpr = true,
-        member('event_key')..init = 'EX_EVENT'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('create_resp_key')..init = 'EX_RESP:M'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('submit_resp_key')..init = 'EX_RESP:S'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('cancel_resp_key')..init = 'EX_RESP:C'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('replace_resp_key')..init = 'EX_RESP:R'..type = 'char const*'..isStatic = true..isConstExpr = true,
+
+        member('market_created_event_key')..init = 'EX_EVT:M'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('top_event_key')..init = 'EX_EVT:T'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('book_event_key')..init = 'EX_EVT:B'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('fill_event_key')..init = 'EX_EVT:F'..type = 'char const*'..isStatic = true..isConstExpr = true,
       ],
 
     ],
