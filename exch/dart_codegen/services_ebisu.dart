@@ -52,6 +52,7 @@ void main() {
       ..args = [redisHostArg, redisPort],
 
       script('market_details')
+      ..isAsync = true
       ..imports = commonImports
       ..args = [
         redisHostArg, redisPort, reqIdArg, marketIdArg,
@@ -64,6 +65,7 @@ void main() {
       ],
 
       script('create')
+      ..isAsync = true
       ..imports = commonImports
       ..args = (commonArgs
           ..addAll([
@@ -90,6 +92,7 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
           ]))
       ..doc = 'Create a market',
       script('submit')
+      ..isAsync = true
       ..imports = commonImports
       ..args = (commonArgs
           ..addAll([
@@ -97,6 +100,7 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
           ]))
       ..doc = 'Submit an order to a market',
       script('cancel')
+      ..isAsync = true
       ..imports = commonImports
       ..args = (commonArgs
           ..addAll([
@@ -104,6 +108,7 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
           ]))
       ..doc = 'Cancel an order from a market',
       script('log')
+      ..isAsync = true
       ..imports = commonImports
       ..args = (commonArgs
           ..addAll([
@@ -111,6 +116,7 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
           ]))
       ..doc = 'Log current state of a market',
       script('replace')
+      ..isAsync = true
       ..imports = commonImports
       ..args = (commonArgs
           ..addAll([
@@ -119,8 +125,9 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
           ]))
       ..doc = 'Replace an order in a market',
       script('bootstrap_scenario_1')
+      ..isAsync = true
       ..doc = 'Creates a market, does sequence of other commands on that market'
-      ..imports = (commonImports..addAll([ 'math' ]))
+      ..imports = (commonImports..addAll([ 'math', 'async' ]))
       ..args = (commonArgs..addAll([ marketIdArg ])),
 
     ]
@@ -129,6 +136,9 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
       ..imports = [
         'convert',
         'package:redis_client/redis_client.dart',
+        'collection',
+        'async',
+        'io',
       ]
       ..parts = [
         part('requests')
@@ -141,9 +151,18 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
           ..values = [ id('log_book') ],
         ]
         ..classes = [
+          class_('request_completer')
+          ..immutable = true
+          ..members = [
+            member('request')..type = 'Request',
+            member('completer')..type = 'Completer',
+          ],
+          class_('request')
+          ..isAbstract = true,
           class_('create_market_req')
           ..jsonKeyFormat = snake
           ..immutable = true
+          ..implement = ['Request']
           ..members = [
             member('req_id')..type = 'int',
             member('user_id')..type = 'int',
@@ -159,6 +178,7 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
           ],
           class_('submit_req')
           ..jsonKeyFormat = snake
+          ..implement = ['Request']
           ..immutable = true
           ..members = [
             member('req_id')..type = 'int',
@@ -171,6 +191,7 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
           class_('cancel_req')
           ..jsonKeyFormat = snake
           ..immutable = true
+          ..implement = ['Request']
           ..members = [
             member('req_id')..type = 'int',
             member('user_id')..type = 'int',
@@ -180,6 +201,7 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
           class_('replace_req')
           ..jsonKeyFormat = snake
           ..immutable = true
+          ..implement = ['Request']
           ..members = [
             member('req_id')..type = 'int',
             member('user_id')..type = 'int',
@@ -190,6 +212,7 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
           ],
           class_('market_details_req')
           ..jsonKeyFormat = snake
+          ..implement = ['Request']
           ..immutable = true
           ..members = [
             member('req_id')..type = 'int',
@@ -210,9 +233,14 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
         part('exch_client')
         ..classes = [
           class_('exch_client')
-          ..immutable = true
           ..members = [
-            member('redis_client')..type = 'RedisClient'..access = IA,
+            member('host'),
+            member('port')..type = 'int',
+            member('publish_client')..type = 'RedisClient'..access = IA,
+            member('listener_client')..type = 'RedisClient'..access = IA,
+            member('next_req_id')..classInit = 1..access = IA,
+            member('requests')..type = 'Queue<RequestCompleter>'
+            ..access = IA..classInit = 'new Queue()',
           ]
         ],
       ]

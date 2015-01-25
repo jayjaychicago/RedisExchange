@@ -134,7 +134,7 @@ Quantity of an order
 
 final _logger = new Logger('replace');
 
-main(List<String> args) {
+main(List<String> args) async {
   Logger.root.onRecord.listen((LogRecord r) =>
       print("${r.loggerName} [${r.level}]:\t${r.message}"));
   Logger.root.level = Level.INFO;

@@ -103,7 +103,7 @@ redis port used by pub/sub
 
 final _logger = new Logger('log');
 
-main(List<String> args) {
+main(List<String> args) async {
   Logger.root.onRecord.listen((LogRecord r) =>
       print("${r.loggerName} [${r.level}]:\t${r.message}"));
   Logger.root.level = Level.INFO;
@@ -115,14 +115,14 @@ main(List<String> args) {
 
   final host = options['redis-host'];
   final port = options['redis-port'];
-  RedisClient
-    .connect('$host:$port')
-    .then((RedisClient redisClient) {
-      final client = new ExchClient(redisClient);
-      final req = new LogReq(LogType.LOG_BOOK, options['market-id']);
-      client.log(req);
-      redisClient.close();
-    });
+
+  final client = (await ExchClient.makeClient(host, port));
+  client
+  .logBook(options['market-id'])
+  .then((Object _) {
+    print('Sent');
+    client.close();
+  });
 
   // end <log main>
 

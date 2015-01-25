@@ -112,7 +112,7 @@ redis port used by pub/sub
 
 final _logger = new Logger('cancel');
 
-main(List<String> args) {
+main(List<String> args) async {
   Logger.root.onRecord.listen((LogRecord r) =>
       print("${r.loggerName} [${r.level}]:\t${r.message}"));
   Logger.root.level = Level.INFO;
@@ -124,17 +124,13 @@ main(List<String> args) {
 
   final host = options['redis-host'];
   final port = options['redis-port'];
-  RedisClient
-    .connect('$host:$port')
-    .then((RedisClient redisClient) {
-      final client = new ExchClient(redisClient);
-      final req= new CancelReq(
-        options['req-id'], options['user-id'],
-        options['market-id'], options['order-id']);
-      client.cancel(req);
-      redisClient.close();
-    });
-
+  final client = (await ExchClient.makeClient(host, port));  
+  client
+  .cancel(options['user-id'], options['market-id'], options['order-id'])
+  .then((String response) {
+    print('Response:\n$response');
+    client.close();
+  });
 
   // end <cancel main>
 

@@ -133,7 +133,7 @@ Quantity of an order
 
 final _logger = new Logger('submit');
 
-main(List<String> args) {
+main(List<String> args) async {
   Logger.root.onRecord.listen((LogRecord r) =>
       print("${r.loggerName} [${r.level}]:\t${r.message}"));
   Logger.root.level = Level.INFO;
@@ -145,19 +145,19 @@ main(List<String> args) {
 
   final host = options['redis-host'];
   final port = options['redis-port'];
-  RedisClient
-    .connect('$host:$port')
-    .then((RedisClient redisClient) {
-      final client = new ExchClient(redisClient);
-      final req= new SubmitReq(
-        options['req-id'], options['user-id'],
-        options['market-id'],
-        options['is-ask']? Side.ASK_SIDE : Side.BID_SIDE,
-        options['price'],
-        options['quantity']);
-      client.submit(req);
-      redisClient.close();
-    });
+
+  final client = (await ExchClient.makeClient(host, port));
+  client
+  .submit(
+      options['user-id'],
+      options['market-id'],
+      options['is-ask'],
+      options['price'],
+      options['quantity'])
+  .then((String response) {
+    print('Response:\n$response');
+    client.close();
+  });
 
   // end <submit main>
 

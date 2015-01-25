@@ -116,7 +116,7 @@ redis port used by pub/sub
 
 final _logger = new Logger('marketDetails');
 
-main(List<String> args) {
+main(List<String> args) async {
   Logger.root.onRecord.listen((LogRecord r) =>
       print("${r.loggerName} [${r.level}]:\t${r.message}"));
   Logger.root.level = Level.INFO;
@@ -128,20 +128,18 @@ main(List<String> args) {
 
   final host = options['redis-host'];
   final port = options['redis-port'];
-  print('Options are $options');
-  RedisClient
-    .connect('$host:$port')
-    .then((RedisClient redisClient) {
-      final client = new ExchClient(redisClient);
-      final req= new MarketDetailsReq(
-        options['req-id'],
-        options['market-id'],
-        options['include-active'],
-        options['include-dead'],
-        options['include-fills']);
-      client.marketDetails(req);
-      redisClient.close();
-    });
+  final client = (await ExchClient.makeClient(host, port));    
+
+  client
+  .marketDetails(
+      options['market-id'],
+      options['include-active'],
+      options['include-dead'],
+      options['include-fills'])
+  .then((String response) {
+    print('Response:\n$response');
+    client.close();
+  });
 
   // end <marketDetails main>
 

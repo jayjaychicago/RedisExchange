@@ -82,7 +82,29 @@ class LogType implements Comparable<LogType> {
 
 }
 
-class CreateMarketReq {
+class RequestCompleter {
+  const RequestCompleter(this.request, this.completer);
+
+  final Request request;
+  final Completer completer;
+  // custom <class RequestCompleter>
+
+  complete(String response) => completer.complete(response);
+  toString() => 'RequestCompleter for request:\n$request';
+  
+  // end <class RequestCompleter>
+}
+
+abstract class Request {
+  // custom <class Request>
+
+  int get reqId;
+
+  // end <class Request>
+}
+
+class CreateMarketReq
+  implements Request {
   const CreateMarketReq(this.reqId, this.userId, this.name, this.startTime,
     this.endTime, this.decimalShift, this.tickSize);
 
@@ -137,7 +159,8 @@ class CreateMarketReq {
 
 }
 
-class SubmitReq {
+class SubmitReq
+  implements Request {
   const SubmitReq(this.reqId, this.userId, this.marketId, this.side, this.price,
     this.quantity);
 
@@ -186,7 +209,8 @@ class SubmitReq {
 
 }
 
-class CancelReq {
+class CancelReq
+  implements Request {
   const CancelReq(this.reqId, this.userId, this.marketId, this.orderId);
 
   final int reqId;
@@ -226,7 +250,8 @@ class CancelReq {
 
 }
 
-class ReplaceReq {
+class ReplaceReq
+  implements Request {
   const ReplaceReq(this.reqId, this.userId, this.marketId, this.orderId,
     this.price, this.quantity);
 
@@ -275,7 +300,8 @@ class ReplaceReq {
 
 }
 
-class MarketDetailsReq {
+class MarketDetailsReq
+  implements Request {
   const MarketDetailsReq(this.reqId, this.marketId, this.includeActive,
     this.includeDead, this.includeFills);
 
