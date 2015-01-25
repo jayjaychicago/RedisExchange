@@ -54,13 +54,6 @@ redis port used by pub/sub
       abbr: 'P',
       allowed: null
     );
-    _parser.addOption('req-id',
-      help: '',
-      defaultsTo: '1',
-      allowMultiple: false,
-      abbr: 'r',
-      allowed: null
-    );
     _parser.addOption('user-id',
       help: '',
       defaultsTo: '1',
@@ -85,8 +78,6 @@ redis port used by pub/sub
     result['redis-host'] = argResults['redis-host'];
     result['redis-port'] = argResults['redis-port'] != null?
       int.parse(argResults['redis-port']) : null;
-    result['req-id'] = argResults['req-id'] != null?
-      int.parse(argResults['req-id']) : null;
     result['user-id'] = argResults['user-id'] != null?
       int.parse(argResults['user-id']) : null;
     result['market-id'] = argResults['market-id'] != null?

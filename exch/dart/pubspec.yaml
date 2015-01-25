@@ -2,6 +2,7 @@ name: exch_client
 version: 0.0.1
 author: Daniel Davidson <dbdavidson@yahoo.com>
 dependencies:
+  logging: "any"
 
 # custom <exch_client dependencies>
 

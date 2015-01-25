@@ -24,7 +24,7 @@ get sideArg => scriptArg('is_ask')
   ..doc = 'Is this a bid side (default) or ask side'
   ..isFlag = true..abbr = 'a';
 
-get commonArgs => [ redisHostArg, redisPort, reqIdArg, userIdArg ];
+get commonArgs => [ redisHostArg, redisPort, userIdArg ];
 get priceArg => scriptArg('price')..doc = 'Price of an order'..defaultsTo = 10000..abbr = 'p';
 get quantityArg => scriptArg('quantity')..doc = 'Quantity of an order'..defaultsTo = 100..abbr = 'q';
 
@@ -128,18 +128,25 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
       ..isAsync = true
       ..doc = 'Creates a market, does sequence of other commands on that market'
       ..imports = (commonImports..addAll([ 'math', 'async' ]))
-      ..args = (commonArgs..addAll([ marketIdArg ])),
-
+      ..args = (commonArgs..addAll(
+              [
+                marketIdArg,
+                scriptArg('log_at_end')
+                ..doc = 'If set will log market details after work complete'
+                ..isFlag = true..defaultsTo = true,
+              ])),
     ]
     ..libraries = [
       library('exch_client')
       ..imports = [
         'convert',
         'package:redis_client/redis_client.dart',
+        'package:logging/logging.dart',
         'collection',
         'async',
         'io',
       ]
+      ..includeLogger = true
       ..parts = [
         part('requests')
         ..enums = [

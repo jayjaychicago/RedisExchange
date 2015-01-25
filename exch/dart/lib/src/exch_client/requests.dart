@@ -91,7 +91,7 @@ class RequestCompleter {
 
   complete(String response) => completer.complete(response);
   toString() => 'RequestCompleter for request:\n$request';
-  
+
   // end <class RequestCompleter>
 }
 
@@ -118,6 +118,9 @@ class CreateMarketReq
   final int decimalShift;
   final int tickSize;
   // custom <class CreateMarketReq>
+
+  toString() => toJson().toString();
+
   // end <class CreateMarketReq>
 
   Map toJson() => {
@@ -171,6 +174,7 @@ class SubmitReq
   final int price;
   final int quantity;
   // custom <class SubmitReq>
+  toString() => toJson().toString();
   // end <class SubmitReq>
 
   Map toJson() => {
@@ -218,6 +222,7 @@ class CancelReq
   final int marketId;
   final int orderId;
   // custom <class CancelReq>
+  toString() => toJson().toString();
   // end <class CancelReq>
 
   Map toJson() => {
@@ -262,6 +267,7 @@ class ReplaceReq
   final int price;
   final int quantity;
   // custom <class ReplaceReq>
+  toString() => toJson().toString();
   // end <class ReplaceReq>
 
   Map toJson() => {
@@ -311,6 +317,7 @@ class MarketDetailsReq
   final bool includeDead;
   final bool includeFills;
   // custom <class MarketDetailsReq>
+  toString() => toJson().toString();
   // end <class MarketDetailsReq>
 
   Map toJson() => {
@@ -352,6 +359,7 @@ class LogReq {
   final LogType logType;
   final int marketId;
   // custom <class LogReq>
+  toString() => toJson().toString();
   // end <class LogReq>
 
   Map toJson() => {
