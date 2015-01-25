@@ -6,7 +6,7 @@ dependencies:
 # custom <exch_client dependencies>
 
   redis_client:
-    git: https://github.com/dartist/redis_client
+    git: https://github.com/patefacio/redis_client
 
   ebisu:
     git: https://github.com/patefacio/ebisu
