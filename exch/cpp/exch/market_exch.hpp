@@ -110,10 +110,10 @@ class Market_exchange {
   Cancel_result cancel(Order_id_t order_id) {
     ++market_stats_.cancels;
     bool canceled = order_book_.cancel(order_id);
-    if(canceled) {
+    if (canceled) {
       update_active();
     }
-    return canceled? Cancel_succeeded_e : Cancel_invalid_order_e;
+    return canceled ? Cancel_succeeded_e : Cancel_invalid_order_e;
   }
 
   Replace_result replace_order(Order_id_t original, Order const& order) {
