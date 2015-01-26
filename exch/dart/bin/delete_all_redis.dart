@@ -1,6 +1,4 @@
 #!/usr/bin/env dart
-/// Replace an order in a market
-
 import 'dart:io';
 import 'package:args/args.dart';
 import 'package:exch_client/exch_client.dart';
@@ -13,7 +11,7 @@ ArgParser _parser;
 //! The comment and usage associated with this script
 void _usage() {
   print('''
-Replace an order in a market
+null
 ''');
   print(_parser.getUsage());
 }
@@ -54,45 +52,6 @@ redis port used by pub/sub
       abbr: 'P',
       allowed: null
     );
-    _parser.addOption('user-id',
-      help: '',
-      defaultsTo: '1',
-      allowMultiple: false,
-      abbr: 'u',
-      allowed: null
-    );
-    _parser.addOption('market-id',
-      help: '',
-      defaultsTo: '1',
-      allowMultiple: false,
-      abbr: 'm',
-      allowed: null
-    );
-    _parser.addOption('order-id',
-      help: '',
-      defaultsTo: '1',
-      allowMultiple: false,
-      abbr: 'o',
-      allowed: null
-    );
-    _parser.addOption('price',
-      help: '''
-Price of an order
-''',
-      defaultsTo: '10000',
-      allowMultiple: false,
-      abbr: 'p',
-      allowed: null
-    );
-    _parser.addOption('quantity',
-      help: '''
-Quantity of an order
-''',
-      defaultsTo: '100',
-      allowMultiple: false,
-      abbr: 'q',
-      allowed: null
-    );
 
     /// Parse the command line options (excluding the script)
     argResults = _parser.parse(args);
@@ -103,16 +62,6 @@ Quantity of an order
     result['redis-host'] = argResults['redis-host'];
     result['redis-port'] = argResults['redis-port'] != null?
       int.parse(argResults['redis-port']) : null;
-    result['user-id'] = argResults['user-id'] != null?
-      int.parse(argResults['user-id']) : null;
-    result['market-id'] = argResults['market-id'] != null?
-      int.parse(argResults['market-id']) : null;
-    result['order-id'] = argResults['order-id'] != null?
-      int.parse(argResults['order-id']) : null;
-    result['price'] = argResults['price'] != null?
-      int.parse(argResults['price']) : null;
-    result['quantity'] = argResults['quantity'] != null?
-      int.parse(argResults['quantity']) : null;
     result['help'] = argResults['help'];
 
     return { 'options': result, 'rest': remaining };
@@ -123,9 +72,9 @@ Quantity of an order
   }
 }
 
-final _logger = new Logger('replace');
+final _logger = new Logger('deleteAllRedis');
 
-main(List<String> args) async {
+main(List<String> args) {
   Logger.root.onRecord.listen((LogRecord r) =>
       print("${r.loggerName} [${r.level}]:\t${r.message}"));
   Logger.root.level = Level.INFO;
@@ -133,26 +82,37 @@ main(List<String> args) async {
   Map options = argResults['options'];
   List positionals = argResults['rest'];
 
-  // custom <replace main>
+  // custom <deleteAllRedis main>
 
   final host = options['redis-host'];
   final port = options['redis-port'];
+
+  stdout.write('Are you sure you want to delete all redis keys? [y/n]: ');
+  String input = stdin.readLineSync();
+
   RedisClient
     .connect('$host:$port')
     .then((RedisClient redisClient) {
-      final client = new ExchClient(redisClient);
-      final req= new ReplaceReq(
-        options['req-id'], options['user-id'],
-        options['market-id'], options['order-id'],
-        options['price'], options['quantity']);
-      client.replace(req);
-      redisClient.close();
+
+      if(new RegExp(r'^(?:y|yes)$', caseSensitive:false).hasMatch(input)) {
+        final keys = [ 'CMD', 'FILLS' ];
+        print('Deleting redis keys $keys');
+        return redisClient
+          .mdel(keys)
+          .then((int deleted) {
+            print('Deleted $deleted keys');
+            redisClient.close();
+          });
+      } else {
+        print('Pheww - saved you there');
+      }
+
     });
 
-  // end <replace main>
+  // end <deleteAllRedis main>
 
 }
 
-// custom <replace global>
-// end <replace global>
+// custom <deleteAllRedis global>
+// end <deleteAllRedis global>
 

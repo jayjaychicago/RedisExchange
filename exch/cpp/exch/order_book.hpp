@@ -3,6 +3,7 @@
 
 #include "cereal/archives/json.hpp"
 #include "cereal/cereal.hpp"
+#include "cppformat/format.h"
 #include "exch/exch.hpp"
 #include "exch/fill.hpp"
 #include "fcs/timestamp/cereal.hpp"
@@ -40,7 +41,6 @@ inline void invalid_order(std::string const& order) {
 // end <FcbBeginNamespace order_book>
 
 class Fill;
-using Fill_list_t = std::vector<Fill>;
 using Price_list_t = std::vector<Price_t>;
 
 enum Order_state { Submitted_e, Active_e, Canceled_e, Filled_e };
@@ -78,55 +78,33 @@ struct Market {
 
 class Order {
  public:
-  Order(Order_id_t order_id, Timestamp_t timestamp, Side side, Price_t price,
-        Quantity_t quantity)
-      : order_id_{order_id},
+  Order(User_id_t user_id, Order_id_t order_id, Timestamp_t timestamp,
+        Side side, Price_t price, Quantity_t quantity)
+      : user_id_{user_id},
+        order_id_{order_id},
         timestamp_{timestamp},
         side_{side},
         price_{price},
         quantity_{quantity} {}
 
+  Order() {}
+
+  bool operator==(Order const& rhs) const {
+    return this == &rhs ||
+           (user_id_ == rhs.user_id_ && order_id_ == rhs.order_id_ &&
+            timestamp_ == rhs.timestamp_ && side_ == rhs.side_ &&
+            price_ == rhs.price_ && quantity_ == rhs.quantity_);
+  }
+
+  bool operator!=(Order const& rhs) const { return !(*this == rhs); }
   // custom <ClsPublic Order>
-
-  std::string to_tuple() const {
-    using namespace fcs::timestamp;
-    using namespace boost;
-    using namespace std;
-    std::stringstream out;
-    out << lexical_cast<string>(order_id_) << ':'
-        << lexical_cast<string>(ticks(timestamp_)) << ':'
-        << lexical_cast<string>(side_ == Bid_side_e ? 'B' : 'S') << ':'
-        << lexical_cast<string>(price_) << ':'
-        << lexical_cast<string>(quantity_);
-    return out.str();
-  }
-
-  static Order from_tuple(std::string const& tuple) {
-    using namespace boost;
-    using namespace fcs::timestamp;
-    char_separator<char> sep{":"};
-    tokenizer<char_separator<char> > tokens(tuple, sep);
-    boost::tokenizer<boost::char_separator<char> >::iterator it{tokens.begin()};
-
-    Order_id_t order_id;
-    long long ticks;
-    char side;
-    Quantity_t quantity;
-    Price_t price;
-
-    if (!next_token(tokens, it, order_id)) invalid_order(tuple);
-    if (!next_token(tokens, it, ticks)) invalid_order(tuple);
-    if (!next_token(tokens, it, side)) invalid_order(tuple);
-    if (!next_token(tokens, it, price)) invalid_order(tuple);
-    if (!next_token(tokens, it, quantity)) invalid_order(tuple);
-
-    return Order(order_id, Timestamp_t(Timestamp_t::time_rep_type(ticks)),
-                 side == 'B' ? Bid_side_e : Ask_side_e, price, quantity);
-  }
 
   bool is_bid() const { return side_ == Bid_side_e; }
 
   // end <ClsPublic Order>
+
+  //! getter for user_id_ (access is Ro)
+  User_id_t user_id() const { return user_id_; }
 
   //! getter for order_id_ (access is Ro)
   Order_id_t order_id() const { return order_id_; }
@@ -143,6 +121,7 @@ class Order {
   //! getter for quantity_ (access is Ro)
   Quantity_t quantity() const { return quantity_; }
   friend inline std::ostream& operator<<(std::ostream& out, Order const& item) {
+    out << '\n' << "user_id:" << item.user_id_;
     out << '\n' << "order_id:" << item.order_id_;
     out << '\n' << "timestamp:" << item.timestamp_;
     out << '\n' << "side:" << item.side_;
@@ -153,6 +132,7 @@ class Order {
 
   template <class Archive>
   void serialize(Archive& ar__) {
+    ar__(cereal::make_nvp("user_id", user_id_));
     ar__(cereal::make_nvp("order_id", order_id_));
     ar__(cereal::make_nvp("timestamp", timestamp_));
     ar__(cereal::make_nvp("side", side_));
@@ -170,7 +150,71 @@ class Order {
     serialize(ar__);
   }
 
+  std::string serialize_to_dsv() const {
+    fmt::MemoryWriter w__;
+    w__ << user_id_ << ':' << order_id_ << ':'
+        << fcs::timestamp::ticks(timestamp_) << ':' << side_ << ':' << price_
+        << ':' << quantity_;
+
+    return w__.str();
+  }
+
+  void serialize_from_dsv(std::string const& tuple__) {
+    using namespace boost;
+    char_separator<char> const sep__{":"};
+    tokenizer<char_separator<char> > tokens__(tuple__, sep__);
+    tokenizer<boost::char_separator<char> >::iterator it__{tokens__.begin()};
+
+    if (it__ != tokens__.end()) {
+      user_id_ = lexical_cast<User_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Order failed: expected user_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      order_id_ = lexical_cast<Order_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Order failed: expected order_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      if (!fcs::timestamp::convert_to_timestamp_from_ticks(*it__, timestamp_)) {
+        std::string msg{"Encountered invalid timestamp ticks:"};
+        msg += *it__;
+        throw std::logic_error(msg);
+      }
+
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Order failed: expected timestamp_");
+    }
+
+    if (it__ != tokens__.end()) {
+      side_ = Side(lexical_cast<int>(*it__));
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Order failed: expected side_");
+    }
+
+    if (it__ != tokens__.end()) {
+      price_ = lexical_cast<Price_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Order failed: expected price_");
+    }
+
+    if (it__ != tokens__.end()) {
+      quantity_ = lexical_cast<Quantity_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error("Tokenize Order failed: expected quantity_");
+    }
+  }
+
  private:
+  User_id_t user_id_{};
   Order_id_t order_id_{};
   Timestamp_t timestamp_{};
   Side side_{};
@@ -193,8 +237,8 @@ class Managed_order {
     return quantity() - filled_;
   }
 
+  User_id_t user_id() const { return order.user_id(); }
   Order_id_t order_id() const { return order.order_id(); }
-
   Side side() const { return order.side(); }
 
   void fill_quantity(Quantity_t qty) {
@@ -281,8 +325,9 @@ class Order_book {
             ++delete_to;
             // TODO: set state to dead/fully filled
           }
-          fills.emplace_back(next_fill_id(), bid.timestamp(), bid.order_id(),
-                             ask.order_id(), ask_price, matched);
+          fills.emplace_back(next_fill_id(), bid.timestamp(), bid.user_id(),
+                             bid.order_id(), ask.user_id(), ask.order_id(),
+                             ask_price, matched);
         }
       }
 
@@ -304,7 +349,7 @@ class Order_book {
       Insert_result_t insert_result{
           bids_.insert(Bids_t::value_type(bid_price, Managed_order_list_t()))};
 
-      Managed_order_list_t& orders{insert_result.first->second};
+      Managed_order_list_t& orders = insert_result.first->second;
       add_order(managed_bid);
       orders.push_back(managed_bid);
 
@@ -340,8 +385,9 @@ class Order_book {
           Quantity_t matched = std::min(bid_quantity, remaining);
           bid.fill_quantity(matched);
           managed_ask.fill_quantity(matched);
-          fills.emplace_back(next_fill_id(), ask.timestamp(), bid.order_id(),
-                             ask.order_id(), bid_price, matched);
+          fills.emplace_back(next_fill_id(), ask.timestamp(), bid.user_id(),
+                             bid.order_id(), ask.user_id(), ask.order_id(),
+                             bid_price, matched);
           if (bid.remaining_quantity() == 0) {
             remove_active_order(bid);
             ++delete_to;
@@ -367,7 +413,7 @@ class Order_book {
       Insert_result_t insert_result{
           asks_.insert(Asks_t::value_type(ask_price, Managed_order_list_t()))};
 
-      Managed_order_list_t& orders = {insert_result.first->second};
+      Managed_order_list_t& orders = insert_result.first->second;
       add_order(managed_ask);
       orders.push_back(managed_ask);
 
@@ -399,7 +445,7 @@ class Order_book {
     bool result{false};
     auto orders_at_price = map.find(price);
     if (orders_at_price != map.end()) {
-      Managed_order_list_t& orders{orders_at_price->second};
+      Managed_order_list_t& orders = orders_at_price->second;
       result = remove_order_from_list(orders, order_id);
       if (result && orders.empty()) {
         map.erase(price);
@@ -466,6 +512,12 @@ class Order_book {
   }
 
   // end <ClsPublic Order_book>
+
+  //! getter for bids_ (access is Ro)
+  Bids_t const& bids() const { return bids_; }
+
+  //! getter for asks_ (access is Ro)
+  Asks_t const& asks() const { return asks_; }
 
  private:
   // custom <ClsPrivate Order_book>

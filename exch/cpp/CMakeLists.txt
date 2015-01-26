@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.0)
 
 include(CheckCXXCompilerFlag)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -9,10 +9,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-set(BOOST_INCLUDEDIR /usr/local/include/boost)
-set(BOOST_LIBRARYDIR /usr/local/lib)
-
-find_package(Boost 1.56.0 COMPONENTS program_options system thread
+find_package(Boost 1.54.0 COMPONENTS program_options system thread
 # custom <boost lib components>
   date_time
   regex
@@ -63,8 +60,8 @@ add_executable(exch_server
 target_link_libraries(exch_server
 # custom <exch_server libs>
   format
-  libuv.dylib
-  hiredis.dylib
+  uv
+  hiredis
   ${Boost_REGEX_LIBRARY}
 # end <exch_server libs>
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
@@ -105,3 +102,6 @@ target_link_libraries(test_redis_support
 )
 
 add_test(test_redis_support test_redis_support)
+
+
+

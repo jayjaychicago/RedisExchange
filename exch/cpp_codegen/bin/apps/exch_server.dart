@@ -11,7 +11,6 @@ Server supporting dynamic creation of markets exchanges
     'exch/exchange.hpp',
     'exch/redis_support.hpp',
     'boost/asio/ip/address.hpp',
-    'redisclient/redisclient.h',
     'hiredis/adapters/libuv.h',
   ]
   ..requiredLibs = [ 'format', 'boost_system', 'boost_thread' ]

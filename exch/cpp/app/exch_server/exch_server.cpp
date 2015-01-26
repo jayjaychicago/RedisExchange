@@ -1,7 +1,6 @@
 #include "exch/exchange.hpp"
 #include "exch/redis_support.hpp"
 #include "hiredis/adapters/libuv.h"
-#include "redisclient/redisclient.h"
 #include <boost/asio/ip/address.hpp>
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -101,6 +100,9 @@ int main(int argc, char** argv) {
         options.redis_address().c_str(), options.redis_port());
     redisLibuvAttach(writeContext, loop);
 
+    // redisSetTcpNoDelay(listenContext);
+    // redisSetTcpNoDelay(writeContext);
+
     Redis_bootstrap_listener bootstrap_redis_listener{*bootstrapContext};
     Redis_listener redis_listener{*listenContext};
     Redis_persister redis_persister{*writeContext};
@@ -108,8 +110,8 @@ int main(int argc, char** argv) {
     auto config = Exchange_config{};
 
     Exchange exchange{config, bootstrap_redis_listener, redis_listener,
-        redis_persister, redis_publisher,
-        [&]() { uv_stop(loop); }};
+                      redis_persister, redis_publisher,
+                      [&]() { uv_stop(loop); }};
 
     std::cout << "Running with: " << config
               << "\nExchange server waiting for requests" << std::endl;

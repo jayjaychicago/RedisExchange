@@ -82,7 +82,29 @@ class LogType implements Comparable<LogType> {
 
 }
 
-class CreateMarketReq {
+class RequestCompleter {
+  const RequestCompleter(this.request, this.completer);
+
+  final Request request;
+  final Completer completer;
+  // custom <class RequestCompleter>
+
+  complete(String response) => completer.complete(response);
+  toString() => 'RequestCompleter for request:\n$request';
+
+  // end <class RequestCompleter>
+}
+
+abstract class Request {
+  // custom <class Request>
+
+  int get reqId;
+
+  // end <class Request>
+}
+
+class CreateMarketReq
+  implements Request {
   const CreateMarketReq(this.reqId, this.userId, this.name, this.startTime,
     this.endTime, this.decimalShift, this.tickSize);
 
@@ -96,6 +118,9 @@ class CreateMarketReq {
   final int decimalShift;
   final int tickSize;
   // custom <class CreateMarketReq>
+
+  toString() => toJson().toString();
+
   // end <class CreateMarketReq>
 
   Map toJson() => {
@@ -137,7 +162,8 @@ class CreateMarketReq {
 
 }
 
-class SubmitReq {
+class SubmitReq
+  implements Request {
   const SubmitReq(this.reqId, this.userId, this.marketId, this.side, this.price,
     this.quantity);
 
@@ -148,6 +174,7 @@ class SubmitReq {
   final int price;
   final int quantity;
   // custom <class SubmitReq>
+  toString() => toJson().toString();
   // end <class SubmitReq>
 
   Map toJson() => {
@@ -186,7 +213,8 @@ class SubmitReq {
 
 }
 
-class CancelReq {
+class CancelReq
+  implements Request {
   const CancelReq(this.reqId, this.userId, this.marketId, this.orderId);
 
   final int reqId;
@@ -194,6 +222,7 @@ class CancelReq {
   final int marketId;
   final int orderId;
   // custom <class CancelReq>
+  toString() => toJson().toString();
   // end <class CancelReq>
 
   Map toJson() => {
@@ -226,7 +255,8 @@ class CancelReq {
 
 }
 
-class ReplaceReq {
+class ReplaceReq
+  implements Request {
   const ReplaceReq(this.reqId, this.userId, this.marketId, this.orderId,
     this.price, this.quantity);
 
@@ -237,6 +267,7 @@ class ReplaceReq {
   final int price;
   final int quantity;
   // custom <class ReplaceReq>
+  toString() => toJson().toString();
   // end <class ReplaceReq>
 
   Map toJson() => {
@@ -275,12 +306,60 @@ class ReplaceReq {
 
 }
 
+class MarketDetailsReq
+  implements Request {
+  const MarketDetailsReq(this.reqId, this.marketId, this.includeActive,
+    this.includeDead, this.includeFills);
+
+  final int reqId;
+  final int marketId;
+  final bool includeActive;
+  final bool includeDead;
+  final bool includeFills;
+  // custom <class MarketDetailsReq>
+  toString() => toJson().toString();
+  // end <class MarketDetailsReq>
+
+  Map toJson() => {
+      "req_id": ebisu_utils.toJson(reqId),
+      "market_id": ebisu_utils.toJson(marketId),
+      "include_active": ebisu_utils.toJson(includeActive),
+      "include_dead": ebisu_utils.toJson(includeDead),
+      "include_fills": ebisu_utils.toJson(includeFills),
+  };
+
+  static MarketDetailsReq fromJson(Object json) {
+    if(json == null) return null;
+    if(json is String) {
+      json = convert.JSON.decode(json);
+    }
+    assert(json is Map);
+    return new MarketDetailsReq._fromJsonMapImpl(json);
+  }
+
+  MarketDetailsReq._fromJsonMapImpl(Map jsonMap) :
+    reqId = jsonMap["req_id"],
+    marketId = jsonMap["market_id"],
+    includeActive = jsonMap["include_active"],
+    includeDead = jsonMap["include_dead"],
+    includeFills = jsonMap["include_fills"];
+
+  MarketDetailsReq._copy(MarketDetailsReq other) :
+    reqId = other.reqId,
+    marketId = other.marketId,
+    includeActive = other.includeActive,
+    includeDead = other.includeDead,
+    includeFills = other.includeFills;
+
+}
+
 class LogReq {
   const LogReq(this.logType, this.marketId);
 
   final LogType logType;
   final int marketId;
   // custom <class LogReq>
+  toString() => toJson().toString();
   // end <class LogReq>
 
   Map toJson() => {

@@ -14,6 +14,7 @@ final exch = lib('exch')
     ..customBlocks = [ fcbEndNamespace ]
     ..forwardDecls = [
       forwardDecl('Order'),
+      forwardDecl('Fill'),
     ]
     ..enums = [
       enum_('side')
@@ -45,6 +46,12 @@ final exch = lib('exch')
         'replace_invalid_order_details',
       ],
 
+      enum_('market_details_result')
+      ..values = [
+        'market_details_succeeded',
+        'market_details_invalid_market',
+      ],
+
       enum_('log_type')
       ..descr = 'For requests to server for specific log messages'
       ..values = [
@@ -60,6 +67,7 @@ final exch = lib('exch')
       'Fill_id_t = int64_t',
       'Order_id_list_t = std::vector< Order_id_t >',
       'Order_list_t = std::vector< Order >',
+      'Fill_list_t = std::vector< Fill >',
       'Timestamp_t = fcs::timestamp::Timestamp_t',
       'Order_update_t = std::pair< Order_id_t, Order >',
       'Order_update_list_t = std::vector< Order_update_t >',
@@ -67,22 +75,31 @@ final exch = lib('exch')
     ],
 
     header('fill')
-    ..includes = [ 'fcs/timestamp/conversion.hpp', ]
+    ..includes = [
+      'fcs/utils/streamers/streamers.hpp',
+      'fcs/timestamp/conversion.hpp',
+    ]
     ..classes = [
       class_('fill')
-      ..immutable = true
+      ..opEqual
+      ..defaultCtor
       ..streamable = true
+      ..usesStreamers = true
       ..serializers = [ cereal(), dsv() ]
       ..customBlocks = [ clsPublic ]
       ..defaultCtor.useDefault = true
       ..members = [
         member('fill_id')..type = 'Fill_id_t',
         member('timestamp')..type = 'Timestamp_t',
+        member('buyer_id')..type = 'User_id_t',
         member('bid_id')..type = 'Order_id_t',
+        member('seller_id')..type = 'User_id_t',
         member('ask_id')..type = 'Order_id_t',
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
-      ],
+      ]
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
     ],
 
     header('order_book')
@@ -91,7 +108,6 @@ final exch = lib('exch')
       forwardDecl('Fill'),
     ]
     ..usings = [
-      'Fill_list_t = std::vector<Fill>',
       'Price_list_t = std::vector<Price_t>',
     ]
     ..includes = [
@@ -131,11 +147,14 @@ final exch = lib('exch')
       ],
 
       class_('order')
+      ..opEqual
+      ..defaultCtor
       ..streamable = true
-      ..serializers = [ cereal() ]
       ..customBlocks = [ clsPublic ]
+      ..serializers = [ cereal(), dsv() ]
       ..memberCtors = [ memberCtor()..allMembers = true ]
       ..members = [
+        member('user_id')..type = 'User_id_t'..access = ro,
         member('order_id')..type = 'Order_id_t'..access = ro,
         member('timestamp')..type = 'Timestamp_t'..access = ro,
         member('side')..type = 'Side'..serializeInt = true..access = ro,
@@ -167,8 +186,8 @@ final exch = lib('exch')
         'Active_map_t = std::map< Order_id_t, Price_t >',
       ]
       ..members = [
-        member('bids')..type = 'Bids_t',
-        member('asks')..type = 'Asks_t',
+        member('bids')..type = 'Bids_t'..access = ro..byRef = true,
+        member('asks')..type = 'Asks_t'..access = ro..byRef = true,
         member('next_fill_id')..init = 0,
         member('active_map')..type = 'Active_map_t',
       ],
@@ -225,7 +244,11 @@ final exch = lib('exch')
     ],
     header('requests')
     ..descr = 'Requests types available to clients of the exchange'
-    ..includes = [ 'fcs/timestamp/conversion.hpp', ]
+    ..includes = [
+      'cereal/types/vector.hpp',
+      'fcs/timestamp/conversion.hpp',
+      'fcs/utils/streamers/vector.hpp',
+    ]
     ..classes = [
       ////////////////////////////////////////////////////////////
       // Requests/Responses
@@ -235,7 +258,6 @@ final exch = lib('exch')
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
@@ -244,19 +266,24 @@ final exch = lib('exch')
         member('end_time')..type = 'Timestamp_t',
         member('decimal_shift')..type = 'int',
         member('tick_size')..type = 'int',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+
       class_('create_market_resp')
       ..opEqual
-      ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
         member('market_id')..type = 'Market_id_t',
         member('result')..type = 'Create_market_result',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
 
       class_('submit_req')
       ..opEqual
@@ -264,7 +291,6 @@ final exch = lib('exch')
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
-      ..immutable = true
       ..members = [
         member('timestamp')..type = 'Timestamp_t'
         ..initText = 'Timestamp_t::time_rep_type(0LL)'
@@ -276,53 +302,64 @@ final exch = lib('exch')
         member('side')..type = 'Side'..serializeInt = true,
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+
       class_('submit_resp')
       ..opEqual
       ..defaultCtor.useDefault = true
+      ..memberCtors.add(memberCtor(['req_id', 'user_id', 'market_id', 'result']))
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
         member('market_id')..type = 'Market_id_t',
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Submit_result',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
 
       class_('cancel_req')
       ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
         member('market_id')..type = 'Market_id_t',
         member('order_id')..type = 'Order_id_t',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+
       class_('cancel_resp')
       ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
         member('market_id')..type = 'Market_id_t',
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Cancel_result',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
 
       class_('replace_req')
       ..opEqual
       ..defaultCtor.useDefault = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
@@ -330,13 +367,17 @@ final exch = lib('exch')
         member('order_id')..type = 'Order_id_t',
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+
       class_('replace_resp')
       ..opEqual
       ..defaultCtor.useDefault = true
+      ..memberCtors.add(memberCtor(['req_id', 'user_id', 'market_id', 'result']))
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('user_id')..type = 'User_id_t',
@@ -344,19 +385,61 @@ final exch = lib('exch')
         member('canceled_order_id')..type = 'Order_id_t',
         member('order_id')..type = 'Order_id_t',
         member('result')..type = 'Replace_result',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+
+
+      class_('market_details_req')
+      ..opEqual
+      ..defaultCtor.useDefault = true
+      ..streamable = true
+      ..serializers = [ cereal(), dsv() ]
+      ..members = [
+        member('req_id')..type = 'Req_id_t',
+        member('market_id')..type = 'Market_id_t',
+        member('include_active')..type = 'bool',
+        member('include_dead')..type = 'bool',
+        member('include_fills')..type = 'bool',
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+
+      class_('market_details_resp')
+      ..opEqual
+      ..memberCtors.add(memberCtor(['req_id', 'market_id', 'result']))
+      ..defaultCtor.useDefault = true
+      ..streamable = true
+      ..usesStreamers = true
+      ..serializers = [ cereal() ]
+      ..members = [
+        member('req_id')..type = 'Req_id_t',
+        member('market_id')..type = 'Market_id_t',
+        member('bids')..type = 'Order_list_t',
+        member('asks')..type = 'Order_list_t',
+        member('dead')..type = 'Order_list_t',
+        member('fills')..type = 'Fill_list_t',
+        member('result')..type = 'Market_details_result',
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+
 
       class_('log_req')
       ..opEqual
       ..defaultCtor.useDefault = true
-      ..immutable = true
       ..streamable = true
       ..serializers = [ cereal(), dsv() ]
       ..members = [
         member('log_type')..type = 'Log_type'..serializeInt = true,
         member('market_id')..type = 'Market_id_t',
-      ],
-
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
     ],
     header('events')
     ..descr = 'Events published by the exchange'
@@ -367,40 +450,37 @@ final exch = lib('exch')
       class_('market_created_evt')
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
 
       class_('top_of_book_evt')
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+
       class_('book_update_evt')
       ..streamable = true
       ..serializers = [ cereal() ]
-      ..immutable = true
       ..members = [
         member('market_id')..type = 'Market_id_t',
         member('side')..type = 'Side'..serializeInt = true,
         member('price')..type = 'Price_t',
         member('quantity')..type = 'Quantity_t',
         member('top_price')..type = 'Price_t',
-      ],
-      class_('trade_evt')
-      ..streamable = true
-      ..serializers = [ cereal() ]
-      ..immutable = true
-      ..members = [
-        member('market_id')..type = 'Market_id_t',
-        member('side')..type = 'Side'..serializeInt = true,
-        member('quantity')..type = 'Quantity_t',
-        member('price')..type = 'Price_t',
-        member('net_volume')..type = 'Quantity_t',
-      ],
+      ]
+      ..defaultCtor
+      ..members.forEach((m) => m.access = ro)
+      ..addFullMemberCtor(),
+
     ],
 
     header('interfaces')
@@ -415,6 +495,9 @@ final exch = lib('exch')
       'Submit_handler_t = boost::function< void(const Submit_req & req) >',
       'Cancel_handler_t = boost::function< void(const Cancel_req & req) >',
       'Replace_handler_t = boost::function< void(const Replace_req & req) >',
+
+      'Market_details_handler_t = boost::function< void(const Market_details_req & req) >',
+
       'Log_handler_t = boost::function< void(const Log_req & req) >',
       'Halt_handler_t = boost::function< void() >',
     ]
@@ -522,11 +605,15 @@ Subscribes to client requests on redis pub/sub channels'''
       ..bases = [ base('Request_listener') ]
       ..members = [
         member('context')..type = 'redisAsyncContext'..refType = ref,
+
         member('create_market_handler')..type = 'Create_market_handler_t',
         member('submit_handler')..type = 'Submit_handler_t',
         member('cancel_handler')..type = 'Cancel_handler_t',
         member('replace_handler')..type = 'Replace_handler_t',
         member('log_handler')..type = 'Log_handler_t',
+
+        member('market_details_handler')..type = 'Market_details_handler_t',
+
         member('halt_handler')..type = 'Halt_handler_t',
       ],
 
@@ -561,9 +648,19 @@ middleware'''
       ..customBlocks = [ clsPublic, clsPrivate ]
       ..bases = [ base('Market_publisher') ]
       ..members = [
+
         member('context')..type = 'redisAsyncContext'..refType = ref,
-        member('resp_key')..init = 'EX_RESP'..type = 'char const*'..isStatic = true..isConstExpr = true,
-        member('event_key')..init = 'EX_EVENT'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('create_resp_key')..init = 'EX_RESP:M'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('submit_resp_key')..init = 'EX_RESP:S'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('cancel_resp_key')..init = 'EX_RESP:C'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('replace_resp_key')..init = 'EX_RESP:R'..type = 'char const*'..isStatic = true..isConstExpr = true,
+
+        member('market_details_resp_key')..init = 'EX_RESP:D'..type = 'char const*'..isStatic = true..isConstExpr = true,
+
+        member('market_created_event_key')..init = 'EX_EVT:M'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('top_event_key')..init = 'EX_EVT:T'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('book_event_key')..init = 'EX_EVT:B'..type = 'char const*'..isStatic = true..isConstExpr = true,
+        member('fill_event_key')..init = 'EX_EVT:F'..type = 'char const*'..isStatic = true..isConstExpr = true,
       ],
 
     ],

@@ -54,13 +54,6 @@ redis port used by pub/sub
       abbr: 'P',
       allowed: null
     );
-    _parser.addOption('req-id',
-      help: '',
-      defaultsTo: '1',
-      allowMultiple: false,
-      abbr: 'r',
-      allowed: null
-    );
     _parser.addOption('user-id',
       help: '',
       defaultsTo: '1',
@@ -85,8 +78,6 @@ redis port used by pub/sub
     result['redis-host'] = argResults['redis-host'];
     result['redis-port'] = argResults['redis-port'] != null?
       int.parse(argResults['redis-port']) : null;
-    result['req-id'] = argResults['req-id'] != null?
-      int.parse(argResults['req-id']) : null;
     result['user-id'] = argResults['user-id'] != null?
       int.parse(argResults['user-id']) : null;
     result['market-id'] = argResults['market-id'] != null?
@@ -103,7 +94,7 @@ redis port used by pub/sub
 
 final _logger = new Logger('log');
 
-main(List<String> args) {
+main(List<String> args) async {
   Logger.root.onRecord.listen((LogRecord r) =>
       print("${r.loggerName} [${r.level}]:\t${r.message}"));
   Logger.root.level = Level.INFO;
@@ -115,14 +106,14 @@ main(List<String> args) {
 
   final host = options['redis-host'];
   final port = options['redis-port'];
-  RedisClient
-    .connect('$host:$port')
-    .then((RedisClient redisClient) {
-      final client = new ExchClient(redisClient);
-      final req = new LogReq(LogType.LOG_BOOK, options['market-id']);
-      client.log(req);
-      redisClient.close();
-    });
+
+  final client = (await ExchClient.makeClient(host, port));
+  client
+  .logBook(options['market-id'])
+  .then((Object _) {
+    print('Sent');
+    client.close();
+  });
 
   // end <log main>
 
@@ -130,3 +121,4 @@ main(List<String> args) {
 
 // custom <log global>
 // end <log global>
+

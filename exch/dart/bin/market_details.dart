@@ -1,6 +1,4 @@
 #!/usr/bin/env dart
-/// Replace an order in a market
-
 import 'dart:io';
 import 'package:args/args.dart';
 import 'package:exch_client/exch_client.dart';
@@ -13,7 +11,7 @@ ArgParser _parser;
 //! The comment and usage associated with this script
 void _usage() {
   print('''
-Replace an order in a market
+null
 ''');
   print(_parser.getUsage());
 }
@@ -28,6 +26,27 @@ Map _parseArgs(List<String> args) {
   _parser = new ArgParser();
   try {
     /// Fill in expectations of the parser
+    _parser.addFlag('include-active',
+      help: '''
+Include active orders in response
+''',
+      abbr: null,
+      defaultsTo: true
+    );
+    _parser.addFlag('include-dead',
+      help: '''
+Include dead orders in response
+''',
+      abbr: null,
+      defaultsTo: true
+    );
+    _parser.addFlag('include-fills',
+      help: '''
+Include fills in response
+''',
+      abbr: null,
+      defaultsTo: true
+    );
     _parser.addFlag('help',
       help: '''
 Display this help screen
@@ -54,11 +73,11 @@ redis port used by pub/sub
       abbr: 'P',
       allowed: null
     );
-    _parser.addOption('user-id',
+    _parser.addOption('req-id',
       help: '',
       defaultsTo: '1',
       allowMultiple: false,
-      abbr: 'u',
+      abbr: 'r',
       allowed: null
     );
     _parser.addOption('market-id',
@@ -66,31 +85,6 @@ redis port used by pub/sub
       defaultsTo: '1',
       allowMultiple: false,
       abbr: 'm',
-      allowed: null
-    );
-    _parser.addOption('order-id',
-      help: '',
-      defaultsTo: '1',
-      allowMultiple: false,
-      abbr: 'o',
-      allowed: null
-    );
-    _parser.addOption('price',
-      help: '''
-Price of an order
-''',
-      defaultsTo: '10000',
-      allowMultiple: false,
-      abbr: 'p',
-      allowed: null
-    );
-    _parser.addOption('quantity',
-      help: '''
-Quantity of an order
-''',
-      defaultsTo: '100',
-      allowMultiple: false,
-      abbr: 'q',
       allowed: null
     );
 
@@ -103,16 +97,13 @@ Quantity of an order
     result['redis-host'] = argResults['redis-host'];
     result['redis-port'] = argResults['redis-port'] != null?
       int.parse(argResults['redis-port']) : null;
-    result['user-id'] = argResults['user-id'] != null?
-      int.parse(argResults['user-id']) : null;
+    result['req-id'] = argResults['req-id'] != null?
+      int.parse(argResults['req-id']) : null;
     result['market-id'] = argResults['market-id'] != null?
       int.parse(argResults['market-id']) : null;
-    result['order-id'] = argResults['order-id'] != null?
-      int.parse(argResults['order-id']) : null;
-    result['price'] = argResults['price'] != null?
-      int.parse(argResults['price']) : null;
-    result['quantity'] = argResults['quantity'] != null?
-      int.parse(argResults['quantity']) : null;
+    result['include-active'] = argResults['include-active'];
+    result['include-dead'] = argResults['include-dead'];
+    result['include-fills'] = argResults['include-fills'];
     result['help'] = argResults['help'];
 
     return { 'options': result, 'rest': remaining };
@@ -123,7 +114,7 @@ Quantity of an order
   }
 }
 
-final _logger = new Logger('replace');
+final _logger = new Logger('marketDetails');
 
 main(List<String> args) async {
   Logger.root.onRecord.listen((LogRecord r) =>
@@ -133,26 +124,27 @@ main(List<String> args) async {
   Map options = argResults['options'];
   List positionals = argResults['rest'];
 
-  // custom <replace main>
+  // custom <marketDetails main>
 
   final host = options['redis-host'];
   final port = options['redis-port'];
-  RedisClient
-    .connect('$host:$port')
-    .then((RedisClient redisClient) {
-      final client = new ExchClient(redisClient);
-      final req= new ReplaceReq(
-        options['req-id'], options['user-id'],
-        options['market-id'], options['order-id'],
-        options['price'], options['quantity']);
-      client.replace(req);
-      redisClient.close();
-    });
+  final client = (await ExchClient.makeClient(host, port));    
 
-  // end <replace main>
+  client
+  .marketDetails(
+      options['market-id'],
+      options['include-active'],
+      options['include-dead'],
+      options['include-fills'])
+  .then((String response) {
+    print('Response:\n$response');
+    client.close();
+  });
+
+  // end <marketDetails main>
 
 }
 
-// custom <replace global>
-// end <replace global>
+// custom <marketDetails global>
+// end <marketDetails global>
 

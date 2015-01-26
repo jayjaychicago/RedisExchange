@@ -54,13 +54,6 @@ redis port used by pub/sub
       abbr: 'P',
       allowed: null
     );
-    _parser.addOption('req-id',
-      help: '',
-      defaultsTo: '1',
-      allowMultiple: false,
-      abbr: 'r',
-      allowed: null
-    );
     _parser.addOption('user-id',
       help: '',
       defaultsTo: '1',
@@ -127,8 +120,6 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
     result['redis-host'] = argResults['redis-host'];
     result['redis-port'] = argResults['redis-port'] != null?
       int.parse(argResults['redis-port']) : null;
-    result['req-id'] = argResults['req-id'] != null?
-      int.parse(argResults['req-id']) : null;
     result['user-id'] = argResults['user-id'] != null?
       int.parse(argResults['user-id']) : null;
     result['market-name'] = argResults['market-name'];
@@ -150,7 +141,7 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
 
 final _logger = new Logger('create');
 
-main(List<String> args) {
+main(List<String> args) async {
   Logger.root.onRecord.listen((LogRecord r) =>
       print("${r.loggerName} [${r.level}]:\t${r.message}"));
   Logger.root.level = Level.INFO;
@@ -166,20 +157,15 @@ main(List<String> args) {
   final startTime = DateTime.parse(options['start-time']);
   final endTime = DateTime.parse(options['end-time']);
 
-  RedisClient
-    .connect('$host:$port')
-    .then((RedisClient redisClient) {
-      final client = new ExchClient(redisClient);
-      final req = createMarketReq(
-        options['req-id'], options['user-id'],
-        options['market-name'],
-        startTime,
-        endTime,
-        options['decimal-shift'], options['tick-size']);
-      client.createMarket(req);
-      redisClient.close();
-    });
-
+  final client = (await ExchClient.makeClient(host, port));
+  client
+    .createMarket(options['user-id'], options['market-name'],
+        startTime, endTime, decimalShift : options['decimal-shift'],
+        tickSize : options['tick-size'])
+  .then((String response) {
+    print('Response:\n$response');
+    client.close();
+  });
 
   // end <create main>
 
