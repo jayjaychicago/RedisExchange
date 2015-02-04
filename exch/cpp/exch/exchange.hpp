@@ -147,8 +147,9 @@ class Exchange {
     req.timestamp(timestamp);
 
     if (market == nullptr) {
-      market_publisher_.publish(
-          Submit_resp(req.req_id(), req.user_id(), req.market_id(), result));
+      market_publisher_.publish(Submit_resp(req.req_id(), req.user_id(),
+                                            req.market_id(),
+                                            Submit_invalid_market_e));
       return;
     } else {
       submitted_id = market->next_order_id();
