@@ -6,8 +6,6 @@
 #include <iostream>
 #include <string>
 
-namespace fcs {
-namespace app {
 namespace exch_server {
 struct Program_options {
   Program_options(int argc, char** argv) {
@@ -30,8 +28,7 @@ struct Program_options {
     Server supporting dynamic creation of markets exchanges
 
 
-    AllowedOptions
-    )";
+    AllowedOptions)";
 
     static options_description options{descr};
 
@@ -72,11 +69,9 @@ struct Program_options {
 };
 
 }  // namespace exch_server
-}  // namespace app
-}  // namespace fcs
 
 int main(int argc, char** argv) {
-  using namespace fcs::app::exch_server;
+  using namespace exch_server;
   try {
     Program_options options = {argc, argv};
     if (options.help()) {

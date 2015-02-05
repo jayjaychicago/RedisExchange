@@ -14,6 +14,7 @@ Server supporting dynamic creation of markets exchanges
     'hiredis/adapters/libuv.h',
   ]
   ..requiredLibs = [ 'format', 'boost_system', 'boost_thread' ]
+  ..namespace = namespace([ 'exch_server' ])
   ..args = [
 
     arg('redis_address')

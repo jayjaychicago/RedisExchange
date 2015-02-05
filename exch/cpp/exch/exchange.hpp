@@ -147,8 +147,9 @@ class Exchange {
     req.timestamp(timestamp);
 
     if (market == nullptr) {
-      market_publisher_.publish(
-          Submit_resp(req.req_id(), req.user_id(), req.market_id(), result));
+      market_publisher_.publish(Submit_resp(req.req_id(), req.user_id(),
+                                            req.market_id(),
+                                            Submit_invalid_market_e));
       return;
     } else {
       submitted_id = market->next_order_id();
@@ -224,12 +225,12 @@ class Exchange {
         if (req.include_active()) {
           Order_book const &book{market->order_book()};
           for (auto const &managed_order_key : book.bids()) {
-            for(auto const& managed_order : managed_order_key.second) {
+            for (auto const &managed_order : managed_order_key.second) {
               bids.push_back(managed_order.order);
             }
           }
           for (auto const &managed_order_key : book.asks()) {
-            for(auto const& managed_order : managed_order_key.second) {
+            for (auto const &managed_order : managed_order_key.second) {
               asks.push_back(managed_order.order);
             }
           }
