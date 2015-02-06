@@ -1,0 +1,1 @@
+/opt/bitnami/frameworks/smarty/libs/instabid.php

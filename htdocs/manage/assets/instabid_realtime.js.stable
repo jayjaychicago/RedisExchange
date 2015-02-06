@@ -1,0 +1,64 @@
+    var instabid_listen = [];
+    var sockjs;
+    var protocol = location.protocol;
+    if (protocol !== "http:" && protocol !== "https:") {
+        protocol = "http:";
+    }
+    var script = document.createElement("script");
+    script.onload = foo;
+    script.src = protocol + "//cdn.jsdelivr.net/sockjs/0.3.4/sockjs.min.js";
+    //script.src = protocol + "//cdn.sockjs.org/sockjs-0.3.min.js";
+    document.head.appendChild(script);
+
+function foo() {
+	sockjs = connectSocket();
+}
+
+function connectSocket() {
+   var sockjs_url = "http://www.instabid.io:8880/channel"; 
+      sockjs = new SockJS(sockjs_url);
+
+    var print = function(message){
+	alert(message);
+    }
+
+    sockjs.onopen    = function(e) {
+	instabid_feed(sockjs);
+    }
+
+    sockjs.onmessage = function(e) {
+   /*             var oldCountAsk = countAsk;
+                var oldCountBid = countBid;
+                if (oldCountAsk == 0 ) {location.reload();};
+                if (oldCountBid == 0 ) {location.reload();}; */
+                print(e.data); 
+    }
+    sockjs.onclose   = function()  {alert('Connexion lost');};
+
+    return sockjs;
+
+}
+
+function getDepthUpdate(exchange, product, level, sockjsIn) {
+	console.log('requesting ALLDEPTH for exchange ' +  exchange + ' product' + product + ' level: ' + level );
+	sockjsIn.send('{"event":"AllDepth","channel_id":"' + exchange + ':' + product + '","nick":"admin"}' );
+}
+
+function instabid_feed(sockjs1) {
+	if (instabid_listen.length > 0) {
+		for (var i = 0, len = instabid_listen.length; i < len; i++) {
+			feedRequestType = instabid_listen[i][0];
+		switch (feedRequestType) {
+			case "ALLDEPTH":
+				getDepthUpdate(instabid_listen[i][1],instabid_listen[i][2],instabid_listen[i][3],sockjs1);
+				break;
+			default:
+				console.log('Did not recognize the Instabid feed request');
+		}
+		}
+	}
+}
+
+function instabid_feed_depth(exchange, product, level) {
+	instabid_listen.push(['ALLDEPTH', exchange, product, level]);
+}
