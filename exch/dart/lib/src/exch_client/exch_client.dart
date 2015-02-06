@@ -85,12 +85,10 @@ class ExchClient {
 
   marketDetails(int marketId, int userId, DateTime startTime, DateTime endTime,
       bool includeActive, bool includeDead, bool includeFills) async {
-    print('wtf mkt($marketId) user($userId) start($startTime) end($endTime)');
     final request = new MarketDetailsReq(_reqId, marketId, userId,
         dateTimeToTicks(startTime), dateTimeToTicks(endTime), includeActive,
         includeDead, includeFills);
     final result = addRequestCompleter(request);
-    print("The request is:\n ${convert.JSON.encode(request.toJson())}");
     stdout.flush();
     await _publishClient.publish(
         "EX_REQ:D", convert.JSON.encode(request.toJson()));
