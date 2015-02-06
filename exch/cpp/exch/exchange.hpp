@@ -127,7 +127,7 @@ class Exchange {
     }
   }
 
-  void process_fills(Market_exchange_naked_ptr market) {
+  void persist_and_publish_fills(Market_exchange_naked_ptr market) {
     if (market) {
       auto const &fills = market->fills();
       for (auto const &fill : fills) {
@@ -143,8 +143,11 @@ class Exchange {
     Submit_result result;
     Order_id_t submitted_id{};
 
-    auto timestamp = fcs::timestamp::current_time();
-    req.timestamp(timestamp);
+    auto timestamp =
+        is_live_ ? fcs::timestamp::current_time() : req.timestamp();
+    if (is_live_) {
+      req.timestamp(timestamp);
+    }
 
     if (market == nullptr) {
       market_publisher_.publish(Submit_resp(req.req_id(), req.user_id(),
@@ -160,11 +163,13 @@ class Exchange {
 
     if (is_live_) {
       request_persister_.persist(req);
-      process_fills(market);
-
+      persist_and_publish_fills(market);
       market_publisher_.publish(Submit_resp(
           req.req_id(), req.user_id(), req.market_id(), submitted_id, result));
     }
+
+    market->roll_fills();
+
   }
 
   void cancel(Cancel_req const &req) {
@@ -209,6 +214,34 @@ class Exchange {
     }
   }
 
+  template <typename T>
+  void matching_orders(T const &order_map, User_id_t user_id, Timestamp_t start,
+                       Timestamp_t end, Order_list_t &matched) {
+    for (auto const &entry : order_map) {
+      for (auto const &managed_order : entry.second) {
+        auto const &order = managed_order.order;
+        auto ts = order.timestamp();
+        if ((user_id == 0 || user_id == order.user_id()) &&
+            (start == end || (ts >= start && ts < end))) {
+          matched.push_back(managed_order.order);
+        }
+      }
+    }
+  }
+
+  void matching_fills(Fill_list_t const &processed, User_id_t user_id,
+                      Timestamp_t start, Timestamp_t end,
+                      Fill_list_t &matched) {
+    for (auto const &fill : processed) {
+      auto ts = fill.timestamp();
+      if ((user_id == 0 ||
+           (fill.buyer_id() == user_id || fill.seller_id() == user_id)) &&
+          (start == end || (ts >= start && ts < end))) {
+        matched.push_back(fill);
+      }
+    }
+  }
+
   void market_details(Market_details_req const &req) {
     Market_exchange_naked_ptr market{get_market(req.market_id())};
     Market_details_result result;
@@ -220,26 +253,25 @@ class Exchange {
       if (is_live_) {
         Order_list_t bids;
         Order_list_t asks;
-        Fill_list_t const noFills;
+        Fill_list_t fills;
 
         if (req.include_active()) {
           Order_book const &book{market->order_book()};
-          for (auto const &managed_order_key : book.bids()) {
-            for (auto const &managed_order : managed_order_key.second) {
-              bids.push_back(managed_order.order);
-            }
-          }
-          for (auto const &managed_order_key : book.asks()) {
-            for (auto const &managed_order : managed_order_key.second) {
-              asks.push_back(managed_order.order);
-            }
-          }
+          matching_orders(book.bids(), req.user_id(), req.start_time(),
+                          req.end_time(), bids);
+          matching_orders(book.asks(), req.user_id(), req.start_time(),
+                          req.end_time(), asks);
+        }
+
+        if (req.include_fills()) {
+          matching_fills(market->processed_fills(), req.user_id(),
+                         req.start_time(), req.end_time(), fills);
         }
 
         market_publisher_.publish(
             Market_details_resp(req.req_id(), req.market_id(), bids, asks,
                                 Order_list_t(),  // dead TBD
-                                noFills, Market_details_succeeded_e));
+                                fills, Market_details_succeeded_e));
       }
     }
   }

@@ -8,17 +8,15 @@ class ExchClient {
   ExchClient._ctor(this._publishClient, this._listenerClient);
 
   _startListening() {
-    final channels = [
-      'EX_RESP*',
-    ];
+    final channels = ['EX_RESP*',];
 
     return _listenerClient.psubscribe(channels, onMessage);
   }
 
   onMessage(Receiver receiver) {
     receiver.receiveMultiBulkStrings().then((List message) {
-      if(_requests.length > 0) {
-        if(_logger.level <= Level.FINEST) {
+      if (_requests.length > 0) {
+        if (_logger.level <= Level.FINEST) {
           _logger.finest('Processed $message');
         }
         RequestCompleter completer = _requests.removeFirst();
@@ -29,9 +27,7 @@ class ExchClient {
     });
   }
 
-  _nextResponse() async {
-
-  }
+  _nextResponse() async {}
 
   static makeClient(String host, int port) async {
     final connectString = '$host:$port';
@@ -50,7 +46,7 @@ class ExchClient {
   get _reqId => _nextReqId++;
 
   addRequestCompleter(Request request) {
-    if(_logger.level <= Level.FINEST) {
+    if (_logger.level <= Level.FINEST) {
       _logger.finest('Adding completer: $request');
     }
     final completer = new Completer();
@@ -58,10 +54,11 @@ class ExchClient {
     return completer.future;
   }
 
-  createMarket(int userId, String marketName,
-      DateTime startTime, DateTime endTime, {int decimalShift : 2, int tickSize : 1}) async {
-    final request = createMarketReq(_reqId, userId, marketName,
-        startTime, endTime, decimalShift, tickSize);
+  createMarket(
+      int userId, String marketName, DateTime startTime, DateTime endTime,
+      {int decimalShift: 2, int tickSize: 1}) async {
+    final request = createMarketReq(
+        _reqId, userId, marketName, startTime, endTime, decimalShift, tickSize);
     final result = addRequestCompleter(request);
     await _publishClient.publish("EX_REQ:M", convert.JSON.encode(request));
     return result;
@@ -69,8 +66,7 @@ class ExchClient {
 
   submit(int userId, int marketId, bool isAsk, int price, int quantity) async {
     final request = new SubmitReq(_reqId, userId, marketId,
-        isAsk? Side.ASK_SIDE : Side.BID_SIDE,
-        price, quantity);
+        isAsk ? Side.ASK_SIDE : Side.BID_SIDE, price, quantity);
     final result = addRequestCompleter(request);
     await _publishClient.publish("EX_REQ:S", convert.JSON.encode(request));
     return result;
@@ -79,19 +75,25 @@ class ExchClient {
   cancel(int userId, int marketId, int orderId) async {
     final request = new CancelReq(_reqId, userId, marketId, orderId);
     final result = addRequestCompleter(request);
-    await _publishClient.publish("EX_REQ:C", convert.JSON.encode(request.toJson()));
+    await _publishClient.publish(
+        "EX_REQ:C", convert.JSON.encode(request.toJson()));
     return result;
   }
 
   replace(ReplaceReq req) =>
-    _publishClient.publish("EX_REQ:R",
-        convert.JSON.encode(req.toJson()));
+      _publishClient.publish("EX_REQ:R", convert.JSON.encode(req.toJson()));
 
-  marketDetails(int marketId, bool includeActive, bool includeDead, bool includeFills) async {
-    final request = new MarketDetailsReq(
-        _reqId, marketId, includeActive, includeDead, includeFills);
+  marketDetails(int marketId, int userId, DateTime startTime, DateTime endTime,
+      bool includeActive, bool includeDead, bool includeFills) async {
+    print('wtf mkt($marketId) user($userId) start($startTime) end($endTime)');
+    final request = new MarketDetailsReq(_reqId, marketId, userId,
+        dateTimeToTicks(startTime), dateTimeToTicks(endTime), includeActive,
+        includeDead, includeFills);
     final result = addRequestCompleter(request);
-    await _publishClient.publish("EX_REQ:D", convert.JSON.encode(request.toJson()));
+    print("The request is:\n ${convert.JSON.encode(request.toJson())}");
+    stdout.flush();
+    await _publishClient.publish(
+        "EX_REQ:D", convert.JSON.encode(request.toJson()));
     return result;
   }
 
@@ -102,7 +104,6 @@ class ExchClient {
 
   halt() => _publishClient.publish("EX_REQ:H", "Halt");
 
-
   // end <class ExchClient>
   RedisClient _publishClient;
   RedisClient _listenerClient;
@@ -110,4 +111,13 @@ class ExchClient {
   Queue<RequestCompleter> _requests = new Queue();
 }
 // custom <part exch_client>
+
+dateTimeToTicks(DateTime dt) =>
+    210866803200000000 + dt.millisecondsSinceEpoch * 1000;
+
+CreateMarketReq createMarketReq(int reqId, int userId, String name,
+    DateTime startTime, DateTime endTime, int decimalShift, int tickSize) =>
+        new CreateMarketReq(reqId, userId, name, dateTimeToTicks(startTime),
+            dateTimeToTicks(endTime), decimalShift, tickSize);
+
 // end <part exch_client>

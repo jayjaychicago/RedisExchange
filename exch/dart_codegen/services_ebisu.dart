@@ -1,5 +1,6 @@
 import "dart:io";
 import "package:path/path.dart" as path;
+import "package:ebisu/ebisu.dart";
 import "package:ebisu/ebisu_dart_meta.dart";
 import "package:logging/logging.dart";
 import "package:id/id.dart";
@@ -39,6 +40,8 @@ void main() {
   String here = path.absolute(Platform.script.path);
   _topDir = path.join(path.dirname(path.dirname(here)), 'dart');
 
+  useDartFormatter = true;
+
   System exchClient = system('exch_client')
     ..includeHop = true
     ..rootPath = '$_topDir'
@@ -56,6 +59,15 @@ void main() {
       ..imports = commonImports
       ..args = [
         redisHostArg, redisPort, reqIdArg, marketIdArg,
+        scriptArg('user_id')..type = ArgType.INT..abbr = 'u'..defaultsTo = 0,
+        scriptArg('start_time')
+        ..doc = 'Start time for filtering (inclusive): '
+        ..abbr = 's'
+        ..defaultsTo = '2000-01-01 00:00:00',
+        scriptArg('end_time')
+        ..doc = 'End time for filtering (exclusive): '
+        ..abbr = 'e'
+        ..defaultsTo = '2100-01-01 00:00:00',
         scriptArg('include_active')..doc = 'Include active orders in response'
         ..isFlag = true..defaultsTo = true,
         scriptArg('include_dead')..doc = 'Include dead orders in response'
@@ -224,6 +236,13 @@ dimes (i.e. 100.07 is not valid but 100.05 is)
           ..members = [
             member('req_id')..type = 'int',
             member('market_id')..type = 'int',
+            member('user_id')..type = 'int',
+            member('start_time')
+            ..doc = 'seconds since epoch indicating start time'
+            ..type = 'int',
+            member('end_time')
+            ..doc = 'seconds since epoch indicating end time'
+            ..type = 'int',
             member('include_active')..type = 'bool',
             member('include_dead')..type = 'bool',
             member('include_fills')..type = 'bool',

@@ -12,9 +12,11 @@ Server supporting dynamic creation of markets exchanges
     'exch/redis_support.hpp',
     'boost/asio/ip/address.hpp',
     'hiredis/adapters/libuv.h',
+    'stdexcept',
   ]
   ..requiredLibs = [ 'format', 'boost_system', 'boost_thread' ]
   ..namespace = namespace([ 'exch_server' ])
+  ..customBlocks = [ fcbPreNamespace ]
   ..args = [
 
     arg('redis_address')

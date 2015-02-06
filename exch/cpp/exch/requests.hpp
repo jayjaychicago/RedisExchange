@@ -891,10 +891,14 @@ class Replace_resp {
 
 class Market_details_req {
  public:
-  Market_details_req(Req_id_t req_id, Market_id_t market_id,
+  Market_details_req(Req_id_t req_id, Market_id_t market_id, User_id_t user_id,
+                     Timestamp_t start_time, Timestamp_t end_time,
                      bool include_active, bool include_dead, bool include_fills)
       : req_id_{req_id},
         market_id_{market_id},
+        user_id_{user_id},
+        start_time_{start_time},
+        end_time_{end_time},
         include_active_{include_active},
         include_dead_{include_dead},
         include_fills_{include_fills} {}
@@ -904,6 +908,8 @@ class Market_details_req {
   bool operator==(Market_details_req const& rhs) const {
     return this == &rhs ||
            (req_id_ == rhs.req_id_ && market_id_ == rhs.market_id_ &&
+            user_id_ == rhs.user_id_ && start_time_ == rhs.start_time_ &&
+            end_time_ == rhs.end_time_ &&
             include_active_ == rhs.include_active_ &&
             include_dead_ == rhs.include_dead_ &&
             include_fills_ == rhs.include_fills_);
@@ -918,6 +924,15 @@ class Market_details_req {
   //! getter for market_id_ (access is Ro)
   Market_id_t market_id() const { return market_id_; }
 
+  //! getter for user_id_ (access is Ro)
+  User_id_t user_id() const { return user_id_; }
+
+  //! getter for start_time_ (access is Ro)
+  Timestamp_t start_time() const { return start_time_; }
+
+  //! getter for end_time_ (access is Ro)
+  Timestamp_t end_time() const { return end_time_; }
+
   //! getter for include_active_ (access is Ro)
   bool include_active() const { return include_active_; }
 
@@ -930,6 +945,9 @@ class Market_details_req {
                                          Market_details_req const& item) {
     out << '\n' << "req_id:" << item.req_id_;
     out << '\n' << "market_id:" << item.market_id_;
+    out << '\n' << "user_id:" << item.user_id_;
+    out << '\n' << "start_time:" << item.start_time_;
+    out << '\n' << "end_time:" << item.end_time_;
     out << '\n' << "include_active:" << item.include_active_;
     out << '\n' << "include_dead:" << item.include_dead_;
     out << '\n' << "include_fills:" << item.include_fills_;
@@ -940,6 +958,9 @@ class Market_details_req {
   void serialize(Archive& ar__) {
     ar__(cereal::make_nvp("req_id", req_id_));
     ar__(cereal::make_nvp("market_id", market_id_));
+    ar__(cereal::make_nvp("user_id", user_id_));
+    ar__(cereal::make_nvp("start_time", start_time_));
+    ar__(cereal::make_nvp("end_time", end_time_));
     ar__(cereal::make_nvp("include_active", include_active_));
     ar__(cereal::make_nvp("include_dead", include_dead_));
     ar__(cereal::make_nvp("include_fills", include_fills_));
@@ -957,7 +978,9 @@ class Market_details_req {
 
   std::string serialize_to_dsv() const {
     fmt::MemoryWriter w__;
-    w__ << req_id_ << ':' << market_id_ << ':' << include_active_ << ':'
+    w__ << req_id_ << ':' << market_id_ << ':' << user_id_ << ':'
+        << fcs::timestamp::ticks(start_time_) << ':'
+        << fcs::timestamp::ticks(end_time_) << ':' << include_active_ << ':'
         << include_dead_ << ':' << include_fills_;
 
     return w__.str();
@@ -983,6 +1006,41 @@ class Market_details_req {
     } else {
       throw std::logic_error(
           "Tokenize Market_details_req failed: expected market_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      user_id_ = lexical_cast<User_id_t>(*it__);
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Market_details_req failed: expected user_id_");
+    }
+
+    if (it__ != tokens__.end()) {
+      if (!fcs::timestamp::convert_to_timestamp_from_ticks(*it__,
+                                                           start_time_)) {
+        std::string msg{"Encountered invalid timestamp ticks:"};
+        msg += *it__;
+        throw std::logic_error(msg);
+      }
+
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Market_details_req failed: expected start_time_");
+    }
+
+    if (it__ != tokens__.end()) {
+      if (!fcs::timestamp::convert_to_timestamp_from_ticks(*it__, end_time_)) {
+        std::string msg{"Encountered invalid timestamp ticks:"};
+        msg += *it__;
+        throw std::logic_error(msg);
+      }
+
+      ++it__;
+    } else {
+      throw std::logic_error(
+          "Tokenize Market_details_req failed: expected end_time_");
     }
 
     if (it__ != tokens__.end()) {
@@ -1013,6 +1071,26 @@ class Market_details_req {
  private:
   Req_id_t req_id_{};
   Market_id_t market_id_{};
+  /**
+   If non-0 filters by user id
+  */
+  User_id_t user_id_{};
+  /**
+   Lower bound (inclusive) of time for orders/fills returned. This
+   represents a filter on returned orders. Only orders within
+   (start_time, end_time] are returned. Similarly only fills within
+   (start_time, end_time] are returned. Note: with this setup for a
+   market spanning multiple days a query on a day might return fills on
+   that day for orders happening on a prior day. The prior day orders
+   associated with the fill will not be returned.
+
+   Note if end_time equals start_time all orders are returned
+  */
+  Timestamp_t start_time_{};
+  /**
+   Upper bound (exclusive) of time for orders/fills returned
+  */
+  Timestamp_t end_time_{};
   bool include_active_{};
   bool include_dead_{};
   bool include_fills_{};

@@ -301,6 +301,7 @@ class Order_book {
     }
 
     Managed_order managed_bid{bid};
+    Timestamp_t timestamp = bid.timestamp();
     auto const bid_price = managed_bid.price();
 
     Asks_t::iterator it{asks_.begin()};
@@ -325,7 +326,7 @@ class Order_book {
             ++delete_to;
             // TODO: set state to dead/fully filled
           }
-          fills.emplace_back(next_fill_id(), bid.timestamp(), bid.user_id(),
+          fills.emplace_back(next_fill_id(), timestamp, bid.user_id(),
                              bid.order_id(), ask.user_id(), ask.order_id(),
                              ask_price, matched);
         }
@@ -367,6 +368,7 @@ class Order_book {
     }
     Managed_order managed_ask{ask};
     auto const ask_price = managed_ask.price();
+    Timestamp_t timestamp = ask.timestamp();
 
     Bids_t::iterator it{bids_.begin()};
     Bids_t::iterator end{bids_.end()};
@@ -385,7 +387,7 @@ class Order_book {
           Quantity_t matched = std::min(bid_quantity, remaining);
           bid.fill_quantity(matched);
           managed_ask.fill_quantity(matched);
-          fills.emplace_back(next_fill_id(), ask.timestamp(), bid.user_id(),
+          fills.emplace_back(next_fill_id(), timestamp, bid.user_id(),
                              bid.order_id(), ask.user_id(), ask.order_id(),
                              bid_price, matched);
           if (bid.remaining_quantity() == 0) {
