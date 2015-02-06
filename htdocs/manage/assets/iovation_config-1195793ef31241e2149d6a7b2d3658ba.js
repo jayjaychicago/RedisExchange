@@ -1,0 +1,1 @@
+var io_bbout_element_id="io_blackbox",io_install_stm=!1,io_exclude_stm=12,io_install_flash=!1,io_enable_rip=!0;

@@ -1,0 +1,1 @@
+forever start -a -l foreverAPI.log -o outAPI.log -e errAPI.log ./bin/www
