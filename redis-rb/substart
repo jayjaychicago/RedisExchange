@@ -1,0 +1,1 @@
+/opt/bitnami/ruby/bin/ruby /home/bitnami/redis-rb/sub.rb start
