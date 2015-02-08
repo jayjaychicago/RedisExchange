@@ -9,7 +9,7 @@ session_start();
 //ini_set('display_errors',1);
 //error_reporting(E_ALL);
 
-        include "/home/bitnami/htdocs/manage/assets/instabid.php";
+        include "instabid.php";
         $email = $_SESSION["email"];
  //       if ($email == "") { header( 'Location: /register.php' ) ; }
 ?>
@@ -63,7 +63,7 @@ fillToTable("<?php echo $_GET["exchange"] ;?>", "<?php echo $_GET["product"] ;?>
 		</div><!-- /.container-fluid -->
 	</nav>
 
-<?php include "/home/bitnami/htdocs/lumino/sidebar.php" ;?>
+<?php include "sidebar.php" ;?>
 		
 	<div class="col-sm-9 col-sm-offset-3 col-lg-10 col-lg-offset-2 main">			
 		<div class="row">

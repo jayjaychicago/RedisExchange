@@ -9,7 +9,7 @@ session_start();
 //ini_set('display_errors',1);
 //error_reporting(E_ALL);
 
-        include "/home/bitnami/htdocs/manage/assets/instabid.php";
+        include "instabid.php";
         $email = $_SESSION["email"];
  //       if ($email == "") { header( 'Location: /register.php' ) ; }
 $exchangeName = $_SESSION["exchangeName"];
