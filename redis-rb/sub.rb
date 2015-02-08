@@ -573,11 +573,13 @@ def match_and_adjust_depth(newOrderNum, newSide, newQty, newPrice2, newObjectId,
 	return allFillsJson
 end
 
-$redis = Redis.new(:timeout => 0, :port => 6379)
+#$redis = Redis.new(:timeout => 0, :port => 6379)
+$redis = Redis.new()
 $redis.select('15')
 
 #$redis2 = Redis.connect
-$redis2 = Redis.new(:timeout => 0, :port => 6379)
+#$redis2 = Redis.new(:timeout => 0, :port => 6379)
+$redis2 = Redis.new()
 $redis2.select('15')
 
 #$redis.psubscribe() do |on|
