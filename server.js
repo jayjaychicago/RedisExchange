@@ -7,7 +7,7 @@ var express = require('express');
 var http = require('http');
 var path = require('path');
 var util = require('util');
-var redis   = require('redis');
+var redis   = require('redis'); 
 
 var app = express();
 var sockjs = require('sockjs');
