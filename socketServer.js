@@ -3,7 +3,7 @@
 // Distributed under the Apache License, Version 2.0
 // https://github.com/wrecker/sockjs-dynamic-channels
 
-var express = require('express');
+var express = require('express'); 
 var http = require('http');
 var path = require('path');
 var util = require('util');
