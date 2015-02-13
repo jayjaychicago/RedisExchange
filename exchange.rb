@@ -1,4 +1,4 @@
-require 'rubygems'
+#require 'rubygems'
 require 'redis'
 require 'json'
 require 'daemons'
@@ -379,9 +379,9 @@ def change_position(object, price, qty_change, user)
 end
 
 def fill(newObjectId, priceMatch, qtyMatch, buyUserId, sellUserId)
-
+	puts "Filling: " + newObjectId.to_s + " price: " + priceMatch.to_s + " qtyMatch: " + qtyMatch.to_s + " buyUserId: " + buyUserId.to_s + " seller: " + sellUserId 
         $redis2.publish('FillFeed:' + newObjectId + ':USER:' + buyUserId, '{"obj":"' + newObjectId +'","msgType":"F","V":"' + qtyMatch.to_s + '","P":"' + priceMatch.to_s + '","B":"' + buyUserId.to_s + '","S":"' + sellUserId.to_s + '"}')
-        puts "PUBLISH " + 'FillFeed:' + newObjectId + ':USER:' + buyUserId + ': {"obj":"' + newObjectId +'","msgType":"F","V":"' + qtyMatch.to_s + '","P":"' + priceMatch.to_s + '"}'
+        #puts "PUBLISH " + 'FillFeed:' + newObjectId + ':USER:' + buyUserId + ': {"obj":"' + newObjectId +'","msgType":"F","V":"' + qtyMatch.to_s + '","P":"' + priceMatch.to_s + '"}'
         #$redis2.publish('FillFeed:' + newObjectId + ':USER:' + sellUserId , '{"obj":"' + newObjectId +'","msgType":"F","V":"' + qtyMatch.to_s + '","P":"' + (-1*priceMatch.to_f).to_s + '","B":"' + buyUserId.to_s + '","S":"' + sellUserId.to_s + '"}')
 
 	timestampFill = Time.now.utc
@@ -397,6 +397,9 @@ def fill(newObjectId, priceMatch, qtyMatch, buyUserId, sellUserId)
 	#formattedTimestampFill = timestampFill.year.to_s + timestampFill.month.to_s + timestampFill.day.to_s + timestampFill.hour.to_s + timestampFill.min.to_s + timestampFill.sec.to_s + timestampFill.usec.to_s
 	formattedTimestampFill = format('%02d', timestampFill.year.to_s[2,3]) + format('%02d', timestampFill.month.to_s) + format('%02d', timestampFill.day.to_s) + format('%02d', timestampFill.hour.to_s) + format('%02d', timestampFill.min.to_s) + format('%02d', timestampFill.sec.to_s) + format('%05d', timestampFill.usec.to_s[0,4]) 
     	$redis2.zadd(newObjectId + ':FILLS', formattedTimestampFill, newFillNum)
+	$redis2.zadd(newObjectId + ':FILLS:BYUSER:' + buyUserId.to_s, formattedTimestampFill, newFillNum)
+	$redis2.zadd(newObjectId + ':FILLS:BYUSER:' + sellUserId.to_s, formattedTimestampFill, newFillNum)
+
 
 	# hourly and daily data
         formattedTimestampFillByHour = format('%02d', timestampFill.year.to_s[2,3]) + format('%02d', timestampFill.month.to_s) + format('%02d', timestampFill.day.to_s) + format('%02d', timestampFill.hour.to_s)
@@ -469,10 +472,12 @@ def fill(newObjectId, priceMatch, qtyMatch, buyUserId, sellUserId)
                 end
         end
 
+	return newFillNum
 
 end
 
 def match_and_adjust_depth(newOrderNum, newSide, newQty, newPrice2, newObjectId, reverseTimestamp, newUserId)
+	#puts "Matching: " + newObjectId.to_s
 	newPrice = newPrice2.to_f.abs
 	newQtyFilled = 0
 	#puts "newPrice2 is: " + newPrice2.to_s
@@ -503,6 +508,9 @@ def match_and_adjust_depth(newOrderNum, newSide, newQty, newPrice2, newObjectId,
 		#puts "yeah! I found some matching orders"
 		i = 0
 		imax = matchingOldOrders.count
+		jsonI = 0
+		newFillJson = ""
+		allFillsJson = ""
 		while (i < imax and newQtyFilled<newQty) do
 			oldFullOrderNum = matchingOldOrders[i]
 			oldShortOrderNum = matchingOldOrders[i][matchingOldOrders[i].index("ORD")+3,matchingOldOrders[i].size]
@@ -511,6 +519,7 @@ def match_and_adjust_depth(newOrderNum, newSide, newQty, newPrice2, newObjectId,
 			i = i + 1
 			matchingSingleOldOrder = $redis2.hmget(newObjectId + ':ORDER:DETAILS:' + oldShortOrderNum, 'qty', 'qtyfilled', 'userid')
 			if matchingSingleOldOrder.count != 0 then
+				puts "found the details of my matching order"
 				oldQty = matchingSingleOldOrder[0].to_i
 				oldQtyFilled = matchingSingleOldOrder[1].to_i
 				oldUserId = matchingSingleOldOrder[2].to_s
@@ -528,10 +537,16 @@ def match_and_adjust_depth(newOrderNum, newSide, newQty, newPrice2, newObjectId,
 				else
 					#puts "We have a fill or a partial fill"
 					if newSide == "B" then
-						fill(newObjectId, oldPrice, qtyMatch, newUserId, oldUserId)	
+						newFillNum = fill(newObjectId, oldPrice, qtyMatch, newUserId, oldUserId)	
 					else
-						fill(newObjectId, oldPrice, qtyMatch, oldUserId, newUserId)	
+						newFillNum = fill(newObjectId, oldPrice, qtyMatch, oldUserId, newUserId)	
 					end
+					newFillJson = '{"fillNum":"' + newFillNum.to_s + '", "product":"' + newObjectId.to_s + '","price":"' + oldPrice.abs.to_s + '","qty":"' + qtyMatch.to_s + '","user1":"' + newUserId.to_s + '","user2":"' + oldUserId.to_s + '"}'
+					if jsonI != 0 
+						allFillsJson = allFillsJson + ' , '
+					end
+					jsonI = jsonI + 1
+					allFillsJson = allFillsJson + newFillJson
 					newQtyFilled = newQtyFilled+qtyMatch
 					oldQtyFilled = oldQtyFilled+qtyMatch
 					$redis2.hset(newObjectId + ':ORDER:DETAILS:' + newOrderNum, 'qtyfilled', newQtyFilled)
@@ -553,20 +568,22 @@ def match_and_adjust_depth(newOrderNum, newSide, newQty, newPrice2, newObjectId,
 
 		end
 	end
-
-
+	
+	allFillsJson = '{"fillCount":"' + jsonI.to_s + '","fills":[' + allFillsJson.to_s + ']}'
+	return allFillsJson
 end
 
-$redis = Redis.new(:timeout => 0)
+$redis = Redis.new(:timeout => 0, :port => 6379)
 $redis.select('15')
 
-$redis2 = Redis.connect
+#$redis2 = Redis.connect
+$redis2 = Redis.new(:timeout => 0, :port => 6379)
 $redis2.select('15')
 
 #$redis.psubscribe() do |on|
 #end
 
-$redis.psubscribe('ORDERS:*', 'PrivateMessageIN:*', 'CANCELS:*') do |on|
+$redis.psubscribe('ORDERS:*', 'PrivateMessageIN:*', 'CANCELS:*', 'GETDEPTH:*', 'GETORDER:*', 'GETFILL:*') do |on|
 
   on.pmessage do |pattern, event, msg|
 
@@ -660,6 +677,155 @@ $redis.psubscribe('ORDERS:*', 'PrivateMessageIN:*', 'CANCELS:*') do |on|
         userId = data['userId']
 	cancel(object,oId,volCancel,userId)
 
+  elsif (pattern == 'GETDEPTH:*')
+	data = JSON.parse(msg)
+	newConn = data['conn']
+	productName = data['productName']
+	exchangeName = data['exchangeName']
+	level = data['level']
+
+	depthGridS = $redis2.ZRANGEBYSCORE(exchangeName + ':' + productName + ':DEPTHS', "-INF", "0", 'WITHSCORES')
+	depthGridB = $redis2.ZREVRANGEBYSCORE(exchangeName + ':' + productName + ':DEPTHS', "+INF", "0", 'WITHSCORES')
+	depthFeedback = '{"msgType":"GETDEPTH", "SELLDEPTHS":['
+        if depthGridS.count != 0 then
+                # no previous depth found
+		#depthGridS.each { |x| puts $redis2.get(exchangeName + ':' + productName + ':DEPTH:QTY:' + x.to_s) }
+		i = 0
+		while (i<depthGridS.count)
+			if (i % 2 == 0)
+				if (i != 0) then
+					depthFeedback = depthFeedback + ","
+				end
+				depthNum = depthGridS[i]	
+				#puts "Num: " + depthNum.to_s
+				depthQty = $redis2.get(exchangeName + ':' + productName + ':DEPTH:QTY:' + depthNum.to_s)
+				#puts "Qty: " + depthQty #$redis2.get(exchangeName + ':' + productName + ':DEPTH:QTY:' + depthNum.to_s)
+				depthFeedback = depthFeedback + '{"NUM":"' + depthNum.to_s + '","QTY":"' + depthQty.to_s +  '", '
+			else
+				depthPrice = depthGridS[i]
+				#puts "Price: " + depthPrice.to_s
+				depthFeedback = depthFeedback + '"PRICE":"' + depthPrice.to_s + '"}'
+			end
+			i = i + 1
+		end
+	end
+	depthFeedback = depthFeedback + "]"
+	depthFeedback = depthFeedback + ', "BUYDEPTHS":['
+	if depthGridB.count != 0 then
+                # no previous depth found
+                #depthGridS.each { |x| puts $redis2.get(exchangeName + ':' + productName + ':DEPTH:QTY:' + x.to_s) }
+                i = 0
+                while (i<depthGridB.count)
+                        if (i % 2 == 0)
+                                if (i != 0) then
+                                        depthFeedback = depthFeedback + ","
+                                end
+                                depthNum = depthGridB[i]        
+                                #puts "Num: " + depthNum.to_s
+                                depthQty = $redis2.get(exchangeName + ':' + productName + ':DEPTH:QTY:' + depthNum.to_s)
+                                #puts "Qty: " + depthQty #$redis2.get(exchangeName + ':' + productName + ':DEPTH:QTY:' + depthNum.to_s)
+                                depthFeedback = depthFeedback + '{"NUM":"' + depthNum.to_s + '","QTY":"' + depthQty.to_s +  '", '
+                        else
+                                depthPrice = depthGridB[i]
+                                #puts "Price: " + depthPrice.to_s
+                                depthFeedback = depthFeedback + '"PRICE":"' + depthPrice.to_s + '"}'
+                        end
+                        i = i + 1
+                end
+        end
+	depthFeedback = depthFeedback + '] }'
+	#puts depthFeedback
+	$redis2.publish('PrivateMessageOUT:' + newConn, depthFeedback)
+
+  elsif (pattern == 'GETORDER:*')
+        data = JSON.parse(msg)
+        newConn = data['conn']
+        productName = data['productName']
+        exchangeName = data['exchangeName']
+        level = data['level']
+	user = data['user']
+
+        orderGridS = $redis2.ZREVRANGEBYSCORE(exchangeName + ':' + productName + ':ORDERS:BYUSER:' + user, "+INF", "-INF", 'WITHSCORES')
+        orderFeedback = '{"msgType":"GETORDER", "ORDERS":['
+        if orderGridS.count != 0 then
+                # no previous order found
+                #orderGridS.each { |x| puts $redis2.get(exchangeName + ':' + productName + ':DEPTH:QTY:' + x.to_s) }
+                i = 0
+                while (i<orderGridS.count)
+                        if (i % 2 == 0)
+                                if (i != 0) then
+                                        orderFeedback = orderFeedback + ","
+                                end
+                                orderNum = orderGridS[i]
+                                #puts "Num: " + orderNum.to_s
+                                orderDetails = $redis2.hmget(exchangeName + ':' + productName + ':ORDER:DETAILS:' + orderNum.to_s, 'qty', 'qtyfilled','price') 
+				if orderDetails.count != 0 then
+					orderQty = orderDetails[0].to_i
+					orderQtyFilled = orderDetails[1].to_i
+					orderPrice = orderDetails[2].to_f
+				end
+                                #puts "Qty: " + orderQty #$redis2.get(exchangeName + ':' + productName + ':DEPTH:QTY:' + orderNum.to_s)
+                                orderFeedback = orderFeedback + '{"NUM":"' + orderNum.to_s + '","QTY":"' + orderQty.to_s +  '", "QTYFILLED":"' + orderQtyFilled.to_s + '", "PRICE":"' + orderPrice.to_s + '", '
+                        else
+                                orderTimeStamp = orderGridS[i]
+                                #puts "Price: " + orderPrice.to_s
+                                orderFeedback = orderFeedback + '"TIMESTAMP":"' + orderTimeStamp.to_s + '"}'
+                        end
+                        i = i + 1
+                end
+        end
+        orderFeedback = orderFeedback + '] }'
+        #puts orderFeedback
+        $redis2.publish('PrivateMessageOUT:' + newConn, orderFeedback)
+
+  elsif (pattern == 'GETFILL:*')
+        data = JSON.parse(msg)
+        newConn = data['conn']
+        productName = data['productName']
+        exchangeName = data['exchangeName']
+        level = data['level']
+        user = data['user']
+
+        fillFeedback = '{"msgType":"GETFILL", "FILLS":['
+        fillGridS = $redis2.ZREVRANGEBYSCORE(exchangeName + ':' + productName + ':FILLS:BYUSER:' + user, "+INF", "-INF", 'WITHSCORES')
+	hadBuyers = 0
+        if fillGridS.count != 0 then
+		hadBuyers = 1
+                # no previous order found
+                #orderGridS.each { |x| puts $redis2.get(exchangeName + ':' + productName + ':DEPTH:QTY:' + x.to_s) }
+                i = 0
+                while (i<fillGridS.count)
+                        if (i % 2 == 0)
+                                if (i != 0) then
+                                        fillFeedback = fillFeedback + ","
+                                end
+                                fillNum = fillGridS[i]
+                                #puts "Num: " + orderNum.to_s
+                                fillDetails = $redis2.hmget(exchangeName + ':' + productName + ':FILLS:DETAILS:' + fillNum.to_s, 'qty_match', 'price_match', 'buy_user_id', 'sell_user_id','object_id')
+				#puts 'HMGET ' + exchangeName + ':' + productName + ':FILLS:DETAILS:' + fillNum.to_s + ' qty_match ' + 'price_match ' + 'buy_user_id ' + 'sell_user_id ' + 'object_id'
+                                if fillDetails.count != 0 then
+                                        fillQty = fillDetails[0].to_i
+                                        fillPrice = fillDetails[1].to_f
+                                        fillBuyer = fillDetails[2].to_s
+                                        fillSeller = fillDetails[3].to_s
+                                        fillProduct = fillDetails[4].to_s
+                                end
+                                #puts "Qty: " + orderQty #$redis2.get(exchangeName + ':' + productName + ':DEPTH:QTY:' + orderNum.to_s)
+                                fillFeedback = fillFeedback + '{"NUM":"' + fillNum.to_s + '","QTY":"' + fillQty.to_s +  '", "PRICE":"' + fillPrice.to_s + '", "BUYER":"' + fillBuyer.to_s + '", "SELLER":"' + fillSeller.to_s + '", "PRODUCT":"' + fillProduct.to_s + '", '
+                        else
+                                fillTimeStamp = fillGridS[i]
+                                #puts "Price: " + orderPrice.to_s
+                                fillFeedback = fillFeedback + '"TIMESTAMP":"' + fillTimeStamp.to_s + '"}'
+                        end
+                        i = i + 1
+                end
+        end
+
+
+        fillFeedback = fillFeedback + '] }'
+        #puts fillFeedback
+        $redis2.publish('PrivateMessageOUT:' + newConn, fillFeedback)
+
   elsif (pattern == 'ORDERS:*')
 	#on.pmessage do |pattern, event, msg|
 	#puts "====== RECEIVED NEW ORDER =================="
@@ -680,6 +846,12 @@ $redis.psubscribe('ORDERS:*', 'PrivateMessageIN:*', 'CANCELS:*') do |on|
 	newQty = data['qty'].to_i
 	newType = data['type']
 	newSide = data['side']
+	# added for the API
+	if data['conn'].nil?
+		newConn = newObjectId
+	else
+		newConn = data['conn']
+	end
 	#sockJsConnection = data['sockJsConnection']
 	if ((newQty <= 0) or (data['price'].to_f <= 0))
 		#$redis2.publish('PrivateMessageOUT:' + sockJsConnection,'{"obj":"' + newObjectId.to_s + '","msgType":"E","M":"Order rejected: Price or qty have to be superior to 0"}')
@@ -697,11 +869,14 @@ $redis.psubscribe('ORDERS:*', 'PrivateMessageIN:*', 'CANCELS:*') do |on|
     		#puts "#{newOrderNum} is the new order num"
     		$redis2.zadd(newObjectId + ':ORDERS', newPrice, reverseTimestamp + 'ORD' + newOrderNum)
 		$redis2.zadd(newObjectId + ':ORDERS:TIMESTAMP', formattedTimestamp, newOrderNum)
+		$redis2.zadd(newObjectId + ':ORDERS:BYUSER:' + newUserId, formattedTimestamp, newOrderNum)
 		$redis2.hmset(newObjectId + ':ORDER:DETAILS:' + newOrderNum, 'qty', newQty, 'qtyfilled', 0, 'userid', newUserId, 'price', newPrice)
 		$redis2.sadd('OBJECTSTRADEDBYUSER:' + newUserId, newObjectId)
 
 		$redis2.publish('OrderFeed:' + newObjectId, '{"obj":"' + newObjectId +'","S":"' + newSide.to_s + '","msgType":"O","V":"' + newQty.to_s + '","P":"' + newPrice.to_s + '","U":"' + newUserId.to_s + '","ON":"' + newOrderNum.to_s + '","T":"' + formattedTimestamp.to_s + '"}')
-		match_and_adjust_depth(newOrderNum, newSide, newQty, newPrice, newObjectId, reverseTimestamp, newUserId)
+		allFillsJson = match_and_adjust_depth(newOrderNum, newSide, newQty, newPrice, newObjectId, reverseTimestamp, newUserId)
+		$redis2.publish('PrivateMessageOUT:' + newConn, allFillsJson)
+		#puts "Sending " + allFillsJson + " to " + newConn
 	end
   else
 	#puts "===== Received gibberish ===="
@@ -723,7 +898,6 @@ module Daemons
     def output_logfile; '/home/bitnami/redis-rb/log/f2'; end
   end
 end
-
 
 Daemons.run('sub.rb', :dir => '/home/bitnami/redis-rb/tmp/pids', :dir_mode => :normal, :ontop => false, :log_output => true)
 #publish_depth(12,12,12)
