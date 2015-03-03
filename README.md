@@ -12,6 +12,7 @@ Requirements
 You need an ubuntu server running a recent version of redis to run this. You also need ruby, python, node.js, express, sockjs the server and client libraries
 The ruby version of the code requires Deamons too so that it can run in the background.
 If you want to serve the trading engine online for web browsers to trade, you also need to run Node.js
+A Java version of the exchange server will soon be available.
 
 What it does
 ============
