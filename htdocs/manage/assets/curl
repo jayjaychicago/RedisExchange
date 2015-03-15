@@ -1,0 +1,1 @@
+curl www.instabid.io:3000/products/ --data "name=SKU1&exchange=TOTO&privateKey=123"

@@ -83,8 +83,14 @@ class Market_exchange {
 
   // custom <ClsPublic Market_exchange>
 
-  Submit_result submit(Order const& order) {
+  //! Called to move fills just processed on a submit to the processed list
+  void roll_fills() {
+    processed_fills_.insert(processed_fills_.end(), fills_.begin(),
+                            fills_.end());
     fills_.clear();
+  }
+
+  Submit_result submit(Order const& order) {
     prices_affected_.clear();
     ++market_stats_.submits;
 
@@ -104,7 +110,7 @@ class Market_exchange {
     }
 
     update_active();
-    return Submit_result();
+    return Submit_succeeded_e;
   }
 
   Cancel_result cancel(Order_id_t order_id) {
@@ -142,6 +148,9 @@ class Market_exchange {
   //! getter for fills_ (access is Ro)
   Fill_list_t const& fills() const { return fills_; }
 
+  //! getter for processed_fills_ (access is Ro)
+  Fill_list_t const& processed_fills() const { return processed_fills_; }
+
  private:
   Market_config market_config_;
   Market_id_t const market_id_{};
@@ -149,6 +158,7 @@ class Market_exchange {
   Market_stats market_stats_;
   Order_book order_book_{};
   Fill_list_t fills_{32};
+  Fill_list_t processed_fills_{1024};
   Price_list_t prices_affected_{32};
   Managed_order_list_t dead_orders_{};
   Quantity_t net_volume_{};

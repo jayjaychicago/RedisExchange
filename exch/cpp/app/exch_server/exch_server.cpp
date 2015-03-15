@@ -4,7 +4,18 @@
 #include <boost/asio/ip/address.hpp>
 #include <boost/program_options.hpp>
 #include <iostream>
+#include <stdexcept>
 #include <string>
+
+// custom <FcbPreNamespace exch_server>
+
+inline void throw_redis_error(char const* msg, char const* redis_error) {
+  std::string error { msg };
+  error += redis_error;
+  throw std::domain_error(error);
+}
+
+// end <FcbPreNamespace exch_server>
 
 namespace exch_server {
 struct Program_options {
@@ -86,13 +97,29 @@ int main(int argc, char** argv) {
 
     redisAsyncContext* listenContext = redisAsyncConnect(
         options.redis_address().c_str(), options.redis_port());
+
+    if (listenContext->err) {
+      throw_redis_error("Redis listener context error: ",
+                        listenContext->errstr);
+    }
+
     redisLibuvAttach(listenContext, loop);
 
     redisContext* bootstrapContext =
         redisConnect(options.redis_address().c_str(), options.redis_port());
 
+    if (bootstrapContext->err) {
+      throw_redis_error("Redis bootstrap context error: ",
+                        bootstrapContext->errstr);
+    }
+
     redisAsyncContext* writeContext = redisAsyncConnect(
         options.redis_address().c_str(), options.redis_port());
+
+    if (writeContext->err) {
+      throw_redis_error("Redis write context error: ", writeContext->errstr);
+    }
+
     redisLibuvAttach(writeContext, loop);
 
     // redisSetTcpNoDelay(listenContext);

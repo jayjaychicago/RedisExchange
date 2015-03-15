@@ -1,0 +1,45 @@
+<?php
+// newExchange allows the creation of an exchange
+// you have to place this library along with your other php libraries
+// if you do a require_once "instabid.php" and it's not in the right spot
+// the error message will tell you where to place it
+
+function newExchange($email, $password, $name) {
+
+$url = 'http://api.instabid.io:3000/exchanges/';
+$data = array('email' => $email, 'password' => $password, 'name' => $name);
+// use key 'http' even if you send the request to https://...
+$options = array(
+    'http' => array(
+        'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+        'method'  => 'POST',
+        'content' => http_build_query($data),
+    ),
+);
+$context  = stream_context_create($options);
+$result = file_get_contents($url, false, $context);
+return $result;
+
+}
+
+
+// newProduct allows the creation of a product 
+
+function newProduct($exchange, $privateKey, $name) {
+
+$url = 'http://api.instabid.io:3000/products/';
+$data = array('name' => $name, 'privateKey' => $privateKey, 'exchange' => $exchange);
+// use key 'http' even if you send the request to https://...
+$options = array(
+    'http' => array(
+        'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+        'method'  => 'POST',
+        'content' => http_build_query($data),
+    ),
+);
+$context  = stream_context_create($options);
+$result = file_get_contents($url, false, $context);
+return $result;
+
+}
+?>

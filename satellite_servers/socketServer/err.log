@@ -1,0 +1,120 @@
+
+events.js:72
+        throw er; // Unhandled 'error' event
+              ^
+Error: listen EADDRINUSE
+    at errnoException (net.js:904:11)
+    at Server._listen2 (net.js:1042:14)
+    at listen (net.js:1064:10)
+    at Server.listen (net.js:1138:5)
+    at Object.<anonymous> (/home/bitnami/satellite_servers/socketServer/server.js:453:8)
+    at Module._compile (module.js:456:26)
+    at Object.Module._extensions..js (module.js:474:10)
+    at Module.load (module.js:356:32)
+    at Function.Module._load (module.js:312:12)
+    at Function.Module.runMain (module.js:497:10)
+
+events.js:72
+        throw er; // Unhandled 'error' event
+              ^
+Error: listen EADDRINUSE
+    at errnoException (net.js:904:11)
+    at Server._listen2 (net.js:1042:14)
+    at listen (net.js:1064:10)
+    at Server.listen (net.js:1138:5)
+    at Object.<anonymous> (/home/bitnami/satellite_servers/socketServer/server.js:453:8)
+    at Module._compile (module.js:456:26)
+    at Object.Module._extensions..js (module.js:474:10)
+    at Module.load (module.js:356:32)
+    at Function.Module._load (module.js:312:12)
+    at Function.Module.runMain (module.js:497:10)
+
+events.js:72
+        throw er; // Unhandled 'error' event
+              ^
+Error: listen EADDRINUSE
+    at errnoException (net.js:904:11)
+    at Server._listen2 (net.js:1042:14)
+    at listen (net.js:1064:10)
+    at Server.listen (net.js:1138:5)
+    at Object.<anonymous> (/home/bitnami/satellite_servers/socketServer/server.js:453:8)
+    at Module._compile (module.js:456:26)
+    at Object.Module._extensions..js (module.js:474:10)
+    at Module.load (module.js:356:32)
+    at Function.Module._load (module.js:312:12)
+    at Function.Module.runMain (module.js:497:10)
+
+events.js:72
+        throw er; // Unhandled 'error' event
+              ^
+Error: Redis connection to 127.0.0.1:6379 failed - connect ECONNREFUSED
+    at RedisClient.on_error (/home/bitnami/satellite_servers/socketServer/node_modules/redis/index.js:189:24)
+    at Socket.<anonymous> (/home/bitnami/satellite_servers/socketServer/node_modules/redis/index.js:95:14)
+    at Socket.emit (events.js:95:17)
+    at net.js:440:14
+    at process._tickCallback (node.js:419:13)
+
+events.js:72
+        throw er; // Unhandled 'error' event
+              ^
+Error: Redis connection to 127.0.0.1:6379 failed - connect ECONNREFUSED
+    at RedisClient.on_error (/home/bitnami/satellite_servers/socketServer/node_modules/redis/index.js:189:24)
+    at Socket.<anonymous> (/home/bitnami/satellite_servers/socketServer/node_modules/redis/index.js:95:14)
+    at Socket.emit (events.js:95:17)
+    at net.js:440:14
+    at process._tickCallback (node.js:419:13)
+
+events.js:72
+        throw er; // Unhandled 'error' event
+              ^
+Error: Redis connection to 127.0.0.1:6379 failed - connect ECONNREFUSED
+    at RedisClient.on_error (/home/bitnami/satellite_servers/socketServer/node_modules/redis/index.js:189:24)
+    at Socket.<anonymous> (/home/bitnami/satellite_servers/socketServer/node_modules/redis/index.js:95:14)
+    at Socket.emit (events.js:95:17)
+    at net.js:440:14
+    at process._tickCallback (node.js:419:13)
+
+events.js:72
+        throw er; // Unhandled 'error' event
+              ^
+Error: Redis connection to 127.0.0.1:6379 failed - connect ECONNREFUSED
+    at RedisClient.on_error (/home/bitnami/satellite_servers/socketServer/node_modules/redis/index.js:189:24)
+    at Socket.<anonymous> (/home/bitnami/satellite_servers/socketServer/node_modules/redis/index.js:95:14)
+    at Socket.emit (events.js:95:17)
+    at net.js:440:14
+    at process._tickCallback (node.js:419:13)
+
+events.js:72
+        throw er; // Unhandled 'error' event
+              ^
+Error: Redis connection to 127.0.0.1:6379 failed - connect ECONNREFUSED
+    at RedisClient.on_error (/home/bitnami/satellite_servers/socketServer/node_modules/redis/index.js:189:24)
+    at Socket.<anonymous> (/home/bitnami/satellite_servers/socketServer/node_modules/redis/index.js:95:14)
+    at Socket.emit (events.js:95:17)
+    at net.js:440:14
+    at process._tickCallback (node.js:419:13)
+
+events.js:72
+        throw er; // Unhandled 'error' event
+              ^
+Error: Redis connection to 127.0.0.1:6379 failed - connect ECONNREFUSED
+    at RedisClient.on_error (/home/bitnami/satellite_servers/socketServer/node_modules/redis/index.js:189:24)
+    at Socket.<anonymous> (/home/bitnami/satellite_servers/socketServer/node_modules/redis/index.js:95:14)
+    at Socket.emit (events.js:95:17)
+    at net.js:440:14
+    at process._tickCallback (node.js:419:13)
+
+/home/bitnami/satellite_servers/socketServer/socketServer.js:168
+		msgJSON[0] = msgJSON;
+		           ^
+TypeError: Cannot set property '0' of undefined
+    at SockJSConnection.<anonymous> (/home/bitnami/satellite_servers/socketServer/socketServer.js:168:14)
+    at SockJSConnection.emit (events.js:95:17)
+    at Session.didMessage (/home/bitnami/satellite_servers/socketServer/node_modules/sockjs/lib/transport.js:220:25)
+    at WebSocketReceiver.didMessage (/home/bitnami/satellite_servers/socketServer/node_modules/sockjs/lib/trans-websocket.js:102:40)
+    at null.<anonymous> (/home/bitnami/satellite_servers/socketServer/node_modules/sockjs/lib/trans-websocket.js:75:22)
+    at emit (events.js:95:17)
+    at EventTarget.dispatchEvent (/home/bitnami/satellite_servers/socketServer/node_modules/sockjs/node_modules/faye-websocket/lib/faye/websocket/api/event_target.js:24:10)
+    at instance._receiveMessage (/home/bitnami/satellite_servers/socketServer/node_modules/sockjs/node_modules/faye-websocket/lib/faye/websocket/api.js:109:10)
+    at null.<anonymous> (/home/bitnami/satellite_servers/socketServer/node_modules/sockjs/node_modules/faye-websocket/lib/faye/websocket/api.js:27:49)
+    at emit (events.js:117:20)

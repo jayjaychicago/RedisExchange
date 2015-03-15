@@ -24,79 +24,58 @@ Creates a market, does sequence of other commands on that market
 //! The result is a map containing all options, including positional options
 Map _parseArgs(List<String> args) {
   ArgResults argResults;
-  Map result = { };
+  Map result = {};
   List remaining = [];
 
   _parser = new ArgParser();
   try {
     /// Fill in expectations of the parser
-    _parser.addFlag('log-at-end',
-      help: '''
+    _parser.addFlag('log-at-end', help: '''
 If set will log market details after work complete
-''',
-      abbr: null,
-      defaultsTo: true
-    );
-    _parser.addFlag('help',
-      help: '''
+''', abbr: null, defaultsTo: true);
+    _parser.addFlag('help', help: '''
 Display this help screen
-''',
-      abbr: 'h',
-      defaultsTo: false
-    );
+''', abbr: 'h', defaultsTo: false);
 
-    _parser.addOption('redis-host',
-      help: '''
+    _parser.addOption('redis-host', help: '''
 redis host used by pub/sub
-''',
-      defaultsTo: '127.0.0.1',
-      allowMultiple: false,
-      abbr: 'H',
-      allowed: null
-    );
-    _parser.addOption('redis-port',
-      help: '''
+''', defaultsTo: '127.0.0.1', allowMultiple: false, abbr: 'H', allowed: null);
+    _parser.addOption('redis-port', help: '''
 redis port used by pub/sub
-''',
-      defaultsTo: '6379',
-      allowMultiple: false,
-      abbr: 'P',
-      allowed: null
-    );
+''', defaultsTo: '6379', allowMultiple: false, abbr: 'P', allowed: null);
     _parser.addOption('user-id',
-      help: '',
-      defaultsTo: '1',
-      allowMultiple: false,
-      abbr: 'u',
-      allowed: null
-    );
+        help: '',
+        defaultsTo: '1',
+        allowMultiple: false,
+        abbr: 'u',
+        allowed: null);
     _parser.addOption('market-id',
-      help: '',
-      defaultsTo: '1',
-      allowMultiple: false,
-      abbr: 'm',
-      allowed: null
-    );
+        help: '',
+        defaultsTo: '1',
+        allowMultiple: false,
+        abbr: 'm',
+        allowed: null);
 
     /// Parse the command line options (excluding the script)
     argResults = _parser.parse(args);
-    if(argResults.wasParsed('help')) {
+    if (argResults.wasParsed('help')) {
       _usage();
       exit(0);
     }
     result['redis-host'] = argResults['redis-host'];
-    result['redis-port'] = argResults['redis-port'] != null?
-      int.parse(argResults['redis-port']) : null;
-    result['user-id'] = argResults['user-id'] != null?
-      int.parse(argResults['user-id']) : null;
-    result['market-id'] = argResults['market-id'] != null?
-      int.parse(argResults['market-id']) : null;
+    result['redis-port'] = argResults['redis-port'] != null
+        ? int.parse(argResults['redis-port'])
+        : null;
+    result['user-id'] =
+        argResults['user-id'] != null ? int.parse(argResults['user-id']) : null;
+    result['market-id'] = argResults['market-id'] != null
+        ? int.parse(argResults['market-id'])
+        : null;
     result['log-at-end'] = argResults['log-at-end'];
     result['help'] = argResults['help'];
 
-    return { 'options': result, 'rest': remaining };
-
-  } catch(e) {
+    return {'options': result, 'rest': remaining};
+  } catch (e) {
     _usage();
     throw e;
   }
@@ -105,8 +84,8 @@ redis port used by pub/sub
 final _logger = new Logger('bootstrapScenario1');
 
 main(List<String> args) async {
-  Logger.root.onRecord.listen((LogRecord r) =>
-      print("${r.loggerName} [${r.level}]:\t${r.message}"));
+  Logger.root.onRecord.listen(
+      (LogRecord r) => print("${r.loggerName} [${r.level}]:\t${r.message}"));
   Logger.root.level = Level.INFO;
   Map argResults = _parseArgs(args);
   Map options = argResults['options'];
@@ -127,7 +106,7 @@ main(List<String> args) async {
   final random = new Random(42);
 
   int maxAsk = 0;
-  int minBid = 1<<30;
+  int minBid = 1 << 30;
 
   someDelta() => random.nextInt(50);
 
@@ -148,49 +127,43 @@ main(List<String> args) async {
 
   List<Future> futures = [];
 
-  futures.add(client.createMarket(
-          userId, "bootstrap_1", startTime, endTime,
-          decimalShift:2, tickSize:500));
+  futures.add(client.createMarket(userId, "bootstrap_1", startTime, endTime,
+      decimalShift: 2, tickSize: 500));
 
-
-  for(int i=1; i<=800; i++) {
-    final big = (i%11==0);
+  for (int i = 1; i <= 800; i++) {
+    final big = (i % 11 == 0);
     final qty = nextQty();
 
-    if(i == 100) {
+    if (i == 100) {
       futures.add(client.cancel(userId, marketId, 81));
       futures.add(client.cancel(userId, marketId, 93));
       futures.add(client.cancel(userId, marketId, 89));
       futures.add(client.cancel(userId, marketId, 31));
     }
 
-    if(someDelta()%2 == 0) {
+    if (someDelta() % 2 == 0) {
       final px = nextAsk();
-      futures.add(
-          client.submit(userId, marketId, true,
-              big? minBid : px,
-              big? qty*3 : qty));
+      futures.add(client.submit(
+          userId, marketId, true, big ? minBid : px, big ? qty * 3 : qty));
     } else {
       final px = nextBid();
-      futures.add(
-          client.submit(userId, marketId, false,
-              big? maxAsk : px,
-              big? qty*3 : qty));
+      futures.add(client.submit(
+          userId, marketId, false, big ? maxAsk : px, big ? qty * 3 : qty));
     }
   }
 
   futures.add(client.logBook(marketId));
 
-  Future
-  .wait(futures)
-  .then((List futures) async {
-    for(var response in futures) {
-      if(_logger.level <= Level.FINEST) {
+  Future.wait(futures).then((List futures) async {
+    for (var response in futures) {
+      if (_logger.level <= Level.FINEST) {
         _logger.finest('Got $response');
       }
     }
-    if(options['log-at-end']) {
-      String details = await client.marketDetails(marketId, true, true, true);
+    if (options['log-at-end']) {
+      final now = new DateTime.now();
+      String details =
+          await client.marketDetails(marketId, 0, now, now, true, true, true);
       print(details);
     }
     client.close();

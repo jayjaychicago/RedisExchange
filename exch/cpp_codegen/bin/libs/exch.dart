@@ -237,6 +237,7 @@ final exch = lib('exch')
         member('market_stats')..type = 'Market_stats'..noInit = true..access = ro..byRef = true,
         member('order_book')..type = 'Order_book'..access = ro..byRef = true,
         member('fills')..type = 'Fill_list_t'..init = 32..access = ro..byRef = true,
+        member('processed_fills')..type = 'Fill_list_t'..init = 1024..access = ro..byRef = true,
         member('prices_affected')..type = 'Price_list_t'..init = 32,
         member('dead_orders')..type = 'Managed_order_list_t',
         member('net_volume')..type = 'Quantity_t',
@@ -399,6 +400,24 @@ final exch = lib('exch')
       ..members = [
         member('req_id')..type = 'Req_id_t',
         member('market_id')..type = 'Market_id_t',
+        member('user_id')
+        ..descr = 'If non-0 filters by user id'
+        ..type = 'User_id_t',
+        member('start_time')
+        ..descr = '''
+Lower bound (inclusive) of time for orders/fills returned. This
+represents a filter on returned orders. Only orders within
+(start_time, end_time] are returned. Similarly only fills within
+(start_time, end_time] are returned. Note: with this setup for a
+market spanning multiple days a query on a day might return fills on
+that day for orders happening on a prior day. The prior day orders
+associated with the fill will not be returned.
+
+Note if end_time equals start_time all orders are returned'''
+        ..type = 'Timestamp_t',
+        member('end_time')
+        ..descr = 'Upper bound (exclusive) of time for orders/fills returned'
+        ..type = 'Timestamp_t',
         member('include_active')..type = 'bool',
         member('include_dead')..type = 'bool',
         member('include_fills')..type = 'bool',
